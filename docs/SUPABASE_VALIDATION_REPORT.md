@@ -2,22 +2,26 @@
 
 # PonteNext Management Portal - Supabase Validation Report
 
-## Scope M0.6
+## Scope
 
-Milestone: M0.6 - Supabase Discovery & Live Validation
+Questo report documenta la discovery live M0.6 e l'applicazione controllata M0.7 sul progetto Supabase `PonteNext`.
 
-Obiettivo: verificare in sola lettura lo stato reale del progetto Supabase `PonteNext` collegato tramite MCP prima di iniziare M1.
+Project ref vincolante:
 
-Vincoli rispettati:
+```text
+uhxfpsamenjhyrfgwckw
+```
 
-- nessuna migration applicata;
-- nessuna tabella creata;
-- nessuna modifica al database;
+Vincoli M0.7 rispettati:
+
+- applicate solo le migration M0 `001_extensions.sql` e `002_admin_users.sql`;
+- nessuna migration successiva applicata;
+- nessuna tabella soci creata;
 - nessun avvio M1;
-- nessun CRUD soci;
-- nessuna nuova funzionalita' applicativa.
+- nessun CRUD creato;
+- nessuna modifica al modello dati oltre M0.
 
-## Progetto Supabase verificato
+## Progetto Supabase
 
 Il progetto Supabase `PonteNext` esiste nella organization collegata tramite MCP.
 
@@ -37,108 +41,54 @@ database_version: 17.6.1.127
 created_at: 2026-06-06T01:30:38.807485Z
 ```
 
-## Controlli eseguiti
+## M0.6 - Stato pre-applicazione
 
-Sono stati eseguiti solo controlli read-only:
+La discovery M0.6 aveva rilevato:
 
-- lista progetti MCP Supabase;
-- dettaglio progetto `PonteNext`;
-- lista migration Supabase;
-- SELECT su `information_schema.tables`;
-- SELECT su `pg_class` per RLS;
-- SELECT su `pg_policies` per policy;
-- controllo `to_regclass('public.admin_users')`;
-- SELECT su `supabase_migrations.schema_migrations`.
+- schema `public` senza tabelle applicative;
+- nessuna migration Supabase registrata;
+- `public.admin_users` assente;
+- nessuna policy RLS nello schema `public`;
+- migration locali M0 presenti nel repository ma non applicate al progetto live.
 
-Non e' stato usato `apply_migration`.
+## M0.7 - Migration applicate
 
-## Tabelle esistenti
-
-### Schema public
-
-Risultato:
-
-```text
-nessuna tabella public presente
-```
-
-### Schemi gestiti da Supabase
-
-Sono presenti tabelle di servizio negli schemi `auth` e `storage`.
-
-Esempi rilevati in `auth`:
-
-```text
-auth.users
-auth.sessions
-auth.identities
-auth.refresh_tokens
-auth.schema_migrations
-```
-
-Esempi rilevati in `storage`:
-
-```text
-storage.buckets
-storage.objects
-storage.migrations
-```
-
-Queste tabelle sono parte dell'infrastruttura Supabase e non costituiscono schema applicativo PonteNext.
-
-## Migration applicate
-
-La lista migration Supabase restituita dal MCP e' vuota:
-
-```text
-migrations: []
-```
-
-Inoltre la query su:
-
-```sql
-select version
-from supabase_migrations.schema_migrations
-order by version;
-```
-
-ha restituito errore per relazione inesistente:
-
-```text
-relation "supabase_migrations.schema_migrations" does not exist
-```
-
-Interpretazione:
-
-- non risultano migration applicate tramite il sistema migration Supabase;
-- lo schema `public` non contiene ancora oggetti applicativi;
-- il progetto live non ha ricevuto le migration M0 presenti nel repository.
-
-## Migration locali non applicate
-
-Nel repository sono presenti questi file:
+Sono state applicate solo le migration M0 richieste:
 
 ```text
 database/migrations/001_extensions.sql
 database/migrations/002_admin_users.sql
-database/migrations/003_members_roles.sql
-database/migrations/004_membership_plans.sql
-database/migrations/005_memberships_payments.sql
-database/migrations/006_sponsors.sql
-database/migrations/007_events.sql
-database/migrations/008_sponsor_contributions.sql
-database/migrations/009_email.sql
-database/migrations/010_audit_logs.sql
-database/migrations/011_views.sql
-database/migrations/012_rls_policies.sql
-database/migrations/013_seed.sql
 ```
 
-Stato:
+Migration registrate dal progetto Supabase:
 
-- `001_extensions.sql`: migration M0 operativa locale, non applicata al progetto live;
-- `002_admin_users.sql`: migration M0 operativa locale, non applicata al progetto live;
-- `003_members_roles.sql` - `013_seed.sql`: placeholder locali, non applicati e da non applicare in M0.6.
+```text
+20260606113953  001_extensions
+20260606114014  002_admin_users
+```
+
+Non risultano applicate migration successive.
+
+## Tabelle public dopo M0.7
+
+Lo schema `public` contiene:
+
+```text
+public.admin_users
+```
+
+Non risultano create tabelle M1 o successive, ad esempio:
+
+- `members`;
+- `roles`;
+- `member_roles`;
+- `membership_plans`;
+- `memberships`;
+- `payments`;
+- `sponsors`;
+- `events`;
+- `email_templates`;
+- `audit_logs`.
 
 ## admin_users
 
@@ -151,124 +101,178 @@ select to_regclass('public.admin_users') as admin_users_regclass;
 Risultato:
 
 ```text
-admin_users_regclass: null
+admin_users_regclass: admin_users
 ```
 
 Esito:
 
 ```text
-public.admin_users non esiste nel progetto Supabase live PonteNext.
+public.admin_users esiste nel progetto Supabase live PonteNext.
 ```
 
-## RLS su admin_users
+## Colonne admin_users
 
-Poiche' `public.admin_users` non esiste, non e' possibile verificare RLS sulla tabella.
-
-Controllo sulle tabelle `public`:
-
-```sql
-select
-  n.nspname as schema_name,
-  c.relname as table_name,
-  c.relrowsecurity,
-  c.relforcerowsecurity
-from pg_class c
-join pg_namespace n on n.oid = c.relnamespace
-where n.nspname = 'public'
-  and c.relkind in ('r', 'p')
-order by c.relname;
-```
-
-Risultato:
+Colonne rilevate:
 
 ```text
-[]
+id            uuid                     not null default gen_random_uuid()
+auth_user_id  uuid                     not null
+full_name     text                     not null
+email         text                     not null
+role          text                     not null
+status        text                     not null default 'active'
+created_at    timestamptz              not null default now()
+updated_at    timestamptz              not null default now()
+archived_at   timestamptz              null
 ```
 
 Esito:
 
 ```text
-nessuna tabella public su cui RLS risulti verificabile.
+le colonne sono coerenti con DATABASE_DESIGN.md per la tabella minima M0.
 ```
 
-## Policy esistenti
+## Vincoli admin_users
 
-Controllo eseguito:
-
-```sql
-select
-  schemaname,
-  tablename,
-  policyname,
-  permissive,
-  roles,
-  cmd,
-  qual,
-  with_check
-from pg_policies
-where schemaname = 'public'
-order by tablename, policyname;
-```
-
-Risultato:
+Vincoli rilevati:
 
 ```text
-[]
+admin_users_pkey               PRIMARY KEY (id)
+admin_users_auth_user_id_key   UNIQUE (auth_user_id)
+admin_users_email_key          UNIQUE (email)
+admin_users_auth_user_id_fkey  FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+admin_users_role_check         CHECK role in ('super_admin', 'admin')
+admin_users_status_check       CHECK status in ('active', 'inactive')
 ```
 
 Esito:
 
 ```text
-nessuna policy RLS presente nello schema public.
+vincoli coerenti con il perimetro M0.
 ```
 
-## Confronto con atteso M0/M0.5
+## Estensione e funzioni
 
-Atteso da documentazione M0/M0.5:
-
-- `001_extensions.sql` applicata;
-- `002_admin_users.sql` applicata;
-- tabella `public.admin_users` presente;
-- RLS abilitata su `public.admin_users`;
-- policy SELECT `admin_users_select_self_or_active_admin`;
-- nessuna policy insert/update/delete in M0;
-- bootstrap primo `super_admin` eseguito con owner/service role.
-
-Stato reale live:
-
-- `001_extensions.sql` non risulta applicata;
-- `002_admin_users.sql` non risulta applicata;
-- `public.admin_users` assente;
-- RLS applicativa non verificabile;
-- policy applicative assenti;
-- bootstrap `super_admin` non verificabile per assenza della tabella.
-
-## Impatto
-
-Il progetto Next.js e' configurato per usare Supabase, ma il progetto Supabase live `PonteNext` non contiene ancora lo schema applicativo minimo M0.
-
-Con lo stato attuale:
-
-- `/login` puo' usare Supabase Auth se `.env.local` punta al progetto `PonteNext`;
-- le route protette non possono autorizzare admin attivi perche' `public.admin_users` non esiste;
-- il bootstrap del primo `super_admin` non puo' essere eseguito finche' `002_admin_users.sql` non viene applicata;
-- M1 non deve iniziare prima di applicare e verificare M0 sul database live.
-
-## Raccomandazione
-
-Prima di iniziare M1, applicare in modo controllato le migration M0 sul progetto Supabase `PonteNext`:
+Estensione rilevata:
 
 ```text
-database/migrations/001_extensions.sql
-database/migrations/002_admin_users.sql
+pgcrypto 1.3
 ```
 
-Dopo l'applicazione, ripetere i controlli M0.6 per confermare:
+Funzioni rilevate:
 
-- presenza di `public.admin_users`;
-- RLS abilitata;
-- policy SELECT attesa;
-- assenza intenzionale di policy insert/update/delete;
-- bootstrap del primo `super_admin`.
+```text
+public.set_updated_at()    SECURITY INVOKER
+public.is_active_admin()   SECURITY DEFINER
+```
 
-Questa PR non applica migration e non modifica il database.
+Trigger rilevato:
+
+```text
+set_admin_users_updated_at
+BEFORE UPDATE ON public.admin_users
+EXECUTE FUNCTION set_updated_at()
+```
+
+## RLS admin_users
+
+Controllo RLS:
+
+```text
+relrowsecurity: true
+relforcerowsecurity: false
+```
+
+Esito:
+
+```text
+RLS e' attiva su public.admin_users.
+```
+
+## Policy admin_users
+
+Policy rilevata:
+
+```text
+policyname: admin_users_select_self_or_active_admin
+roles: authenticated
+cmd: SELECT
+qual: ((auth.uid() = auth_user_id) OR is_active_admin())
+with_check: null
+```
+
+Conteggio policy per comando:
+
+```text
+SELECT: 1
+```
+
+Esito:
+
+- la policy SELECT attesa e' presente;
+- non risultano policy INSERT;
+- non risultano policy UPDATE;
+- non risultano policy DELETE;
+- bootstrap e manutenzione admin restano da eseguire con owner/service role, non tramite UI M0.
+
+## Advisory security Supabase
+
+Dopo l'applicazione delle migration M0 e' stato eseguito il security advisor Supabase.
+
+Warning rilevati:
+
+1. `function_search_path_mutable` su `public.set_updated_at`
+   - dettaglio: la funzione non imposta `search_path`;
+   - remediation: [Supabase database linter 0011](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable).
+
+2. `anon_security_definer_function_executable` su `public.is_active_admin()`
+   - dettaglio: la funzione `SECURITY DEFINER` risulta eseguibile dal ruolo `anon`;
+   - remediation: [Supabase database linter 0028](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
+
+3. `authenticated_security_definer_function_executable` su `public.is_active_admin()`
+   - dettaglio: la funzione `SECURITY DEFINER` risulta eseguibile dal ruolo `authenticated`;
+   - remediation: [Supabase database linter 0029](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+
+Privilegi funzione verificati:
+
+```text
+public.is_active_admin()
+anon: execute = true
+authenticated: execute = true
+public: execute = false
+
+public.set_updated_at()
+PUBLIC: EXECUTE
+anon: EXECUTE
+authenticated: EXECUTE
+postgres: EXECUTE
+service_role: EXECUTE
+```
+
+Nota M0.7:
+
+- non sono state applicate correzioni aggiuntive perche' il perimetro richiesto era applicare solo `001_extensions.sql` e `002_admin_users.sql`;
+- i warning devono essere risolti con una migration di hardening dedicata prima della produzione o prima di ampliare le policy RLS su altre tabelle.
+
+## Esito M0.7
+
+Esito complessivo:
+
+```text
+M0 Supabase migrations applicate con successo.
+public.admin_users presente e validata.
+RLS attiva.
+Policy SELECT attesa presente.
+Nessuna migration successiva applicata.
+Nessuna tabella M1 o successiva creata.
+```
+
+## Passi successivi consigliati
+
+Prima di iniziare M1:
+
+1. Eseguire bootstrap del primo `super_admin` con owner/service role.
+2. Verificare login reale da `/login` usando `.env.local` puntata a `PonteNext`.
+3. Pianificare una migration di hardening per i warning security advisor sulle funzioni.
+
+Questa PR documenta l'applicazione live M0.7 e non introduce M1.
