@@ -10,6 +10,7 @@ Questo report documenta:
 - M0.7 - Apply M0 Supabase Migrations;
 - M0.8 - Supabase Function Security Hardening.
 - M0.9 - Bootstrap primo super_admin e login reale.
+- M1 - Members & Roles.
 
 Project ref vincolante:
 
@@ -17,15 +18,22 @@ Project ref vincolante:
 uhxfpsamenjhyrfgwckw
 ```
 
-Vincoli rispettati:
+Vincoli rispettati nello storico M0.x:
 
-- nessun avvio M1;
-- nessuna tabella soci creata;
-- nessun CRUD creato;
-- nessuna migration successiva applicata;
-- nessuna modifica al modello dati applicativo oltre M0;
-- policy modificate solo per hardening della funzione admin.
+- nessuna tabella soci creata prima di M1;
+- nessun CRUD creato prima di M1;
+- nessuna migration successiva applicata prima della milestone esplicita;
+- nessuna modifica al modello dati applicativo oltre M0 durante M0.x;
+- policy modificate solo per hardening della funzione admin in M0.8;
 - modifiche dati limitate a utenti Auth/admin di validazione M0.9.
+
+Vincoli rispettati in M1:
+
+- applicata solo la migration `004_members_roles`;
+- create solo `members`, `roles`, `member_roles`;
+- applicato solo seed ruoli base;
+- nessuna tabella iscrizioni, quote, pagamenti, sponsor, eventi, email o report;
+- nessuna migration M2 o successiva applicata.
 
 ## Progetto Supabase
 
@@ -89,21 +97,38 @@ Migration registrate dal progetto Supabase dopo M0.8:
 20260606115133  003_harden_admin_functions
 ```
 
-Non risultano applicate migration M1 o successive.
+## M1 - Migration applicata
 
-## Tabelle public dopo M0.8
+E' stata applicata solo la migration M1 richiesta:
+
+```text
+database/migrations/004_members_roles.sql
+```
+
+Migration registrate dal progetto Supabase dopo M1:
+
+```text
+20260606113953  001_extensions
+20260606114014  002_admin_users
+20260606115133  003_harden_admin_functions
+20260606124849  004_members_roles
+```
+
+Non risultano applicate migration M2 o successive.
+
+## Tabelle public dopo M1
 
 Lo schema `public` contiene:
 
 ```text
 public.admin_users
+public.member_roles
+public.members
+public.roles
 ```
 
-Non risultano create tabelle M1 o successive, ad esempio:
+Non risultano create tabelle M2 o successive, ad esempio:
 
-- `members`;
-- `roles`;
-- `member_roles`;
 - `membership_plans`;
 - `memberships`;
 - `payments`;
@@ -115,7 +140,7 @@ Non risultano create tabelle M1 o successive, ad esempio:
 Verifica specifica M1:
 
 ```text
-m1_table_count: 0
+out_of_scope_table_count: 0
 ```
 
 ## admin_users
@@ -422,7 +447,7 @@ Nota:
 - non e' stata applicata modifica di configurazione Auth in M0.9;
 - abilitarla e' consigliato prima dell'uso operativo del portale.
 
-## Passi successivi consigliati
+## Passi consigliati dopo M0.9
 
 Prima di iniziare M1:
 
@@ -431,4 +456,177 @@ Prima di iniziare M1:
 3. Rieseguire security advisor e validazione RLS dopo il bootstrap definitivo.
 4. Abilitare Leaked Password Protection in Supabase Auth prima dell'uso operativo.
 
-Questa PR documenta la validazione live M0.9 e non introduce M1.
+Questa sezione resta come storico operativo M0.9.
+
+## M1 - Members & Roles live validation
+
+M1 ha introdotto solo le tabelle:
+
+```text
+members
+roles
+member_roles
+```
+
+### Colonne M1
+
+Le colonne rilevate sono coerenti con `DATABASE_DESIGN.md` e `M1_IMPLEMENTATION_PLAN.md`.
+
+`members` contiene:
+
+```text
+id uuid
+first_name text
+last_name text
+email text null
+phone text null
+address text null
+city text null
+postal_code text null
+province text null
+country text default 'Italia'
+birth_date date null
+fiscal_code text null
+profession text null
+notes text null
+status text default 'active'
+created_at timestamptz
+updated_at timestamptz
+archived_at timestamptz null
+```
+
+`roles` contiene:
+
+```text
+id uuid
+name text unique
+description text null
+is_default boolean default false
+sort_order integer default 0
+created_at timestamptz
+updated_at timestamptz
+archived_at timestamptz null
+```
+
+`member_roles` contiene:
+
+```text
+id uuid
+member_id uuid references members(id)
+role_id uuid references roles(id)
+start_date date
+end_date date null
+notes text null
+created_at timestamptz
+updated_at timestamptz
+archived_at timestamptz null
+```
+
+### RLS M1
+
+RLS risulta attiva su:
+
+```text
+public.members
+public.roles
+public.member_roles
+```
+
+Policy presenti:
+
+- `members_select_active_admin`
+- `members_insert_active_admin`
+- `members_update_active_admin`
+- `roles_select_active_admin`
+- `roles_insert_active_admin`
+- `roles_update_active_admin`
+- `member_roles_select_active_admin`
+- `member_roles_insert_active_admin`
+- `member_roles_update_active_admin`
+
+Non risultano policy DELETE sulle tabelle M1:
+
+```text
+delete_policy_count: 0
+```
+
+Le policy usano l'helper hardened:
+
+```text
+app_private.is_active_admin()
+```
+
+### Trigger M1
+
+Trigger `updated_at` rilevati:
+
+```text
+set_members_updated_at
+set_roles_updated_at
+set_member_roles_updated_at
+```
+
+Tutti usano `public.set_updated_at()`, gia' hardened in M0.8.
+
+### Seed ruoli base
+
+Ruoli base presenti e non archiviati:
+
+```text
+Presidente
+Vicepresidente
+Segretario
+Tesoriere
+Consigliere
+Socio Ordinario
+Socio Sostenitore
+```
+
+### Validazione dati M1
+
+E' stato eseguito un test transazionale con rollback:
+
+```text
+inserted_member_count: 1
+inserted_assignment_count: 1
+rollback eseguito
+validation_member_count finale: 0
+```
+
+Esito:
+
+- creazione socio valida;
+- assegnazione ruolo valida;
+- nessun dato socio di test lasciato nel database live.
+
+### Validazione RLS M1
+
+Controlli eseguiti:
+
+```text
+anon_blocked
+active_admin_can_read_roles
+```
+
+Esito:
+
+- ruolo `anon` bloccato sulle tabelle M1;
+- ruolo `authenticated` con `auth_user_id` collegato ad admin attivo puo' leggere i ruoli seed.
+
+### Advisory dopo M1
+
+Security Advisor:
+
+```text
+auth_leaked_password_protection
+```
+
+Il warning e' lo stesso residuo operativo gia' documentato in M0.9 e riguarda la configurazione Auth, non SQL/RLS M1.
+
+Performance Advisor:
+
+```text
+unused_index
+```
+
+Gli advisory `unused_index` sono INFO attesi su indici appena creati in M1 prima di traffico applicativo reale. Non indicano tabelle fuori scope o RLS mancanti.
