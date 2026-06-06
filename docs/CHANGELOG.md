@@ -1,5 +1,12 @@
 # CHANGELOG.md
 
+## 0.3.1
+
+- Formalizzato il modello storico delle iscrizioni
+- Stabilito che ogni rinnovo crea una nuova riga in `memberships`
+- Chiarito che le iscrizioni esistenti non devono essere modificate, estese o riutilizzate per rappresentare un rinnovo successivo
+- Aggiornati database design, business rules e ADR architetturale
+
 ## 0.3.0
 
 - Avviata milestone M1 - Members & Roles

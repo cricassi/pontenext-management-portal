@@ -196,6 +196,10 @@ Campi:
 
 Singola iscrizione o rinnovo.
 
+La tabella `memberships` e' storica: ogni rinnovo crea sempre una nuova riga.
+
+Le righe esistenti non devono essere modificate, estese o riutilizzate per rappresentare un rinnovo successivo.
+
 Campi:
 
 - id uuid PK
@@ -219,6 +223,10 @@ Regole:
 - la quota effettiva può differire dalla quota minima
 - la durata può essere personalizzata
 - lo stato pagamento dipende dai pagamenti collegati
+- ogni rinnovo crea una nuova riga `memberships`
+- non aggiornare `start_date`, `end_date`, durata, quota o stato di una iscrizione esistente per estenderla
+- una iscrizione precedente resta storica anche quando il socio rinnova
+- lo stato associativo corrente del socio deriva dalla riga `memberships` applicabile alla data di valutazione
 
 ## payments
 
