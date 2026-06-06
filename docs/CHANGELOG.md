@@ -1,5 +1,17 @@
 # CHANGELOG.md
 
+## 0.4.0
+
+- Avviata milestone M2 - Memberships & Payments
+- Applicate al progetto Supabase live `PonteNext` le migration `005_membership_plans` e `006_memberships_payments`
+- Create tabelle `membership_plans`, `memberships` e `payments` con vincoli, indici, RLS e trigger `updated_at`
+- Aggiunti trigger/funzioni per ricalcolo automatico di `paid_amount` e `payment_status`
+- Applicato seed piani iscrizione base `Ordinaria`, `Agevolata`, `Sostenitore`
+- Implementate route `/memberships`, `/memberships/new`, `/memberships/[id]` e `/settings/membership-plans`
+- Integrato lo storico iscrizioni nella scheda socio senza modificare il modello M1 fuori necessita'
+- Aggiunti service layer, validazioni form e componenti responsive M2
+- Documentata validazione live Supabase M2 e aggiunta checklist `M2_CHECKLIST.md`
+
 ## 0.3.1
 
 - Formalizzato il modello storico delle iscrizioni

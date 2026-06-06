@@ -26,7 +26,7 @@ export const navigationItems = [
     label: "Iscrizioni",
     href: "/memberships",
     icon: CreditCard,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Scadenze",

@@ -4,10 +4,12 @@ import { Archive, Pencil } from "lucide-react";
 import { archiveMemberAction } from "@/app/(admin)/members/actions";
 import { MemberDetail } from "@/components/members/MemberDetail";
 import { MemberRolesPanel } from "@/components/members/MemberRolesPanel";
+import { MembershipHistoryPanel } from "@/components/memberships/MembershipHistoryPanel";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { getMemberRoleAssignments } from "@/services/member-roles.service";
 import { getMemberById } from "@/services/members.service";
+import { getMembershipsByMemberId } from "@/services/memberships.service";
 import { getAssignableRoles } from "@/services/roles.service";
 import { isUuid } from "@/utils/id";
 
@@ -30,9 +32,10 @@ export default async function MemberPage({ params }: MemberPageProps) {
     notFound();
   }
 
-  const [assignments, roles] = await Promise.all([
+  const [assignments, roles, memberships] = await Promise.all([
     getMemberRoleAssignments(id),
     getAssignableRoles(),
+    getMembershipsByMemberId(id),
   ]);
 
   return (
@@ -60,6 +63,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
 
       <MemberDetail member={member} />
       <MemberRolesPanel memberId={member.id} assignments={assignments} roles={roles} />
+      <MembershipHistoryPanel memberId={member.id} memberships={memberships} />
     </div>
   );
 }

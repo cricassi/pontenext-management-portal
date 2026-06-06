@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Tags } from "lucide-react";
+import { CreditCard, Tags } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import {
@@ -33,6 +33,23 @@ export default function SettingsPage() {
               <Link href="/settings/roles">
                 <Tags aria-hidden="true" className="mr-2 size-4" />
                 Apri ruoli
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Piani iscrizione</CardTitle>
+            <CardDescription>
+              Configura quote minime e durate predefinite.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild>
+              <Link href="/settings/membership-plans">
+                <CreditCard aria-hidden="true" className="mr-2 size-4" />
+                Apri piani
               </Link>
             </Button>
           </CardContent>
