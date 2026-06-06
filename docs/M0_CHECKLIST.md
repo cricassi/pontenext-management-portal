@@ -23,6 +23,7 @@ M0 prepara l'infrastruttura tecnica e la base minima di sicurezza amministrativa
 - [x] Strategia bootstrap primo `super_admin` documentata
 - [x] `.env.example` aggiornato
 - [x] README aggiornato con setup locale
+- [x] Lint configurato per Next.js 16 tramite ESLint CLI
 
 ## Escluso
 
@@ -52,7 +53,7 @@ Le altre voci di navigazione sono visibili come struttura futura ma disabilitate
 ## Verifiche richieste
 
 - [x] `npm install`
-- [x] `npm run lint`
+- [x] `npm run lint` con `eslint --max-warnings=0 .`
 - [x] `npm run build`
 - [x] Avvio locale con `npm run dev`
 - [x] Verifica shadcn/ui con `npx shadcn@latest info`
@@ -62,3 +63,10 @@ Le altre voci di navigazione sono visibili come struttura futura ma disabilitate
 - [ ] Verifica browser mobile
 
 Nota: il Browser plugin non era disponibile in questa sessione. Il fallback Playwright bundled non e' stato utilizzabile per assenza di `playwright-core`; la verifica visuale resta da completare quando uno strumento browser e' disponibile.
+
+## Follow-up PR #2
+
+- [x] Rimossa ogni dipendenza da `next lint`
+- [x] Confermata configurazione flat `eslint.config.mjs` per ESLint CLI
+- [x] README allineato alla configurazione lint effettiva
+- [x] Rieseguite le verifiche M0 richieste dopo il fix lint

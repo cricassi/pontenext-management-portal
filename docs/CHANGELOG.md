@@ -1,5 +1,10 @@
 # CHANGELOG.md
 
+## 0.2.1
+
+- Allineata la configurazione lint a Next.js 16 usando ESLint CLI
+- Aggiornati README e checklist M0 con la command lint effettiva
+
 ## 0.2.0
 
 - Avviata milestone M0 - Setup Infrastruttura

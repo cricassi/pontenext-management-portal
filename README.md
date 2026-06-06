@@ -129,6 +129,20 @@ npm run lint
 npm run start
 ```
 
+### Lint
+
+Il progetto usa Next.js 16. La command storica `next lint` non e' utilizzata: il lint passa dalla ESLint CLI configurata con `eslint.config.mjs`.
+
+```bash
+npm run lint
+```
+
+Lo script esegue:
+
+```bash
+eslint --max-warnings=0 .
+```
+
 ## Struttura
 
 ```text
