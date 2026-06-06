@@ -1,5 +1,17 @@
 # CHANGELOG.md
 
+## 0.3.0
+
+- Avviata milestone M1 - Members & Roles
+- Applicata migration `004_members_roles` al progetto Supabase live `PonteNext`
+- Create tabelle `members`, `roles` e `member_roles` con vincoli, indici, RLS e trigger `updated_at`
+- Aggiunto seed ruoli base idempotente
+- Implementati CRUD soci, CRUD ruoli e assegnazione ruoli ai soci
+- Abilitate route `/members`, `/members/new`, `/members/[id]`, `/members/[id]/edit`, `/settings` e `/settings/roles`
+- Aggiunti service layer e validazioni form M1
+- Aggiunta checklist `M1_CHECKLIST.md`
+- Documentata validazione live Supabase M1
+
 ## 0.2.5
 
 - Avviata milestone M0.9 - Bootstrap primo `super_admin` e login reale

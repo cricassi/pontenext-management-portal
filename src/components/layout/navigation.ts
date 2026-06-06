@@ -20,7 +20,7 @@ export const navigationItems = [
     label: "Soci",
     href: "/members",
     icon: Users,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Iscrizioni",
@@ -62,6 +62,6 @@ export const navigationItems = [
     label: "Impostazioni",
     href: "/settings",
     icon: Settings,
-    enabled: false,
+    enabled: true,
   },
 ] as const;
