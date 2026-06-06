@@ -1,0 +1,4 @@
+-- Seed piani iscrizione iniziali
+-- Ordinaria: 30.00, 12 mesi
+-- Agevolata: 15.00, 6 mesi
+-- Sostenitore: 30.00, 12 mesi

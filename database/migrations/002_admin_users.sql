@@ -1,0 +1,3 @@
+-- 002_admin_users.sql
+-- Migration placeholder for PonteNext Management Portal.
+-- Generate this incrementally with Codex following /docs/DATABASE_DESIGN.md.

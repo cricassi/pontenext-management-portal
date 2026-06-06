@@ -1,0 +1,8 @@
+-- Seed ruoli iniziali
+-- Presidente
+-- Vicepresidente
+-- Segretario
+-- Tesoriere
+-- Consigliere
+-- Socio Ordinario
+-- Socio Sostenitore

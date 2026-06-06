@@ -1,0 +1,3 @@
+-- 008_sponsor_contributions.sql
+-- Migration placeholder for PonteNext Management Portal.
+-- Generate this incrementally with Codex following /docs/DATABASE_DESIGN.md.
