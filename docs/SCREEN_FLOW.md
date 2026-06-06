@@ -139,26 +139,24 @@ Non usare sidebar fissa su mobile.
 
 ## Contenuto
 
-Card KPI:
+Card KPI M3, basate solo sui dati disponibili dopo M2:
 
-- soci attivi
-- soci scaduti
+- soci anagraficamente attivi
+- soci con iscrizione attiva
+- soci con iscrizione scaduta
 - rinnovi entro 30 giorni
-- sponsor attivi
-- eventi futuri
 
 Sezioni:
 
 - prossime scadenze
 - ultimi soci inseriti
-- prossimi eventi
 
 ## Azioni rapide
 
 - nuovo socio
-- nuovo sponsor
-- nuovo evento
 - registra rinnovo
+
+Nota: widget sponsor, eventi futuri e relative azioni rapide vengono aggiunti solo dopo M5 e M6.
 
 ---
 
@@ -179,7 +177,8 @@ Tabella con colonne:
 - Telefono
 - Ruolo principale
 - Ultima scadenza
-- Stato
+- Stato anagrafico
+- Stato iscrizione
 - Azioni
 
 ## Mobile
@@ -189,15 +188,16 @@ Lista card con:
 - nome completo
 - email
 - telefono
-- stato iscrizione
+- stato anagrafico
+- stato iscrizione derivato
 - scadenza
 - azioni principali
 
 ## Filtri
 
 - testo libero
-- stato socio
-- stato iscrizione
+- stato anagrafico socio
+- stato iscrizione derivato
 - ruolo
 - scadenza
 
@@ -255,7 +255,7 @@ Elenco iscrizioni con:
 - quota prevista
 - pagato
 - stato pagamento
-- stato iscrizione
+- stato iscrizione derivato
 
 ## Azioni
 
@@ -283,8 +283,9 @@ Elenco iscrizioni con:
 ## Azioni
 
 - rinnova iscrizione
-- invia promemoria
 - esporta elenco
+
+Nota: M4 non invia email. L'azione di promemoria scadenze e' disponibile solo dopo M7.
 
 ---
 
@@ -346,7 +347,7 @@ Sezioni:
 ## Campi visualizzati
 
 - nome evento
-- data
+- data e orario derivati da `start_datetime` e `end_datetime`
 - luogo
 - stato
 - sponsor collegati
@@ -377,6 +378,14 @@ Sezioni:
 /email
 ```
 
+Le route email definitive sono:
+
+```text
+/email
+/email/templates
+/email/campaigns
+```
+
 ## Sottosezioni
 
 ```text
@@ -395,8 +404,8 @@ Sezioni:
 ## Segmenti iniziali
 
 - tutti i soci
-- soci attivi
-- soci scaduti
+- soci con iscrizione attiva
+- soci con iscrizione scaduta
 - sponsor
 - destinatari custom
 

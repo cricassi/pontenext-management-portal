@@ -38,6 +38,8 @@ docs/RESPONSIVE_RULES.md
 - Non creare app mobile nativa.
 - Non usare cancellazioni fisiche per dati principali.
 - Non salvare quote o scadenze nella tabella `members`.
+- Non usare `members.status` per indicare lo stato associativo.
+- Usare `start_datetime` e `end_datetime` come campi canonici evento.
 
 ---
 
@@ -65,6 +67,7 @@ Non sostituire stack senza aggiornare ADR.
 - Usare `date` per date senza orario.
 - Usare soft delete con `archived_at`.
 - Abilitare RLS sulle tabelle applicative.
+- In M0 predisporre `admin_users` minimo, bootstrap del primo `super_admin`, route protette e RLS iniziale.
 
 ---
 
@@ -82,6 +85,7 @@ Non sostituire stack senza aggiornare ADR.
 
 - TypeScript strict.
 - Componenti riutilizzabili.
+- File componenti React in formato `PascalCase.tsx`.
 - Nomi chiari.
 - Separare logica dati, componenti e utility.
 - Non duplicare codice inutilmente.

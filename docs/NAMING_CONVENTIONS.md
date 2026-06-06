@@ -141,7 +141,8 @@ updated_at
 archived_at
 membership_plan_id
 payment_status
-event_date
+start_datetime
+end_datetime
 created_by
 ```
 
@@ -474,6 +475,12 @@ Usare:
 PascalCase
 ```
 
+La convenzione definitiva per i file dei componenti React e':
+
+```text
+PascalCase.tsx
+```
+
 Esempi:
 
 ```text
@@ -552,7 +559,9 @@ Esempi:
 /sponsors/[id]
 /events
 /events/[id]
-/email-campaigns
+/email
+/email/templates
+/email/campaigns
 /reports
 /settings
 ```
@@ -887,7 +896,9 @@ DashboardCard.tsx
 ```text
 /members
 /sponsors
-/email-campaigns
+/email
+/email/templates
+/email/campaigns
 ```
 
 ## Service

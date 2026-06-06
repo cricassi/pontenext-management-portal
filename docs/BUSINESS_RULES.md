@@ -1,20 +1,30 @@
 # BUSINESS_RULES.md
 
-# PonteNext Management Portal – Business Rules
+# PonteNext Management Portal - Business Rules
 
-## BR-001 – Accesso
+## BR-001 - Accesso
 
 Solo Super Admin e Admin accedono al sistema.
 
 I soci non hanno login.
 
-## BR-002 – Soci
+M0 deve includere `admin_users` minimo, bootstrap del primo `super_admin`, route protette e RLS iniziale.
 
-Un socio può esistere anche senza iscrizione attiva.
+## BR-002 - Soci
 
-## BR-003 – Iscrizioni
+Un socio puo' esistere anche senza iscrizione attiva.
 
-Un socio può avere più iscrizioni nel tempo.
+`members.status` indica solo lo stato anagrafico del socio:
+
+- `active`
+- `inactive`
+- `archived`
+
+Lo stato associativo del socio e' derivato dalle iscrizioni presenti in `memberships`.
+
+## BR-003 - Iscrizioni
+
+Un socio puo' avere piu' iscrizioni nel tempo.
 
 Ogni iscrizione deve avere:
 
@@ -24,39 +34,43 @@ Ogni iscrizione deve avere:
 - quota prevista
 - stato pagamento
 
-## BR-004 – Quote
+## BR-004 - Quote
 
-La quota minima è configurabile.
+La quota minima e' configurabile.
 
-La quota effettiva può essere diversa dalla minima.
+La quota effettiva puo' essere diversa dalla minima.
 
-La durata può essere personalizzata.
+La durata puo' essere personalizzata.
 
-## BR-005 – Pagamenti
+## BR-005 - Pagamenti
 
 Un pagamento appartiene sempre a una iscrizione.
 
-Un'iscrizione può avere più pagamenti.
+Un'iscrizione puo' avere piu' pagamenti.
 
-I pagamenti non hanno valore di contabilità fiscale.
+I pagamenti non hanno valore di contabilita' fiscale.
 
-## BR-006 – Scadenze
+## BR-006 - Scadenze
 
 La scadenza deriva da `memberships.end_date`.
 
 Non deve essere salvata nella tabella `members`.
 
-## BR-007 – Sponsor
+M4 gestisce monitoraggio e rinnovo delle scadenze, ma non invia email. I promemoria email vengono introdotti solo in M7.
 
-Uno sponsor è indipendente dai soci.
+## BR-007 - Sponsor
 
-## BR-008 – Eventi
+Uno sponsor e' indipendente dai soci.
 
-Uno sponsor può essere collegato a più eventi.
+## BR-008 - Eventi
 
-Un evento può avere più sponsor.
+Uno sponsor puo' essere collegato a piu' eventi.
 
-## BR-009 – Email
+Un evento puo' avere piu' sponsor.
+
+Per gli eventi, `start_datetime` e `end_datetime` sono i campi canonici. La data evento mostrata in UI deve derivare da `start_datetime`.
+
+## BR-009 - Email
 
 Ogni invio email deve salvare:
 
@@ -64,13 +78,15 @@ Ogni invio email deve salvare:
 - destinatari
 - stato invio
 
-## BR-010 – Soft delete
+I promemoria scadenze via email appartengono alla milestone M7.
+
+## BR-010 - Soft delete
 
 I record principali non devono essere cancellati fisicamente.
 
 Usare `archived_at`.
 
-## BR-011 – Contabilità
+## BR-011 - Contabilita'
 
 Non implementare:
 

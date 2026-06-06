@@ -21,6 +21,20 @@ Questa analisi e' stata redatta leggendo integralmente la documentazione present
 
 Sono stati inoltre osservati in sola lettura i file di struttura del repository e le migration presenti in `database/migrations`, che risultano al momento placeholder.
 
+## Nota di recepimento
+
+Le decisioni emerse da questa analisi sono state recepite nella documentazione in `CHANGELOG.md` versione `0.1.1`.
+
+In particolare, i documenti aggiornati chiariscono che:
+
+- M0 include `admin_users` minimo, bootstrap del primo `super_admin`, route protette e RLS iniziale;
+- M3 Dashboard e' parziale e basata solo sui dati disponibili dopo M2;
+- M4 Scadenze non invia email e i promemoria sono rimandati a M7;
+- i componenti React usano file `PascalCase.tsx`;
+- le route email definitive sono `/email`, `/email/templates`, `/email/campaigns`;
+- `members.status` indica solo lo stato anagrafico;
+- `start_datetime` e `end_datetime` sono i campi canonici per gli eventi.
+
 ## Comprensione del progetto
 
 PonteNext Management Portal e' una piattaforma web gestionale per l'amministrazione interna dell'associazione Ponte Next. Il prodotto e' pensato per centralizzare dati e processi oggi verosimilmente gestiti con Excel, archivi manuali o flussi non integrati.

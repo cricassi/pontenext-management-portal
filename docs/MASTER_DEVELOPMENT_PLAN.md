@@ -12,7 +12,7 @@ Ogni milestone deve essere completata prima di passare alla successiva.
 
 ## Obiettivo
 
-Predisporre l'ambiente tecnico.
+Predisporre l'ambiente tecnico e la base minima di sicurezza applicativa.
 
 ## Attività
 
@@ -22,11 +22,15 @@ Predisporre l'ambiente tecnico.
 - configurare shadcn/ui
 - collegare Supabase
 - configurare autenticazione amministratori
+- predisporre `admin_users` minimo per autorizzazione applicativa
+- definire bootstrap del primo `super_admin`
+- proteggere le route gestionali
+- abilitare RLS iniziale sulle tabelle applicative disponibili
 - predisporre deploy Vercel
 
 ## Deliverable
 
-Login amministratore funzionante.
+Login amministratore funzionante con accesso consentito solo ad admin attivi.
 
 ---
 
@@ -34,7 +38,6 @@ Login amministratore funzionante.
 
 ## Tabelle
 
-- admin_users
 - members
 - roles
 - member_roles
@@ -74,17 +77,22 @@ Gestione iscrizioni completa.
 
 # M3 – Dashboard
 
+## Perimetro
+
+Dashboard parziale basata solo sui dati disponibili dopo M2.
+
 ## Widget
 
-- soci attivi
-- soci scaduti
+- soci anagraficamente attivi
+- soci con iscrizione attiva
+- soci con iscrizione scaduta
 - rinnovi in scadenza
-- sponsor attivi
-- eventi futuri
 
 ## Deliverable
 
-Home amministrativa funzionante.
+Home amministrativa iniziale funzionante.
+
+Nota: widget sponsor ed eventi verranno aggiunti solo dopo M5 e M6.
 
 ---
 
@@ -97,10 +105,13 @@ Home amministrativa funzionante.
 - filtro entro 60 giorni
 - filtro entro 90 giorni
 - azione rinnovo
+- export elenco, se previsto dalla milestone
 
 ## Deliverable
 
 Monitoraggio rinnovi.
+
+Nota: M4 non invia email. I promemoria via email restano rimandati a M7.
 
 ---
 
@@ -152,6 +163,7 @@ Gestione eventi.
 
 - template
 - selezione destinatari
+- invio promemoria scadenze
 - storico invii
 
 ## Deliverable

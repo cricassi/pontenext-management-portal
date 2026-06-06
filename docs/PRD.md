@@ -74,11 +74,15 @@ Non hanno accesso al sistema.
 
 ## Dashboard
 
-Mostra:
+Nella milestone M3 mostra una dashboard parziale basata sui dati disponibili dopo M2:
 
-- soci attivi
-- soci scaduti
+- soci anagraficamente attivi
+- soci con iscrizione attiva
+- soci con iscrizione scaduta
 - rinnovi prossimi
+
+Dopo M5 e M6 la dashboard puo' essere estesa con:
+
 - sponsor attivi
 - eventi futuri
 
@@ -93,7 +97,7 @@ Gestione anagrafica:
 - indirizzo
 - città
 - note
-- stato
+- stato anagrafico
 
 Campi opzionali:
 
@@ -118,6 +122,8 @@ Esempi:
 ## Iscrizioni
 
 Ogni socio può avere più iscrizioni nel tempo.
+
+Lo stato associativo del socio e' derivato dalle iscrizioni, non dal campo `members.status`.
 
 Ogni iscrizione contiene:
 
@@ -177,7 +183,8 @@ Gestione eventi:
 
 - nome
 - descrizione
-- data
+- data e orario inizio
+- data e orario fine
 - luogo
 - stato
 - note
@@ -193,8 +200,8 @@ Un evento può avere più sponsor.
 Invio email verso:
 
 - tutti i soci
-- soci attivi
-- soci scaduti
+- soci con iscrizione attiva
+- soci con iscrizione scaduta
 - sponsor
 
 Con:

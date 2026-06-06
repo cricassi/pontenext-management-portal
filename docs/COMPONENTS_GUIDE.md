@@ -83,11 +83,11 @@ Card mobile socio.
 
 ## MemberStatusBadge
 
-Badge stato socio/iscrizione.
+Badge stato anagrafico socio.
 
 ## MembershipStatusBadge
 
-Badge stato iscrizione.
+Badge stato associativo derivato dalle iscrizioni.
 
 ## PaymentStatusBadge
 
@@ -153,14 +153,14 @@ PascalCase
 File componenti:
 
 ```text
-kebab-case.tsx
+PascalCase.tsx
 ```
 
 Esempio:
 
 ```text
-member-card.tsx
-payment-status-badge.tsx
+MemberCard.tsx
+PaymentStatusBadge.tsx
 ```
 
 ---
