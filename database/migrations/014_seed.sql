@@ -1,3 +1,3 @@
--- 004_membership_plans.sql
+-- 014_seed.sql
 -- Migration placeholder for PonteNext Management Portal.
 -- Generate this incrementally with Codex following /docs/DATABASE_DESIGN.md.

@@ -1,3 +1,3 @@
--- 013_seed.sql
+-- 007_sponsors.sql
 -- Migration placeholder for PonteNext Management Portal.
 -- Generate this incrementally with Codex following /docs/DATABASE_DESIGN.md.
