@@ -1,5 +1,12 @@
 # CHANGELOG.md
 
+## 0.2.3
+
+- Applicate al progetto Supabase live `PonteNext` le migration M0 `001_extensions` e `002_admin_users`
+- Validata la presenza di `public.admin_users`, dei vincoli, del trigger, della RLS e della policy SELECT iniziale
+- Aggiornato `SUPABASE_VALIDATION_REPORT.md` con esito M0.7 e warning security advisor
+- Aggiunta checklist `M0_7_CHECKLIST.md`
+
 ## 0.2.2
 
 - Avviata milestone intermedia M0.5 - Supabase Verification
