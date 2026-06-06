@@ -26,6 +26,10 @@ Lo stato associativo del socio e' derivato dalle iscrizioni presenti in `members
 
 Un socio puo' avere piu' iscrizioni nel tempo.
 
+Ogni rinnovo crea una nuova riga nella tabella `memberships`.
+
+Le iscrizioni esistenti non devono essere modificate, estese o riutilizzate per rappresentare un rinnovo successivo.
+
 Ogni iscrizione deve avere:
 
 - data inizio
@@ -33,6 +37,8 @@ Ogni iscrizione deve avere:
 - quota minima
 - quota prevista
 - stato pagamento
+
+La storia associativa del socio si ricostruisce leggendo le righe `memberships` ordinate per periodo di validita'.
 
 ## BR-004 - Quote
 
@@ -55,6 +61,8 @@ I pagamenti non hanno valore di contabilita' fiscale.
 La scadenza deriva da `memberships.end_date`.
 
 Non deve essere salvata nella tabella `members`.
+
+Alla scadenza, il rinnovo non prolunga la riga esistente: deve essere registrata una nuova iscrizione con proprio periodo, quota e stato pagamento.
 
 M4 gestisce monitoraggio e rinnovo delle scadenze, ma non invia email. I promemoria email vengono introdotti solo in M7.
 

@@ -65,6 +65,12 @@ Quote, durata e scadenze appartengono alla singola iscrizione, non alla tabella 
 
 `members.status` indica solo lo stato anagrafico. Lo stato associativo del socio e' derivato dalle `memberships`.
 
+Le iscrizioni sono modellate come storico append-only per i rinnovi: ogni rinnovo crea una nuova riga in `memberships`.
+
+Una riga `memberships` esistente non deve essere modificata, estesa o riutilizzata per rappresentare un rinnovo successivo.
+
+Questa scelta preserva la storia dei periodi associativi, delle quote previste e dello stato pagamento di ciascun periodo.
+
 ## AD-011 - Sponsor/Eventi
 
 Relazione molti-a-molti.
