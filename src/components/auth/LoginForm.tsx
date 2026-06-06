@@ -40,15 +40,30 @@ export function LoginForm({ isSupabaseConfigured, nextPath }: LoginFormProps) {
     setErrorMessage(null);
 
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
+    if (error || !data.user) {
+      setIsSubmitting(false);
+      setErrorMessage("Credenziali non valide o utente non autorizzato.");
+      return;
+    }
+
+    const { data: admin } = await supabase
+      .from("admin_users")
+      .select("id")
+      .eq("auth_user_id", data.user.id)
+      .eq("status", "active")
+      .is("archived_at", null)
+      .maybeSingle();
+
     setIsSubmitting(false);
 
-    if (error) {
-      setErrorMessage("Credenziali non valide o utente non autorizzato.");
+    if (!admin) {
+      await supabase.auth.signOut();
+      setErrorMessage("Utente non autorizzato o amministratore non attivo.");
       return;
     }
 

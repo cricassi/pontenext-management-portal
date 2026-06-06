@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 0.2.5
+
+- Avviata milestone M0.9 - Bootstrap primo `super_admin` e login reale
+- Documentata la procedura operativa di creazione utente Supabase Auth e bootstrap `admin_users`
+- Validato login live per Auth-only, `super_admin` attivo, admin inattivo e admin archiviato
+- Aggiornato `LoginForm` per bloccare subito utenti Auth non presenti come admin attivi
+- Documentato warning Auth residuo `auth_leaked_password_protection`
+- Aggiunta checklist `M0_9_CHECKLIST.md`
+
 ## 0.2.4
 
 - Avviata milestone M0.8 - Supabase Function Security Hardening

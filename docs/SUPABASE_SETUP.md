@@ -116,6 +116,16 @@ Scritture M0.5:
 3. Applicare `002_admin_users.sql`.
 4. Eseguire il bootstrap con privilegi owner/service role.
 
+Procedura operativa consigliata:
+
+1. Aprire il progetto Supabase `PonteNext`.
+2. Andare in `Authentication` -> `Users`.
+3. Creare il primo utente amministratore con email reale dell'operatore.
+4. Confermare l'email o marcare l'utente come confermato secondo procedura interna.
+5. Impostare una password temporanea sicura e farla ruotare al primo accesso operativo.
+6. Eseguire la query bootstrap sotto con privilegi owner/service role.
+7. Verificare login da `/login`.
+
 SQL bootstrap:
 
 ```sql
@@ -147,6 +157,8 @@ Sostituire `admin@example.com` con l'email reale creata in Supabase Auth.
 
 Questa operazione non deve essere esposta in una route pubblica. In M0.5 non esiste UI per creare amministratori.
 
+In M0.9 la validazione live e' stata eseguita con account di test dedicati. Le credenziali di validazione non sono documentate nel repository; per l'uso operativo creare o sostituire il primo `super_admin` con una email reale dell'associazione.
+
 ## Verifica login e route protette
 
 Avviare il progetto:
@@ -165,14 +177,23 @@ Verifiche manuali:
 6. Impostare temporaneamente `status = 'inactive'` o `archived_at` valorizzato sul record admin di test.
 7. Verificare che l'accesso a `/dashboard` venga negato.
 
-Coerenza codice M0.5:
+Coerenza codice M0.9:
 
 - `LoginForm` usa `supabase.auth.signInWithPassword`.
+- `LoginForm` verifica subito che l'utente autenticato abbia un record `admin_users` con `status = 'active'` e `archived_at is null`.
+- Se il record admin attivo manca, `LoginForm` esegue sign out e mostra errore.
 - `middleware.ts` protegge le route non pubbliche.
 - `updateSession` richiede sessione Supabase Auth e record `admin_users` attivo.
 - `requireActiveAdmin` ripete il controllo server-side nel layout admin.
 - `/login` resta pubblica.
 - `/dashboard` e le route gestionali future passano dal controllo admin attivo.
+
+Esiti live M0.9:
+
+- utente Auth non presente in `admin_users`: autenticazione Auth riuscita, admin guard negato;
+- `super_admin` attivo: autenticazione Auth riuscita, admin guard consentito;
+- `super_admin` con `status = 'inactive'`: autenticazione Auth riuscita, admin guard negato;
+- `super_admin` con `archived_at` valorizzato: autenticazione Auth riuscita, admin guard negato.
 
 ## Nota sulla verifica live
 
