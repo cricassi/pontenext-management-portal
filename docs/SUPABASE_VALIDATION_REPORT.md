@@ -4,7 +4,11 @@
 
 ## Scope
 
-Questo report documenta la discovery live M0.6 e l'applicazione controllata M0.7 sul progetto Supabase `PonteNext`.
+Questo report documenta:
+
+- M0.6 - Supabase Discovery & Live Validation;
+- M0.7 - Apply M0 Supabase Migrations;
+- M0.8 - Supabase Function Security Hardening.
 
 Project ref vincolante:
 
@@ -12,14 +16,14 @@ Project ref vincolante:
 uhxfpsamenjhyrfgwckw
 ```
 
-Vincoli M0.7 rispettati:
+Vincoli rispettati:
 
-- applicate solo le migration M0 `001_extensions.sql` e `002_admin_users.sql`;
-- nessuna migration successiva applicata;
-- nessuna tabella soci creata;
 - nessun avvio M1;
+- nessuna tabella soci creata;
 - nessun CRUD creato;
-- nessuna modifica al modello dati oltre M0.
+- nessuna migration successiva applicata;
+- nessuna modifica al modello dati applicativo oltre M0;
+- policy modificate solo per hardening della funzione admin.
 
 ## Progetto Supabase
 
@@ -60,16 +64,32 @@ database/migrations/001_extensions.sql
 database/migrations/002_admin_users.sql
 ```
 
-Migration registrate dal progetto Supabase:
+Migration registrate dal progetto Supabase dopo M0.7:
 
 ```text
 20260606113953  001_extensions
 20260606114014  002_admin_users
 ```
 
-Non risultano applicate migration successive.
+## M0.8 - Migration di hardening applicata
 
-## Tabelle public dopo M0.7
+E' stata applicata la migration dedicata:
+
+```text
+database/migrations/003_harden_admin_functions.sql
+```
+
+Migration registrate dal progetto Supabase dopo M0.8:
+
+```text
+20260606113953  001_extensions
+20260606114014  002_admin_users
+20260606115133  003_harden_admin_functions
+```
+
+Non risultano applicate migration M1 o successive.
+
+## Tabelle public dopo M0.8
 
 Lo schema `public` contiene:
 
@@ -89,6 +109,12 @@ Non risultano create tabelle M1 o successive, ad esempio:
 - `events`;
 - `email_templates`;
 - `audit_logs`.
+
+Verifica specifica M1:
+
+```text
+m1_table_count: 0
+```
 
 ## admin_users
 
@@ -151,7 +177,7 @@ Esito:
 vincoli coerenti con il perimetro M0.
 ```
 
-## Estensione e funzioni
+## Estensione, schema privato e funzioni
 
 Estensione rilevata:
 
@@ -159,11 +185,30 @@ Estensione rilevata:
 pgcrypto 1.3
 ```
 
-Funzioni rilevate:
+Schema privato rilevato:
 
 ```text
-public.set_updated_at()    SECURITY INVOKER
-public.is_active_admin()   SECURITY DEFINER
+app_private
+```
+
+Funzioni rilevate dopo M0.8:
+
+```text
+public.set_updated_at()
+language: plpgsql
+security: invoker
+search_path: ''
+
+app_private.is_active_admin()
+language: sql
+security: definer
+search_path: ''
+```
+
+La funzione precedente `public.is_active_admin()` e' stata rimossa:
+
+```text
+public_is_active_admin_count: 0
 ```
 
 Trigger rilevato:
@@ -173,6 +218,24 @@ set_admin_users_updated_at
 BEFORE UPDATE ON public.admin_users
 EXECUTE FUNCTION set_updated_at()
 ```
+
+## Privilegi funzioni dopo hardening
+
+```text
+app_private.is_active_admin()
+anon: execute = false
+authenticated: execute = true
+postgres: execute = true
+service_role: execute = false
+
+public.set_updated_at()
+anon: execute = false
+authenticated: execute = false
+postgres: execute = true
+service_role: execute = true
+```
+
+`app_private.is_active_admin()` resta eseguibile da `authenticated` perche' e' usata dalla policy RLS SELECT di `admin_users`, ma non si trova piu' nello schema pubblico esposto.
 
 ## RLS admin_users
 
@@ -191,25 +254,20 @@ RLS e' attiva su public.admin_users.
 
 ## Policy admin_users
 
-Policy rilevata:
+Policy rilevata dopo M0.8:
 
 ```text
 policyname: admin_users_select_self_or_active_admin
 roles: authenticated
 cmd: SELECT
-qual: ((auth.uid() = auth_user_id) OR is_active_admin())
+qual: (((select auth.uid()) = auth_user_id) or (select app_private.is_active_admin()))
 with_check: null
-```
-
-Conteggio policy per comando:
-
-```text
-SELECT: 1
 ```
 
 Esito:
 
 - la policy SELECT attesa e' presente;
+- la policy e' stata aggiornata solo per chiamare l'helper hardened in `app_private`;
 - non risultano policy INSERT;
 - non risultano policy UPDATE;
 - non risultano policy DELETE;
@@ -217,53 +275,40 @@ Esito:
 
 ## Advisory security Supabase
 
-Dopo l'applicazione delle migration M0 e' stato eseguito il security advisor Supabase.
+### Stato dopo M0.7
 
-Warning rilevati:
+Il security advisor Supabase segnalava:
 
-1. `function_search_path_mutable` su `public.set_updated_at`
-   - dettaglio: la funzione non imposta `search_path`;
-   - remediation: [Supabase database linter 0011](https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable).
+1. `function_search_path_mutable` su `public.set_updated_at`;
+2. `anon_security_definer_function_executable` su `public.is_active_admin()`;
+3. `authenticated_security_definer_function_executable` su `public.is_active_admin()`.
 
-2. `anon_security_definer_function_executable` su `public.is_active_admin()`
-   - dettaglio: la funzione `SECURITY DEFINER` risulta eseguibile dal ruolo `anon`;
-   - remediation: [Supabase database linter 0028](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
+### Stato dopo M0.8
 
-3. `authenticated_security_definer_function_executable` su `public.is_active_admin()`
-   - dettaglio: la funzione `SECURITY DEFINER` risulta eseguibile dal ruolo `authenticated`;
-   - remediation: [Supabase database linter 0029](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
-
-Privilegi funzione verificati:
+Il security advisor Supabase non segnala warning:
 
 ```text
-public.is_active_admin()
-anon: execute = true
-authenticated: execute = true
-public: execute = false
-
-public.set_updated_at()
-PUBLIC: EXECUTE
-anon: EXECUTE
-authenticated: EXECUTE
-postgres: EXECUTE
-service_role: EXECUTE
+lints: []
 ```
 
-Nota M0.7:
+Esito:
 
-- non sono state applicate correzioni aggiuntive perche' il perimetro richiesto era applicare solo `001_extensions.sql` e `002_admin_users.sql`;
-- i warning devono essere risolti con una migration di hardening dedicata prima della produzione o prima di ampliare le policy RLS su altre tabelle.
+```text
+i warning rilevati dopo M0.7 risultano risolti.
+```
 
-## Esito M0.7
+## Esito M0.8
 
 Esito complessivo:
 
 ```text
-M0 Supabase migrations applicate con successo.
+M0.8 applicata con successo.
+Funzioni amministrative hardened.
+Security advisor Supabase pulito.
 public.admin_users presente e validata.
 RLS attiva.
-Policy SELECT attesa presente.
-Nessuna migration successiva applicata.
+Policy SELECT attesa presente e aggiornata.
+Nessuna migration M1 o successiva applicata.
 Nessuna tabella M1 o successiva creata.
 ```
 
@@ -273,6 +318,6 @@ Prima di iniziare M1:
 
 1. Eseguire bootstrap del primo `super_admin` con owner/service role.
 2. Verificare login reale da `/login` usando `.env.local` puntata a `PonteNext`.
-3. Pianificare una migration di hardening per i warning security advisor sulle funzioni.
+3. Rieseguire security advisor e validazione RLS dopo il bootstrap.
 
-Questa PR documenta l'applicazione live M0.7 e non introduce M1.
+Questa PR documenta l'applicazione live M0.8 e non introduce M1.

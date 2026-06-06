@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+## 0.2.4
+
+- Avviata milestone M0.8 - Supabase Function Security Hardening
+- Aggiunta migration `003_harden_admin_functions.sql`
+- Hardened `set_updated_at` e helper admin con `search_path` esplicito e privilegi ridotti
+- Spostato helper admin RLS in schema non esposto `app_private`
+- Aggiornata la policy SELECT di `admin_users` per usare l'helper hardened
+- Validato Security Advisor Supabase senza warning residui
+- Riallineata la numerazione dei placeholder migration futuri per inserire `003_harden_admin_functions.sql`
+
 ## 0.2.3
 
 - Applicate al progetto Supabase live `PonteNext` le migration M0 `001_extensions` e `002_admin_users`
