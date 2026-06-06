@@ -9,6 +9,7 @@ Questo report documenta:
 - M0.6 - Supabase Discovery & Live Validation;
 - M0.7 - Apply M0 Supabase Migrations;
 - M0.8 - Supabase Function Security Hardening.
+- M0.9 - Bootstrap primo super_admin e login reale.
 
 Project ref vincolante:
 
@@ -24,6 +25,7 @@ Vincoli rispettati:
 - nessuna migration successiva applicata;
 - nessuna modifica al modello dati applicativo oltre M0;
 - policy modificate solo per hardening della funzione admin.
+- modifiche dati limitate a utenti Auth/admin di validazione M0.9.
 
 ## Progetto Supabase
 
@@ -312,12 +314,121 @@ Nessuna migration M1 o successiva applicata.
 Nessuna tabella M1 o successiva creata.
 ```
 
+## M0.9 - Bootstrap e login reale
+
+M0.9 ha validato end-to-end Supabase Auth + autorizzazione applicativa `admin_users` sul progetto live `PonteNext`.
+
+### Dati di validazione
+
+Sono stati creati account dedicati M0.9 nel perimetro Auth/admin:
+
+```text
+validation_auth_users: 2
+validation_admin_users: 1
+active_validation_super_admin: 1
+```
+
+Uso:
+
+- un utente solo Supabase Auth, non presente in `admin_users`;
+- un utente Supabase Auth collegato a `public.admin_users` come `super_admin`.
+
+Le credenziali di validazione non sono documentate nel repository. Prima dell'uso operativo, sostituire o ruotare l'utente di validazione con il primo `super_admin` reale dell'associazione.
+
+### Procedura bootstrap documentata
+
+La procedura operativa e la query bootstrap sono documentate in `docs/SUPABASE_SETUP.md`.
+
+In sintesi:
+
+1. creare un utente in Supabase Auth;
+2. eseguire insert/upsert su `public.admin_users`;
+3. assegnare `role = 'super_admin'`;
+4. impostare `status = 'active'`;
+5. mantenere `archived_at = null`.
+
+### Validazione login/admin guard
+
+La validazione e' stata eseguita con login password reale su Supabase Auth e query PostgREST equivalente al guard applicativo:
+
+```text
+auth_user_id = current auth user
+status = active
+archived_at is null
+```
+
+Esiti:
+
+```text
+AUTH_ONLY_SIGNIN=ok
+AUTH_ONLY_GUARD_COUNT=0
+
+SUPER_ACTIVE_SIGNIN=ok
+SUPER_ACTIVE_GUARD_COUNT=1
+
+SUPER_INACTIVE_SIGNIN=ok
+SUPER_INACTIVE_GUARD_COUNT=0
+
+SUPER_ARCHIVED_SIGNIN=ok
+SUPER_ARCHIVED_GUARD_COUNT=0
+
+SUPER_RESTORED_ACTIVE_SIGNIN=ok
+SUPER_RESTORED_ACTIVE_GUARD_COUNT=1
+```
+
+Interpretazione:
+
+- Supabase Auth puo' autenticare utenti validi anche se non autorizzati dal portale;
+- il portale consente accesso amministrativo solo con record `admin_users` attivo e non archiviato;
+- `status = 'inactive'` blocca il guard amministrativo;
+- `archived_at` valorizzato blocca il guard amministrativo;
+- lo stato finale del validation `super_admin` e' stato ripristinato ad `active` con `archived_at = null`.
+
+### Correzione minima login
+
+Il form login e' stato aggiornato per verificare subito il record `admin_users` attivo dopo `signInWithPassword`.
+
+Se l'utente Auth non e' amministratore attivo:
+
+- viene eseguito `signOut`;
+- viene mostrato errore;
+- non viene effettuato redirect verso l'area admin.
+
+Il middleware e il layout admin restano una seconda linea di protezione server-side.
+
+### Advisory security dopo M0.9
+
+Il Security Advisor Supabase non segnala piu' warning sulle funzioni M0.8.
+
+Dopo la creazione degli utenti Auth di validazione risulta un warning di configurazione Auth:
+
+```text
+auth_leaked_password_protection
+```
+
+Dettaglio:
+
+```text
+Leaked Password Protection Disabled
+```
+
+Remediation:
+
+[Supabase password security](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
+
+Nota:
+
+- il warning riguarda una configurazione Auth del progetto, non una funzione SQL o una policy RLS;
+- non e' stata applicata modifica di configurazione Auth in M0.9;
+- abilitarla e' consigliato prima dell'uso operativo del portale.
+
 ## Passi successivi consigliati
 
 Prima di iniziare M1:
 
-1. Eseguire bootstrap del primo `super_admin` con owner/service role.
-2. Verificare login reale da `/login` usando `.env.local` puntata a `PonteNext`.
-3. Rieseguire security advisor e validazione RLS dopo il bootstrap.
+1. Sostituire o ruotare l'utente `super_admin` di validazione con il primo operatore reale.
+2. Verificare login reale da `/login` con l'utente operativo.
+3. Rieseguire security advisor e validazione RLS dopo il bootstrap definitivo.
+4. Abilitare Leaked Password Protection in Supabase Auth prima dell'uso operativo.
 
-Questa PR documenta l'applicazione live M0.8 e non introduce M1.
+Questa PR documenta la validazione live M0.9 e non introduce M1.
