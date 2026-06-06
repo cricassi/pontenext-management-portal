@@ -34,6 +34,27 @@ Login amministratore funzionante con accesso consentito solo ad admin attivi.
 
 ---
 
+# M0.5 - Supabase Verification
+
+## Obiettivo
+
+Verificare e documentare il collegamento reale tra progetto Next.js e Supabase prima di iniziare M1.
+
+## Attivita'
+
+- verificare migration `admin_users`
+- verificare RLS iniziale su `admin_users`
+- verificare variabili ambiente Supabase
+- documentare configurazione `.env.local`
+- documentare bootstrap del primo `super_admin`
+- verificare coerenza tra Supabase Auth, login e route protette
+
+## Deliverable
+
+Checklist M0.5 e guida Supabase operative, senza introdurre CRUD soci o nuove funzionalita' applicative.
+
+---
+
 # M1 – Anagrafica soci e ruoli
 
 ## Tabelle

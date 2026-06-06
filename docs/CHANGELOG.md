@@ -1,5 +1,12 @@
 # CHANGELOG.md
 
+## 0.2.2
+
+- Avviata milestone intermedia M0.5 - Supabase Verification
+- Documentata la configurazione reale di `.env.local` per Supabase
+- Documentata la procedura di bootstrap del primo `super_admin`
+- Aggiunte checklist e guida Supabase per verifica di Auth, route protette e RLS iniziale
+
 ## 0.2.1
 
 - Allineata la configurazione lint a Next.js 16 usando ESLint CLI
