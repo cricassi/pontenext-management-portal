@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M0 - Setup Infrastruttura
+M0.5 - Supabase Verification
 ```
 
 M0 include:
@@ -46,6 +46,8 @@ M0 include:
 
 M0 non include CRUD soci, dashboard completa, sponsor, eventi, email o report.
 
+M0.5 verifica e documenta il collegamento tra Next.js, Supabase Auth, `admin_users`, route protette e RLS iniziale prima di iniziare M1.
+
 ## Setup locale
 
 ### 1. Installazione dipendenze
@@ -59,12 +61,14 @@ npm install
 Copiare `.env.example` in `.env.local` e valorizzare:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-public-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` non deve essere usata nel browser. Serve solo per script/server operativi futuri.
+`NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` sono usate dal client browser, dal middleware e dal server client Supabase.
+
+`SUPABASE_SERVICE_ROLE_KEY` non deve essere usata nel browser. Serve solo per operazioni server controllate o bootstrap operativo fuori dalla UI. Se il bootstrap viene fatto dal Supabase SQL editor, la chiave service role non serve al runtime locale M0.5.
 
 ### 3. Database M0
 
@@ -107,6 +111,8 @@ set
 ```
 
 Questa operazione non passa dalla UI M0. Va eseguita solo in fase di bootstrap iniziale da Supabase SQL editor, CLI o script controllato con service role.
+
+La procedura completa di verifica Supabase e' documentata in `docs/SUPABASE_SETUP.md`.
 
 ### 5. Avvio
 
@@ -176,6 +182,8 @@ Documenti principali:
 - `docs/NAMING_CONVENTIONS.md`
 - `docs/CODEX_INSTRUCTIONS.md`
 - `docs/M0_CHECKLIST.md`
+- `docs/M0_5_CHECKLIST.md`
+- `docs/SUPABASE_SETUP.md`
 
 ## Fuori scope
 
