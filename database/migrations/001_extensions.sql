@@ -1,3 +1,14 @@
 -- 001_extensions.sql
--- Migration placeholder for PonteNext Management Portal.
--- Generate this incrementally with Codex following /docs/DATABASE_DESIGN.md.
+-- M0 - estensioni e funzioni tecniche condivise.
+
+create extension if not exists pgcrypto;
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;

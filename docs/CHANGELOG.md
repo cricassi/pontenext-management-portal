@@ -1,5 +1,16 @@
 # CHANGELOG.md
 
+## 0.2.0
+
+- Avviata milestone M0 - Setup Infrastruttura
+- Aggiunto scaffold Next.js App Router con TypeScript strict
+- Configurati Tailwind CSS e shadcn/ui
+- Aggiunta configurazione Supabase client/server
+- Aggiunta pagina login amministratori e layout admin protetto
+- Aggiunto middleware di protezione route amministrative
+- Aggiunte migration M0 per estensione tecnica e `admin_users` minimo con RLS iniziale
+- Aggiornati `.env.example`, README e checklist M0
+
 ## 0.1.1
 
 - Recepita analisi progettuale in `ANALYSIS.md`

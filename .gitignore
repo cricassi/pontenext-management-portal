@@ -1,38 +1,25 @@
-# Dependencies
+# dependencies
 node_modules/
 
-# Next.js
+# next
 .next/
 out/
 
-# Build
+# production
 dist/
+build/
 
-# Environment
+# local env
 .env
-.env.local
-.env.production
-.env.development
+.env*.local
 
-# Vercel
-.vercel/
-
-# Coverage
-coverage/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+dev-server*.log
 
-# IDE
-.vscode/settings.json
-
-# Local database files
-*.sqlite
-*.db
+# system
+.DS_Store
+Thumbs.db
