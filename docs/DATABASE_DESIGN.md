@@ -101,6 +101,8 @@ Usare campi `text` con vincoli `check`, non enum PostgreSQL nella prima versione
 
 Amministratori applicativi collegati a Supabase Auth.
 
+Tabella minima necessaria gia' in M0 per autorizzazione applicativa, bootstrap del primo `super_admin`, route protette e RLS iniziale.
+
 Campi:
 
 - id uuid PK
@@ -139,6 +141,8 @@ Campi:
 - archived_at timestamptz
 
 Regola: non salvare quota, durata o scadenza qui.
+
+Regola: `members.status` indica solo lo stato anagrafico del socio (`active`, `inactive`, `archived`). Lo stato associativo, ad esempio socio con iscrizione attiva, scaduta o assente, e' sempre derivato dalle righe in `memberships`.
 
 ## roles
 
@@ -265,7 +269,6 @@ Campi:
 - id uuid PK
 - name text not null
 - description text null
-- event_date date null
 - start_datetime timestamptz null
 - end_datetime timestamptz null
 - location text null
@@ -274,6 +277,12 @@ Campi:
 - created_at timestamptz
 - updated_at timestamptz
 - archived_at timestamptz
+
+Regole:
+
+- `start_datetime` e `end_datetime` sono i campi canonici per data e orario evento.
+- eventuali viste o UI devono derivare la data evento da `start_datetime`.
+- se `end_datetime` e' valorizzato, deve essere successivo o uguale a `start_datetime`.
 
 ## sponsor_contributions
 
@@ -390,6 +399,8 @@ Regola: non modificare e non cancellare i log.
 - expired_memberships_view
 - dashboard_stats_view
 
+Nota: le viste relative a soci attivi/scaduti devono derivare lo stato associativo da `memberships`, non da `members.status`.
+
 ---
 
 # 6. Trigger consigliati
@@ -409,6 +420,8 @@ Regola base:
 - lettura solo utenti autenticati
 - scrittura solo admin attivi
 - nessuna tabella pubblica
+
+La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gestionali. Le policy devono considerare `admin_users.status = 'active'` e il bootstrap del primo `super_admin` deve essere definito prima di rendere operativo l'ambiente.
 
 ---
 
@@ -459,6 +472,8 @@ Regola base:
 - non creare contabilità
 - non usare cancellazioni fisiche
 - non salvare quota o scadenza in `members`
+- non usare `members.status` per indicare lo stato associativo
+- usare `start_datetime` e `end_datetime` come campi canonici evento
 - non usare float per importi
 - non usare enum PostgreSQL nella prima versione
 - aggiornare questo documento se cambia il modello dati
