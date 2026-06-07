@@ -102,6 +102,9 @@ uhxfpsamenjhyrfgwckw
 - [x] `/sponsors/[id]` presente in build
 - [x] `/sponsors/[id]/edit` presente in build
 - [x] Browser locale desktop senza errori console
+- [x] Browser locale con `.env.local` presente: login senza avviso `Supabase non configurato`
+- [x] Browser locale con `.env.local` presente: `/sponsors` e `/sponsors/new` senza sessione reindirizzano a `/login`
+- [x] Log server pulito dopo correzione guard route sponsor, senza errore `Impossibile caricare gli sponsor`
 - [x] Browser locale mobile `/sponsors` senza sessione: redirect a `/login`
 
 ## Verifiche locali
@@ -119,7 +122,16 @@ Nota dev server: il tentativo sandbox e' fallito con `spawn EPERM`; la verifica
 browser e' stata completata avviando Next.js fuori sandbox su
 `http://127.0.0.1:3004`.
 
-Nota ambiente: `.env.local` non e' presente in questa checkout. La verifica
-browser autenticata con admin reale non e' stata eseguita; la protezione route e'
-stata verificata senza sessione e la validazione dati live e' stata eseguita via
-MCP Supabase sul progetto `PonteNext`.
+Nota ambiente aggiornata: dopo la prima verifica M5, `.env.local` e' stato
+creato localmente e il browser check e' stato rieseguito su
+`http://127.0.0.1:3005`. Next.js ha confermato `Environments: .env.local`.
+Non era presente una sessione admin valida nel browser, quindi la verifica
+autenticata con rendering della pagina `/sponsors` non e' stata eseguita. La
+protezione route e' stata verificata senza sessione e la validazione dati live e'
+stata eseguita via MCP Supabase sul progetto `PonteNext`.
+
+Durante il retry con `.env.local` e' stato rilevato un log server non bloccante:
+la pagina `/sponsors` tentava il caricamento dati prima del redirect a login. Le
+route M5 sono state quindi rafforzate con `requireActiveAdmin()` diretto nelle
+pagine sponsor, oltre al layout admin esistente. Il retry pulito successivo ha
+confermato redirect a `/login` senza errori console e senza errori server.

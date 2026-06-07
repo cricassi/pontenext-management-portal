@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { updateSponsorAction } from "@/app/(admin)/sponsors/actions";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SponsorForm } from "@/components/sponsors/SponsorForm";
+import { requireActiveAdmin } from "@/services/admin-auth.service";
 import { getSponsorById } from "@/services/sponsors.service";
 import { isUuid } from "@/utils/id";
 
@@ -14,6 +15,7 @@ type EditSponsorPageProps = {
 export default async function EditSponsorPage({
   params,
 }: EditSponsorPageProps) {
+  await requireActiveAdmin();
   const { id } = await params;
 
   if (!isUuid(id)) {
