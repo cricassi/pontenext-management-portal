@@ -30,23 +30,24 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M0.5 - Supabase Verification
+M2 - Memberships & Payments
 ```
 
-M0 include:
+Milestone completate o avviate:
 
-- progetto Next.js avviabile;
-- login amministratori;
-- layout amministrativo protetto;
-- configurazione Supabase client/server;
-- middleware di protezione route;
-- migration minima `admin_users`;
-- RLS iniziale per `admin_users`;
-- documentazione bootstrap primo `super_admin`.
+- M0/M0.x: infrastruttura, Supabase Auth, `admin_users`, route protette e bootstrap `super_admin`;
+- M1: soci, ruoli e assegnazione ruoli;
+- M2: piani iscrizione, iscrizioni storiche e pagamenti non contabili.
 
-M0 non include CRUD soci, dashboard completa, sponsor, eventi, email o report.
+M2 include:
 
-M0.5 verifica e documenta il collegamento tra Next.js, Supabase Auth, `admin_users`, route protette e RLS iniziale prima di iniziare M1.
+- route `/memberships`, `/memberships/new`, `/memberships/[id]`;
+- route `/settings/membership-plans`;
+- storico iscrizioni nella scheda socio;
+- migration `membership_plans`, `memberships`, `payments`;
+- seed piani iscrizione base.
+
+Restano fuori scope M2 sponsor, eventi, email, report e dashboard completa.
 
 ## Setup locale
 
@@ -68,18 +69,29 @@ SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 
 `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` sono usate dal client browser, dal middleware e dal server client Supabase.
 
-`SUPABASE_SERVICE_ROLE_KEY` non deve essere usata nel browser. Serve solo per operazioni server controllate o bootstrap operativo fuori dalla UI. Se il bootstrap viene fatto dal Supabase SQL editor, la chiave service role non serve al runtime locale M0.5.
+`SUPABASE_SERVICE_ROLE_KEY` non deve essere usata nel browser. Serve solo per operazioni server controllate o bootstrap operativo fuori dalla UI. Se il bootstrap viene fatto dal Supabase SQL editor, la chiave service role non serve al runtime locale.
 
-### 3. Database M0
+### 3. Database fino a M2
 
-Applicare le migration M0 su Supabase:
+Applicare le migration in ordine:
 
 ```text
 database/migrations/001_extensions.sql
 database/migrations/002_admin_users.sql
+database/migrations/003_harden_admin_functions.sql
+database/migrations/004_members_roles.sql
+database/migrations/005_membership_plans.sql
+database/migrations/006_memberships_payments.sql
 ```
 
-Le altre migration sono ancora placeholder per milestone successive.
+Applicare poi i seed richiesti dalle milestone:
+
+```text
+database/seeds/roles.sql
+database/seeds/membership_plans.sql
+```
+
+Le migration `007` e successive sono placeholder per milestone future e non vanno applicate durante M2.
 
 ### 4. Bootstrap primo super_admin
 
@@ -132,6 +144,7 @@ http://localhost:3000/login
 npm run dev
 npm run build
 npm run lint
+npx tsc --noEmit
 npm run start
 ```
 
@@ -183,7 +196,12 @@ Documenti principali:
 - `docs/CODEX_INSTRUCTIONS.md`
 - `docs/M0_CHECKLIST.md`
 - `docs/M0_5_CHECKLIST.md`
+- `docs/M1_IMPLEMENTATION_PLAN.md`
+- `docs/M1_CHECKLIST.md`
+- `docs/M2_IMPLEMENTATION_PLAN.md`
+- `docs/M2_CHECKLIST.md`
 - `docs/SUPABASE_SETUP.md`
+- `docs/SUPABASE_VALIDATION_REPORT.md`
 
 ## Fuori scope
 

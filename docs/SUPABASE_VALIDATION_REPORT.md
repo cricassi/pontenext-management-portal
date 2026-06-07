@@ -11,6 +11,7 @@ Questo report documenta:
 - M0.8 - Supabase Function Security Hardening.
 - M0.9 - Bootstrap primo super_admin e login reale.
 - M1 - Members & Roles.
+- M2 - Memberships & Payments.
 
 Project ref vincolante:
 
@@ -34,6 +35,15 @@ Vincoli rispettati in M1:
 - applicato solo seed ruoli base;
 - nessuna tabella iscrizioni, quote, pagamenti, sponsor, eventi, email o report;
 - nessuna migration M2 o successiva applicata.
+
+Vincoli rispettati in M2:
+
+- applicate solo le migration M2 `005_membership_plans` e `006_memberships_payments`;
+- create solo `membership_plans`, `memberships`, `payments`;
+- applicato solo seed piani iscrizione base;
+- nessuna tabella sponsor, eventi, email, report o audit creata;
+- nessuna migration successiva a M2 applicata;
+- ogni rinnovo resta rappresentato da una nuova riga in `memberships`.
 
 ## Progetto Supabase
 
@@ -630,3 +640,235 @@ unused_index
 ```
 
 Gli advisory `unused_index` sono INFO attesi su indici appena creati in M1 prima di traffico applicativo reale. Non indicano tabelle fuori scope o RLS mancanti.
+
+## M2 - Memberships & Payments live validation
+
+M2 ha introdotto solo le tabelle:
+
+```text
+membership_plans
+memberships
+payments
+```
+
+Project ref validato:
+
+```text
+uhxfpsamenjhyrfgwckw
+```
+
+### Migration M2 applicate
+
+Sono state applicate solo le migration M2 richieste:
+
+```text
+database/migrations/005_membership_plans.sql
+database/migrations/006_memberships_payments.sql
+```
+
+Migration registrate dal progetto Supabase dopo M2:
+
+```text
+20260606113953  001_extensions
+20260606114014  002_admin_users
+20260606115133  003_harden_admin_functions
+20260606124849  004_members_roles
+20260606221810  005_membership_plans
+20260606221954  006_memberships_payments
+```
+
+Non risultano applicate migration successive a M2.
+
+### Tabelle public dopo M2
+
+Lo schema `public` contiene le tabelle M0/M1 e le sole tabelle M2:
+
+```text
+public.admin_users
+public.members
+public.roles
+public.member_roles
+public.membership_plans
+public.memberships
+public.payments
+```
+
+Non risultano create tabelle fuori scope M2:
+
+```text
+sponsors
+events
+sponsor_contributions
+email_templates
+email_campaigns
+audit_logs
+```
+
+### Colonne M2
+
+`membership_plans` contiene:
+
+```text
+id uuid
+name text unique
+description text null
+minimum_fee numeric(10,2)
+default_duration_months integer
+is_active boolean default true
+sort_order integer default 0
+created_at timestamptz
+updated_at timestamptz
+archived_at timestamptz null
+```
+
+`memberships` contiene:
+
+```text
+id uuid
+member_id uuid references members(id)
+membership_plan_id uuid null references membership_plans(id)
+start_date date
+end_date date
+minimum_fee numeric(10,2)
+expected_fee numeric(10,2)
+paid_amount numeric(10,2) default 0
+payment_status text default 'unpaid'
+status text default 'active'
+notes text null
+created_at timestamptz
+updated_at timestamptz
+archived_at timestamptz null
+```
+
+`payments` contiene:
+
+```text
+id uuid
+membership_id uuid references memberships(id)
+payment_date date
+amount numeric(10,2)
+method text
+reference text null
+notes text null
+created_by uuid null references admin_users(id)
+created_at timestamptz
+updated_at timestamptz
+archived_at timestamptz null
+```
+
+### RLS M2
+
+RLS risulta attiva su:
+
+```text
+public.membership_plans
+public.memberships
+public.payments
+```
+
+Policy presenti:
+
+- `membership_plans_select_active_admin`
+- `membership_plans_insert_active_admin`
+- `membership_plans_update_active_admin`
+- `memberships_select_active_admin`
+- `memberships_insert_active_admin`
+- `memberships_update_active_admin`
+- `payments_select_active_admin`
+- `payments_insert_active_admin`
+- `payments_update_active_admin`
+
+Non sono state create policy DELETE sulle tabelle M2.
+
+Le policy usano l'helper hardened:
+
+```text
+app_private.is_active_admin()
+```
+
+### Trigger e funzioni M2
+
+Trigger rilevati:
+
+```text
+set_membership_plans_updated_at
+set_memberships_updated_at
+set_payments_updated_at
+set_membership_payment_status
+refresh_membership_payment_totals
+```
+
+Funzioni M2:
+
+```text
+public.set_membership_payment_status()
+public.refresh_membership_payment_totals()
+```
+
+Entrambe sono state create con `search_path` esplicito vuoto e privilegi di esecuzione revocati a `public`, `anon` e `authenticated` per uso solo tramite trigger.
+
+### Seed piani iscrizione base
+
+Seed M2 applicato:
+
+```text
+Ordinaria     minimum_fee 30.00  durata 12 mesi
+Agevolata     minimum_fee 15.00  durata 6 mesi
+Sostenitore   minimum_fee 30.00  durata 12 mesi
+```
+
+Conteggi dopo seed e rollback test:
+
+```text
+membership_plans: 3
+memberships: 0
+payments: 0
+members: 0
+```
+
+### Validazione trigger pagamenti
+
+E' stato eseguito un test transazionale con rollback su dati temporanei:
+
+```text
+creazione membership con expected_fee 30.00 -> paid_amount 0.00, payment_status unpaid
+pagamento 10.00 -> paid_amount 10.00, payment_status partial
+secondo pagamento 20.00 -> paid_amount 30.00, payment_status paid
+aggiornamento secondo pagamento a 25.00 -> paid_amount 35.00, payment_status overpaid
+archiviazione secondo pagamento -> paid_amount 10.00, payment_status partial
+membership con expected_fee 0.00 e paid_amount 0.00 -> payment_status paid
+rollback eseguito
+```
+
+Esito:
+
+- il ricalcolo di `paid_amount` e `payment_status` funziona su insert/update/archive pagamento;
+- nessun dato socio, iscrizione o pagamento di test resta persistito nel database live.
+
+### Regola rinnovi storici
+
+La migration non introduce alcun meccanismo di estensione o riuso di una membership esistente.
+
+Nel service layer applicativo, `renewMembership` delega alla creazione di una nuova riga `memberships`, in coerenza con la decisione approvata:
+
+```text
+ogni rinnovo crea una nuova riga in memberships.
+```
+
+### Advisory dopo M2
+
+Security Advisor:
+
+```text
+auth_leaked_password_protection
+```
+
+Il warning e' lo stesso residuo operativo gia' documentato da M0.9 e riguarda la configurazione Auth del progetto, non SQL/RLS M2.
+
+Performance Advisor:
+
+```text
+unused_index
+```
+
+Gli advisory `unused_index` includono anche gli indici M2 appena creati e non ancora usati da traffico reale. Sono INFO attesi in questa fase e non richiedono modifica del modello dati M2.
