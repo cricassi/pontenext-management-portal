@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+# 0.6.0
+
+- Avviata milestone M4 - Dashboard operativa
+- Sostituito il placeholder `/dashboard` M0 con dashboard basata sui dati M1-M3
+- Aggiunti KPI per soci attivi, scadenze entro 30 giorni, membership scadute, quote non saldate, nuovi soci e rinnovi ultimi 30 giorni
+- Aggiunti widget `Da gestire subito`, `Prossime scadenze` e `Ultimi rinnovi`
+- Aggiunte azioni rapide per nuovo socio, nuova membership e rinnovo rapido
+- Implementato service layer dashboard read-only senza nuove tabelle, migration o viste SQL
+- Aggiunti componenti responsive dashboard con tabelle desktop e card mobile
+- Validato Supabase live in sola lettura sul progetto `PonteNext`
+- Aggiunta checklist `M4_CHECKLIST.md`
+- Nessuna funzionalita' sponsor, eventi, email o report introdotta
+
 ## 0.5.0
 
 - Avviata milestone M3 - Expirations & Renewals

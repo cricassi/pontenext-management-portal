@@ -12,6 +12,8 @@ Questo report documenta:
 - M0.9 - Bootstrap primo super_admin e login reale.
 - M1 - Members & Roles.
 - M2 - Memberships & Payments.
+- M3 - Expirations & Renewals.
+- M4 - Dashboard.
 
 Project ref vincolante:
 
@@ -959,3 +961,107 @@ La validazione live conferma che:
 - nessuna membership esistente viene modificata per rappresentare un rinnovo.
 
 La validazione con dataset reale pieno resta da ripetere quando saranno presenti soci e membership operative.
+
+## M4 - Dashboard
+
+Data verifica: 2026-06-07
+
+Progetto verificato:
+
+```text
+name: PonteNext
+project ref: uhxfpsamenjhyrfgwckw
+region: eu-central-1
+status: ACTIVE_HEALTHY
+postgres: 17.6.1.127
+```
+
+### Stato migration M4
+
+M4 non introduce migration operative.
+
+Migration live confermate:
+
+```text
+001_extensions
+002_admin_users
+003_harden_admin_functions
+004_members_roles
+005_membership_plans
+006_memberships_payments
+```
+
+Non sono state applicate migration successive a M2.
+
+### Tabelle e viste
+
+Tabelle `public` presenti:
+
+```text
+admin_users
+member_roles
+members
+membership_plans
+memberships
+payments
+roles
+```
+
+Non risultano create tabelle M4.
+
+Non risultano presenti viste SQL o materialized view nello schema `public`.
+
+Non risultano presenti tabelle fuori scope M4:
+
+```text
+sponsors
+events
+sponsor_contributions
+event_sponsors
+email_templates
+email_campaigns
+email_campaign_recipients
+reports
+audit_logs
+dashboard_stats
+dashboard_kpis
+```
+
+### RLS
+
+RLS resta attiva su tutte le tabelle operative:
+
+```text
+admin_users
+member_roles
+members
+membership_plans
+memberships
+payments
+roles
+```
+
+M4 non modifica policy, helper RLS o funzioni database.
+
+### Conteggi dashboard live
+
+Query dashboard eseguite in sola lettura:
+
+```text
+members: 0
+active_members: 0
+roles: 7
+member_roles: 0
+membership_plans: 3
+memberships: 0
+payments: 0
+new_members_last_30_days: 0
+renewals_last_30_days: 0
+incomplete_payments: 0
+active_associative_memberships: 0
+expired_memberships: 0
+within_30_memberships: 0
+```
+
+La validazione conferma che M4 puo' funzionare senza nuove tabelle o viste, con
+empty states coerenti per il database operativo attualmente vuoto.
