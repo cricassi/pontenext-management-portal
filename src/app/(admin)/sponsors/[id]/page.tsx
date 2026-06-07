@@ -11,8 +11,13 @@ import { SponsorContributionCardList } from "@/components/sponsors/SponsorContri
 import { SponsorContributionForm } from "@/components/sponsors/SponsorContributionForm";
 import { SponsorContributionTable } from "@/components/sponsors/SponsorContributionTable";
 import { SponsorDetail } from "@/components/sponsors/SponsorDetail";
+import { SponsorLinkedEventList } from "@/components/sponsors/SponsorLinkedEventList";
 import { Button } from "@/components/ui/Button";
 import { requireActiveAdmin } from "@/services/admin-auth.service";
+import {
+  getLinkedEventOptionsForSponsor,
+  getSponsorEvents,
+} from "@/services/events.service";
 import {
   getSponsorById,
   getSponsorContributionById,
@@ -62,11 +67,18 @@ export default async function SponsorPage({
     notFound();
   }
 
-  const [contributions, editingContribution] = await Promise.all([
+  const [
+    contributions,
+    editingContribution,
+    linkedEvents,
+    linkedEventOptions,
+  ] = await Promise.all([
     getSponsorContributions(sponsor.id),
     editContributionId
       ? getSponsorContributionById(sponsor.id, editContributionId)
       : Promise.resolve(null),
+    getSponsorEvents(sponsor.id),
+    getLinkedEventOptionsForSponsor(sponsor.id),
   ]);
 
   if (editContributionId && !editingContribution) {
@@ -99,6 +111,13 @@ export default async function SponsorPage({
       <SponsorDetail sponsor={sponsor} />
 
       <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold tracking-normal">
+          Eventi collegati
+        </h2>
+        <SponsorLinkedEventList events={linkedEvents} />
+      </section>
+
+      <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold tracking-normal">Contributi</h2>
         <SponsorContributionTable
           sponsorId={sponsor.id}
@@ -112,6 +131,7 @@ export default async function SponsorPage({
 
       <SponsorContributionForm
         contribution={editingContribution ?? undefined}
+        eventOptions={linkedEventOptions}
         action={
           editingContribution
             ? updateSponsorContributionAction.bind(

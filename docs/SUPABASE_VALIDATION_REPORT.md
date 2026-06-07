@@ -15,6 +15,7 @@ Questo report documenta:
 - M3 - Expirations & Renewals.
 - M4 - Dashboard.
 - M5 - Sponsors.
+- M6 - Events.
 
 Project ref vincolante:
 
@@ -57,6 +58,14 @@ Vincoli rispettati in M5:
 - nessuna logica contabile, fatturazione, IVA o prima nota introdotta;
 - contributi monetari vincolati a `amount > 0`;
 - contributi non monetari ammessi con `amount = 0` e `description` obbligatoria.
+
+Vincoli rispettati in M6:
+
+- applicate solo le migration M6 `008_events` e `009_sponsor_contributions`;
+- create solo le tabelle `events` ed `event_sponsors`;
+- aggiunta solo la colonna nullable `sponsor_contributions.event_id` a una tabella M5 esistente;
+- nessuna tabella email, report, dashboard avanzata, pagamenti online o contabilita' creata;
+- nessuna logica contabile, fatturazione, IVA o prima nota introdotta.
 
 ## Progetto Supabase
 
@@ -1195,3 +1204,164 @@ Esiti:
 - contributo non monetario con `amount = 0` e `description`: OK;
 - contributo non monetario senza `description`: bloccato dal vincolo;
 - rollback confermato con `sponsors = 0` e `sponsor_contributions = 0`.
+
+## M6 - Migration applicate
+
+Sono state applicate solo le migration M6 richieste:
+
+```text
+database/migrations/008_events.sql
+database/migrations/009_sponsor_contributions.sql
+```
+
+Migration registrate dal progetto Supabase dopo M6:
+
+```text
+20260606113953  001_extensions
+20260606114014  002_admin_users
+20260606115133  003_harden_admin_functions
+20260606124849  004_members_roles
+20260606221810  005_membership_plans
+20260606221954  006_memberships_payments
+20260607132737  007_sponsors
+20260607164703  008_events
+20260607164732  009_sponsor_contributions
+```
+
+La migration `008_events` crea:
+
+- `public.events`;
+- `public.event_sponsors`.
+
+La migration `009_sponsor_contributions` modifica solo:
+
+- `public.sponsor_contributions.event_id`, nullable, FK verso `public.events(id)`.
+
+Non sono state create:
+
+- tabelle email;
+- tabelle report;
+- tabelle contabili;
+- tabelle dashboard avanzata;
+- tabelle pagamenti online.
+
+## Tabelle M6
+
+Tabelle M6 confermate sul database live:
+
+| Tabella | RLS |
+| --- | --- |
+| `public.events` | attiva |
+| `public.event_sponsors` | attiva |
+| `public.sponsor_contributions` | attiva |
+
+Colonne principali `events` confermate:
+
+```text
+id
+name
+description
+start_datetime
+end_datetime
+location
+status
+notes
+created_at
+updated_at
+archived_at
+```
+
+Colonne principali `event_sponsors` confermate:
+
+```text
+id
+event_id
+sponsor_id
+sponsorship_level
+notes
+created_at
+updated_at
+archived_at
+```
+
+Colonna M6 su `sponsor_contributions` confermata:
+
+```text
+event_id uuid null
+```
+
+Esito:
+
+- `events.start_datetime` e' obbligatorio;
+- `events.end_datetime` e' opzionale ma non puo' precedere `start_datetime`;
+- `event_sponsors` collega sponsor ed eventi senza implicare contributi;
+- `sponsor_contributions.event_id` e' opzionale;
+- un contributo sponsor senza evento resta valido.
+
+## RLS e policy M6
+
+RLS confermata attiva su:
+
+- `public.events`;
+- `public.event_sponsors`;
+- `public.sponsor_contributions`.
+
+Policy M6 presenti:
+
+| Tabella | Policy | Comando | Ruolo |
+| --- | --- | --- | --- |
+| `events` | `events_select_active_admin` | `SELECT` | `authenticated` |
+| `events` | `events_insert_active_admin` | `INSERT` | `authenticated` |
+| `events` | `events_update_active_admin` | `UPDATE` | `authenticated` |
+| `event_sponsors` | `event_sponsors_select_active_admin` | `SELECT` | `authenticated` |
+| `event_sponsors` | `event_sponsors_insert_active_admin` | `INSERT` | `authenticated` |
+| `event_sponsors` | `event_sponsors_update_active_admin` | `UPDATE` | `authenticated` |
+
+Esito:
+
+- policy basate su `app_private.is_active_admin()`;
+- nessuna policy `DELETE`;
+- nessun accesso anonimo.
+
+## Trigger e vincoli M6
+
+Trigger `updated_at` confermati:
+
+- `set_events_updated_at`;
+- `set_event_sponsors_updated_at`;
+- `set_sponsor_contributions_updated_at`.
+
+Trigger di validazione confermato:
+
+- `validate_sponsor_contribution_event_link` su `sponsor_contributions`.
+
+Vincoli principali confermati:
+
+- `events.name` non vuoto;
+- `events.status in ('planned', 'confirmed', 'completed', 'cancelled')`;
+- `events.end_datetime is null or end_datetime >= start_datetime`;
+- FK `event_sponsors.event_id -> events(id)`;
+- FK `event_sponsors.sponsor_id -> sponsors(id)`;
+- unique parziale attivo su `event_sponsors(event_id, sponsor_id)` con `archived_at is null`;
+- FK `sponsor_contributions.event_id -> events(id)`, nullable.
+
+Esito:
+
+- un evento puo' esistere senza sponsor;
+- uno sponsor puo' essere collegato a piu' eventi;
+- un evento puo' avere piu' sponsor;
+- un contributo evento richiede sponsor valido, evento valido e collegamento operativo `event_sponsors`;
+- nessuna logica contabile, fatturazione, IVA o prima nota introdotta.
+
+## Advisor Supabase dopo M6
+
+Security Advisor:
+
+- warning residuo `auth_leaked_password_protection`, gia' noto da M0.9 e non introdotto da M6;
+- nessun warning security specifico sulle funzioni o tabelle M6.
+
+Performance Advisor:
+
+- presenti avvisi informativi `unused_index` su tabelle storiche e su nuovi indici M6;
+- gli avvisi sono coerenti con un database operativo ancora vuoto o poco usato;
+- non sono state rimosse ottimizzazioni previste dalle milestone, perche' gli indici servono ai filtri e alle join operative future.

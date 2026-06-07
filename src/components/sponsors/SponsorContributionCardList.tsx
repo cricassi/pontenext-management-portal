@@ -5,7 +5,7 @@ import { SponsorContributionTypeBadge } from "@/components/sponsors/SponsorContr
 import { Button } from "@/components/ui/Button";
 import type { SponsorContribution } from "@/types/sponsor";
 import { formatCurrency } from "@/utils/currency";
-import { formatDate } from "@/utils/date";
+import { formatDate, formatDateTime } from "@/utils/date";
 
 type SponsorContributionCardListProps = {
   sponsorId: string;
@@ -47,6 +47,21 @@ export function SponsorContributionCardList({
                 <p className="mt-1 whitespace-pre-wrap">{contribution.notes}</p>
               ) : null}
             </div>
+          ) : null}
+
+          {contribution.eventId && contribution.eventName ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Evento:{" "}
+              <Link
+                href={`/events/${contribution.eventId}`}
+                className="font-medium text-foreground hover:underline"
+              >
+                {contribution.eventName}
+                {contribution.eventStartDatetime
+                  ? `, ${formatDateTime(contribution.eventStartDatetime)}`
+                  : ""}
+              </Link>
+            </p>
           ) : null}
 
           <div className="mt-4 flex justify-end gap-2">

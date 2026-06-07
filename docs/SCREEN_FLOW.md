@@ -90,9 +90,11 @@ Non usare sidebar fissa su mobile.
 /sponsors
 /sponsors/new
 /sponsors/[id]
+/sponsors/[id]/edit
 /events
 /events/new
 /events/[id]
+/events/[id]/edit
 /email
 /email/templates
 /email/campaigns
@@ -330,11 +332,13 @@ Route:
 Sezioni:
 
 - anagrafica
+- eventi collegati
 - contributi
 - note
 
-Nota: eventi collegati e collegamento sponsor/eventi restano fuori da M5 e
-vengono introdotti solo con la milestone eventi.
+Nota M6: gli eventi collegati sono mostrati nella scheda sponsor. I contributi
+sponsor possono essere collegati opzionalmente a un evento gia' associato allo
+sponsor.
 
 ---
 
@@ -361,6 +365,7 @@ Route:
 
 ```text
 /events/[id]
+/events/[id]/edit
 ```
 
 Sezioni:

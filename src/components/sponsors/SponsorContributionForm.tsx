@@ -13,15 +13,17 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/Field";
 import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
+import type { SponsorLinkedEventOption } from "@/types/event";
 import { emptyFormState, type FormState } from "@/types/form";
 import {
   SPONSOR_CONTRIBUTION_TYPE,
   type SponsorContribution,
 } from "@/types/sponsor";
-import { getTodayDateInputValue } from "@/utils/date";
+import { formatDateTime, getTodayDateInputValue } from "@/utils/date";
 
 type SponsorContributionFormProps = {
   contribution?: SponsorContribution;
+  eventOptions?: SponsorLinkedEventOption[];
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   cancelHref: string;
   submitLabel: string;
@@ -35,6 +37,7 @@ function fieldError(state: FormState, key: string) {
 
 export function SponsorContributionForm({
   contribution,
+  eventOptions = [],
   action,
   cancelHref,
   submitLabel,
@@ -107,6 +110,24 @@ export function SponsorContributionForm({
                 required
               />
               {fieldError(state, "amount")}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="eventId">Evento collegato</FieldLabel>
+              <select
+                id="eventId"
+                name="eventId"
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                defaultValue={contribution?.eventId ?? ""}
+              >
+                <option value="">Nessun evento</option>
+                {eventOptions.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name} - {formatDateTime(event.startDatetime)}
+                  </option>
+                ))}
+              </select>
+              {fieldError(state, "eventId")}
             </Field>
 
             <Field className="md:col-span-2">
