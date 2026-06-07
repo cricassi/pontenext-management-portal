@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+## 0.5.0
+
+- Avviata milestone M3 - Expirations & Renewals
+- Aggiunta route protetta `/expirations` per scadenze scadute o entro 30/60/90 giorni
+- Implementate query service-side per ultima membership rinnovabile per socio, senza nuove viste SQL o migration
+- Implementato rinnovo rapido precompilato tramite `/memberships/new?memberId=<member_id>&renewFrom=<membership_id>&mode=quick`
+- Integrato pannello scadenza nella scheda socio
+- Abilitata voce navigazione `Scadenze`
+- Confermato che ogni rinnovo crea una nuova riga `memberships` e non modifica la membership precedente
+- Reso lo script `npm run lint` esplicito sui sorgenti Next.js per evitare scansioni non necessarie del workspace
+- Aggiornati report Supabase e checklist `M3_CHECKLIST.md`
+- Nessuna funzionalita' email, sponsor, eventi, report o dashboard completa introdotta
+
 ## 0.4.0
 
 - Avviata milestone M2 - Memberships & Payments

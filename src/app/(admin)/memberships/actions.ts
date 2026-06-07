@@ -21,6 +21,7 @@ import type { FormState } from "@/types/form";
 function revalidateMembershipPaths(memberId?: string, membershipId?: string) {
   revalidatePath("/memberships");
   revalidatePath("/memberships/new");
+  revalidatePath("/expirations");
 
   if (membershipId) {
     revalidatePath(`/memberships/${membershipId}`);

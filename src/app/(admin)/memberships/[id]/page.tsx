@@ -13,7 +13,9 @@ import {
 } from "@/app/(admin)/memberships/actions";
 import { getMembershipById } from "@/services/memberships.service";
 import { getPaymentsByMembershipId } from "@/services/payments.service";
+import { MEMBERSHIP_STATUS } from "@/types/membership";
 import { isUuid } from "@/utils/id";
+import { buildMembershipRenewalHref } from "@/utils/membership-links";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +46,14 @@ export default async function MembershipPage({ params }: MembershipPageProps) {
         action={
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild variant="outline">
-              <Link href={`/memberships/new?memberId=${membership.memberId}`}>
+              <Link
+                href={buildMembershipRenewalHref(
+                  membership.memberId,
+                  membership.status === MEMBERSHIP_STATUS.CANCELLED
+                    ? undefined
+                    : membership.id,
+                )}
+              >
                 <Plus aria-hidden="true" className="mr-2 size-4" />
                 Rinnova
               </Link>

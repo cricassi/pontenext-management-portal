@@ -872,3 +872,90 @@ unused_index
 ```
 
 Gli advisory `unused_index` includono anche gli indici M2 appena creati e non ancora usati da traffico reale. Sono INFO attesi in questa fase e non richiedono modifica del modello dati M2.
+
+## M3 - Expirations & Renewals
+
+Data verifica: 2026-06-07
+
+Progetto verificato:
+
+```text
+name: PonteNext
+project ref: uhxfpsamenjhyrfgwckw
+region: eu-central-1
+status: ACTIVE_HEALTHY
+postgres: 17
+```
+
+### Stato migration M3
+
+M3 non introduce migration operative.
+
+Migration live confermate:
+
+```text
+001_extensions
+002_admin_users
+003_harden_admin_functions
+004_members_roles
+005_membership_plans
+006_memberships_payments
+```
+
+Non sono state applicate migration successive a M2.
+
+### Tabelle e viste
+
+Tabelle `public` presenti:
+
+```text
+admin_users
+member_roles
+members
+membership_plans
+memberships
+payments
+roles
+```
+
+Non risultano create tabelle M3.
+
+Non risultano create viste SQL o materialized view M3. Le viste necessarie alla milestone sono implementate come query server-side in `src/services/expirations.service.ts`, usando:
+
+- `memberships.end_date` come sorgente canonica delle scadenze;
+- ultima membership non archiviata e non annullata per socio;
+- esclusione dei soci archiviati;
+- join con `membership_plans` e `members` solo per dati di visualizzazione.
+
+### RLS e policy
+
+RLS resta attiva sulle tabelle operative M0-M2.
+
+M3 non modifica policy, helper RLS o funzioni database.
+
+Le query M3 usano il Supabase server client e rispettano le policy esistenti basate su:
+
+```text
+app_private.is_active_admin()
+```
+
+### Validazione funzionale M3
+
+Con il database live attuale:
+
+```text
+members: 0
+memberships: 0
+payments: 0
+membership_plans: 3
+```
+
+La validazione live conferma che:
+
+- la route M3 non richiede nuove tabelle;
+- i filtri scadenza possono essere eseguiti sulle tabelle M2 esistenti;
+- il rinnovo rapido usa la membership sorgente solo per precompilare il form;
+- il salvataggio rinnovo resta delegato al flusso M2 di creazione nuova riga `memberships`;
+- nessuna membership esistente viene modificata per rappresentare un rinnovo.
+
+La validazione con dataset reale pieno resta da ripetere quando saranno presenti soci e membership operative.

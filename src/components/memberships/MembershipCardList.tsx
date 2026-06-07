@@ -2,9 +2,10 @@ import Link from "next/link";
 import { MembershipStatusBadge } from "@/components/memberships/MembershipStatusBadge";
 import { PaymentStatusBadge } from "@/components/payments/PaymentStatusBadge";
 import { Button } from "@/components/ui/Button";
-import type { Membership } from "@/types/membership";
+import { MEMBERSHIP_STATUS, type Membership } from "@/types/membership";
 import { formatCurrency } from "@/utils/currency";
 import { formatDate } from "@/utils/date";
+import { buildMembershipRenewalHref } from "@/utils/membership-links";
 
 type MembershipCardListProps = {
   memberships: Membership[];
@@ -59,7 +60,14 @@ export function MembershipCardList({ memberships }: MembershipCardListProps) {
                 <Link href={`/memberships/${membership.id}`}>Apri</Link>
               </Button>
               <Button asChild variant="outline" size="sm">
-                <Link href={`/memberships/new?memberId=${membership.memberId}`}>
+                <Link
+                  href={buildMembershipRenewalHref(
+                    membership.memberId,
+                    membership.status === MEMBERSHIP_STATUS.CANCELLED
+                      ? undefined
+                      : membership.id,
+                  )}
+                >
                   Rinnova
                 </Link>
               </Button>

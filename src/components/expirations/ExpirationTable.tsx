@@ -1,25 +1,25 @@
 import Link from "next/link";
-import { MembershipStatusBadge } from "@/components/memberships/MembershipStatusBadge";
+import { RefreshCw } from "lucide-react";
+import { ExpirationStatusBadge } from "@/components/expirations/ExpirationStatusBadge";
 import { PaymentStatusBadge } from "@/components/payments/PaymentStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MEMBERSHIP_STATUS, type Membership } from "@/types/membership";
+import type { ExpirationItem } from "@/types/expiration";
 import { formatCurrency } from "@/utils/currency";
 import { formatDate } from "@/utils/date";
+import { getDaysUntilExpirationLabel } from "@/utils/expiration";
 import { buildMembershipRenewalHref } from "@/utils/membership-links";
 
-type MembershipTableProps = {
-  memberships: Membership[];
+type ExpirationTableProps = {
+  expirations: ExpirationItem[];
 };
 
-export function MembershipTable({ memberships }: MembershipTableProps) {
-  if (memberships.length === 0) {
+export function ExpirationTable({ expirations }: ExpirationTableProps) {
+  if (expirations.length === 0) {
     return (
       <EmptyState
-        title="Nessuna iscrizione presente"
-        description="Crea la prima iscrizione o rinnova un socio esistente."
-        actionHref="/memberships/new"
-        actionLabel="Nuova iscrizione"
+        title="Nessuna scadenza trovata"
+        description="Non ci sono iscrizioni nel filtro selezionato."
       />
     );
   }
@@ -31,7 +31,7 @@ export function MembershipTable({ memberships }: MembershipTableProps) {
           <tr>
             <th className="px-4 py-3 font-medium">Socio</th>
             <th className="px-4 py-3 font-medium">Piano</th>
-            <th className="px-4 py-3 font-medium">Periodo</th>
+            <th className="px-4 py-3 font-medium">Scadenza</th>
             <th className="px-4 py-3 font-medium">Quota</th>
             <th className="px-4 py-3 font-medium">Pagato</th>
             <th className="px-4 py-3 font-medium">Stati</th>
@@ -39,49 +39,60 @@ export function MembershipTable({ memberships }: MembershipTableProps) {
           </tr>
         </thead>
         <tbody>
-          {memberships.map((membership) => (
-            <tr key={membership.id} className="border-b last:border-b-0">
+          {expirations.map((expiration) => (
+            <tr key={expiration.membershipId} className="border-b last:border-b-0">
               <td className="px-4 py-3">
                 <Link
-                  href={`/members/${membership.memberId}`}
+                  href={`/members/${expiration.memberId}`}
                   className="font-medium text-foreground hover:underline"
                 >
-                  {membership.memberName}
+                  {expiration.memberName}
                 </Link>
+                {expiration.memberEmail ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {expiration.memberEmail}
+                  </p>
+                ) : null}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {membership.membershipPlanName ?? "Personalizzata"}
+                {expiration.membershipPlanName ?? "Personalizzata"}
+              </td>
+              <td className="px-4 py-3">
+                <p className="font-medium text-foreground">
+                  {formatDate(expiration.endDate)}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {getDaysUntilExpirationLabel(expiration.daysUntilExpiration)}
+                </p>
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {formatDate(membership.startDate)} - {formatDate(membership.endDate)}
+                {formatCurrency(expiration.expectedFee)}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {formatCurrency(membership.expectedFee)}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {formatCurrency(membership.paidAmount)}
+                {formatCurrency(expiration.paidAmount)}
               </td>
               <td className="px-4 py-3">
                 <div className="flex flex-col items-start gap-1">
-                  <MembershipStatusBadge status={membership.status} />
-                  <PaymentStatusBadge status={membership.paymentStatus} />
+                  <ExpirationStatusBadge status={expiration.expirationStatus} />
+                  <PaymentStatusBadge status={expiration.paymentStatus} />
                 </div>
               </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/memberships/${membership.id}`}>Apri</Link>
+                    <Link href={`/memberships/${expiration.membershipId}`}>
+                      Apri
+                    </Link>
                   </Button>
-                  <Button asChild variant="outline" size="sm">
+                  <Button asChild size="sm">
                     <Link
                       href={buildMembershipRenewalHref(
-                        membership.memberId,
-                        membership.status === MEMBERSHIP_STATUS.CANCELLED
-                          ? undefined
-                          : membership.id,
+                        expiration.memberId,
+                        expiration.membershipId,
                       )}
                     >
-                      Rinnova
+                      <RefreshCw aria-hidden="true" className="mr-2 size-4" />
+                      Rinnovo rapido
                     </Link>
                   </Button>
                 </div>
