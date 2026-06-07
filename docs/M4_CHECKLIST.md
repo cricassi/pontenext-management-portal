@@ -113,9 +113,10 @@ within_30_memberships: 0
 - [x] `npm run lint`
 - [x] `npx tsc --noEmit`
 - [x] `npm run build`
-- [ ] Verifica browser locale `/login`
-- [ ] Verifica browser locale `/dashboard` senza sessione
-- [ ] Verifica rendering mobile dashboard
+- [x] Verifica browser locale `/login`
+- [x] Verifica browser locale `/dashboard` senza sessione
+- [x] Verifica browser mobile `/dashboard` senza sessione
+- [ ] Verifica rendering dashboard autenticata con sessione admin
 
 ## Note
 
@@ -123,7 +124,7 @@ Il database live non contiene ancora soci, membership o pagamenti operativi. La
 dashboard M4 e' quindi validata principalmente su KPI a zero, seed ruoli/piani
 presenti ed empty states.
 
-La verifica browser locale non e' stata completata in questa sessione per blocco
+Un primo tentativo di verifica browser locale non era stato completato per blocco
 ambientale del bind del dev server:
 
 ```text
@@ -132,4 +133,42 @@ listen UNKNOWN: unknown error 127.0.0.1:3001
 listen UNKNOWN: unknown error 0.0.0.0:3002
 ```
 
-La build Next.js conferma comunque la route dinamica `/dashboard`.
+Il 7 giugno 2026 la verifica browser e' stata riprovata avviando Next.js fuori
+dal sandbox sulla porta `3003`:
+
+```text
+.\node_modules\.bin\next.cmd dev --hostname 127.0.0.1 --port 3003
+```
+
+Esito del dev server:
+
+```text
+Next.js 16.2.7 (Turbopack)
+Local:   http://127.0.0.1:3003
+Ready in 6.1s
+```
+
+Verifiche browser completate:
+
+- `/login` risponde `200`, renderizza la pagina `Accesso amministratori`, non
+  mostra overlay Next.js e non produce warning/errori console nel browser.
+- `/dashboard` senza sessione risponde con redirect `307` verso `/login`.
+- `/dashboard` senza sessione in viewport mobile `390x844` viene reindirizzata
+  verso `/login`; il form resta leggibile e senza overlay Next.js.
+
+La verifica della dashboard autenticata non e' stata completata perche' in locale
+non e' presente `.env.local` (`Test-Path .env.local` restituisce `False`) e il
+form mostra correttamente l'avviso di Supabase non configurato. Non sono state
+create credenziali, sessioni admin, modifiche Supabase o modifiche funzionali.
+
+Nota tecnica: con `.env.local` assente, una richiesta diretta a `/dashboard`
+produce anche un log server `Supabase non configurato` durante il tentativo di
+rendering della pagina dinamica; il browser resta comunque sulla login e la route
+protetta risulta verificata senza sessione.
+
+La build Next.js conferma la presenza della route dinamica `/dashboard`:
+
+```text
+Route (app)
+dynamic /dashboard
+```
