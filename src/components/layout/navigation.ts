@@ -2,10 +2,10 @@ import {
   BarChart3,
   Calendar,
   CreditCard,
+  Handshake,
   Home,
   Mail,
   Settings,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 
@@ -37,8 +37,8 @@ export const navigationItems = [
   {
     label: "Sponsor",
     href: "/sponsors",
-    icon: ShieldCheck,
-    enabled: false,
+    icon: Handshake,
+    enabled: true,
   },
   {
     label: "Eventi",

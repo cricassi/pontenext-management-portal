@@ -300,14 +300,27 @@ Campi:
 
 - id uuid PK
 - sponsor_id uuid FK sponsors
-- event_id uuid FK events null
 - contribution_date date not null
 - amount numeric(10,2) not null check >= 0
 - contribution_type text not null check in `money`, `goods`, `service`, `other`
+- description text null
 - notes text null
 - created_at timestamptz
 - updated_at timestamptz
 - archived_at timestamptz
+
+Regole:
+
+- un contributo appartiene sempre a uno sponsor
+- uno sponsor puo' esistere senza contributi
+- uno sponsor puo' avere zero, uno o piu' contributi
+- `event_id` non e' presente in `sponsor_contributions`
+- il collegamento sponsor/eventi resta fuori dalla tabella contributi
+- i contributi monetari richiedono `amount > 0`
+- i contributi non monetari possono avere `amount = 0`
+- i contributi non monetari richiedono `description`
+- `amount` per contributi non monetari e' solo un eventuale valore gestionale interno
+- nessuna logica contabile, fiscale, IVA, fatturazione o prima nota deriva dai contributi sponsor
 
 ## event_sponsors
 
@@ -472,6 +485,11 @@ La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gest
 014_seed.sql
 ```
 
+Nota M5: la migration applicata `007_sponsors.sql` crea sia `sponsors` sia
+`sponsor_contributions`, senza `event_id`. Il placeholder storico
+`009_sponsor_contributions.sql` non fa parte di M5 e non deve reintrodurre il
+collegamento eventi nella tabella contributi.
+
 ---
 
 # 10. Note per Codex
@@ -483,6 +501,8 @@ La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gest
 - non salvare quota o scadenza in `members`
 - non usare `members.status` per indicare lo stato associativo
 - usare `start_datetime` e `end_datetime` come campi canonici evento
+- non inserire `event_id` in `sponsor_contributions`
+- non trattare i contributi sponsor come contabilita', fatturazione, IVA o prima nota
 - non usare float per importi
 - non usare enum PostgreSQL nella prima versione
 - aggiornare questo documento se cambia il modello dati

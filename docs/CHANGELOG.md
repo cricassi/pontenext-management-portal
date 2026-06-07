@@ -1,5 +1,19 @@
 # CHANGELOG.md
 
+# 0.7.0
+
+- Avviata milestone M5 - Sponsor
+- Applicata al progetto Supabase live `PonteNext` la migration `007_sponsors`
+- Create solo le tabelle `sponsors` e `sponsor_contributions`
+- Confermato che `sponsor_contributions` non contiene `event_id`
+- Aggiunti vincoli per contributi monetari con `amount > 0`
+- Aggiunti vincoli per contributi non monetari con `description` obbligatoria e `amount` anche pari a `0`
+- Abilitate RLS, policy admin attivi e trigger `updated_at` sulle tabelle M5
+- Implementati service layer, route e UI responsive per sponsor e contributi
+- Abilitata la voce navigazione `Sponsor`
+- Aggiornati report Supabase, README, business rules, database design e checklist M5
+- Nessuna funzionalita' eventi, sponsor/eventi, email, report, dashboard avanzata o contabilita' introdotta
+
 # 0.6.0
 
 - Avviata milestone M4 - Dashboard operativa
