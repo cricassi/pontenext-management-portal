@@ -12,6 +12,7 @@ import { SponsorContributionForm } from "@/components/sponsors/SponsorContributi
 import { SponsorContributionTable } from "@/components/sponsors/SponsorContributionTable";
 import { SponsorDetail } from "@/components/sponsors/SponsorDetail";
 import { Button } from "@/components/ui/Button";
+import { requireActiveAdmin } from "@/services/admin-auth.service";
 import {
   getSponsorById,
   getSponsorContributionById,
@@ -38,6 +39,7 @@ export default async function SponsorPage({
   params,
   searchParams,
 }: SponsorPageProps) {
+  await requireActiveAdmin();
   const { id } = await params;
 
   if (!isUuid(id)) {

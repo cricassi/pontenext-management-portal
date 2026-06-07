@@ -5,6 +5,7 @@ import { SponsorCardList } from "@/components/sponsors/SponsorCardList";
 import { SponsorFilters } from "@/components/sponsors/SponsorFilters";
 import { SponsorTable } from "@/components/sponsors/SponsorTable";
 import { Button } from "@/components/ui/Button";
+import { requireActiveAdmin } from "@/services/admin-auth.service";
 import { getSponsors } from "@/services/sponsors.service";
 import type { SponsorFilters as SponsorFiltersType } from "@/types/sponsor";
 
@@ -37,6 +38,7 @@ function getFilters(
 }
 
 export default async function SponsorsPage({ searchParams }: SponsorsPageProps) {
+  await requireActiveAdmin();
   const params = (await searchParams) ?? {};
   const filters = getFilters(params);
   const sponsors = await getSponsors(filters);
