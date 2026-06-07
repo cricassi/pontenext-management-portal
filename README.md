@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M3 - Expirations & Renewals
+M4 - Dashboard
 ```
 
 Milestone completate o avviate:
@@ -39,6 +39,7 @@ Milestone completate o avviate:
 - M1: soci, ruoli e assegnazione ruoli;
 - M2: piani iscrizione, iscrizioni storiche e pagamenti non contabili;
 - M3: scadenze, filtri 30/60/90 giorni e rinnovo rapido.
+- M4: dashboard operativa con KPI e widget basati sui dati M1-M3.
 
 M2 include:
 
@@ -55,9 +56,12 @@ M3 include:
 - pannello scadenza nella scheda socio;
 - rinnovo rapido precompilato.
 
-Restano fuori scope M3 sponsor, eventi, email, report e dashboard completa.
+Restano fuori scope M4 sponsor, eventi, email, report e dashboard direzionale.
 
 M3 non introduce nuove migration: scadenze e rinnovi rapidi derivano dalle tabelle M2.
+
+M4 non introduce nuove migration: la dashboard legge in sola lettura `members`,
+`memberships`, `payments` e le scadenze derivate da M3.
 
 ## Setup locale
 
