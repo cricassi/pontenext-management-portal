@@ -88,13 +88,27 @@ Regole contributi:
 - i contributi non generano IVA;
 - i contributi non generano prima nota.
 
-`sponsor_contributions` non contiene `event_id`.
+Da M6 `sponsor_contributions.event_id` e' ammesso solo come campo nullable.
+
+Un contributo senza evento resta valido.
+
+Un contributo con `event_id` rappresenta un contributo specifico collegato a un evento, ma non genera logica contabile, fiscale o di fatturazione.
 
 ## BR-008 - Eventi
+
+Un evento puo' esistere senza sponsor.
 
 Uno sponsor puo' essere collegato a piu' eventi.
 
 Un evento puo' avere piu' sponsor.
+
+`event_sponsors` rappresenta il legame operativo sponsor-evento.
+
+`sponsor_contributions.event_id` rappresenta un contributo specifico collegato a un evento.
+
+Un collegamento sponsor-evento non implica automaticamente un contributo.
+
+Un contributo collegato a un evento deve appartenere a uno sponsor valido e gia' collegato a quell'evento.
 
 Per gli eventi, `start_datetime` e `end_datetime` sono i campi canonici. La data evento mostrata in UI deve derivare da `start_datetime`.
 

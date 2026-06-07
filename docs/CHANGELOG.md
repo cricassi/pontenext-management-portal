@@ -1,5 +1,19 @@
 # CHANGELOG.md
 
+# 0.8.0
+
+- Avviata milestone M6 - Events
+- Applicate al progetto Supabase live `PonteNext` le migration `008_events` e `009_sponsor_contributions`
+- Create le tabelle `events` ed `event_sponsors`
+- Aggiunta la colonna nullable `sponsor_contributions.event_id`
+- Aggiunti vincoli, indici, RLS, policy admin attivi e trigger `updated_at` per le tabelle M6
+- Aggiunto trigger di validazione per collegare un contributo evento solo se lo sponsor e' associato all'evento
+- Implementati service layer, route e UI responsive per eventi, sponsor evento e contributi evento
+- Integrata la scheda sponsor con eventi collegati e collegamento opzionale dei contributi a eventi
+- Abilitata la voce navigazione `Eventi`
+- Aggiornati database design, business rules, screen flow, report Supabase e checklist M6
+- Nessuna funzionalita' email, report, dashboard avanzata, pagamenti online, contabilita', fatturazione, IVA o prima nota introdotta
+
 # 0.7.0
 
 - Avviata milestone M5 - Sponsor

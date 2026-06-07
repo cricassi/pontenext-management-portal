@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M5 - Sponsor
+M6 - Events
 ```
 
 Milestone completate o avviate:
@@ -41,6 +41,7 @@ Milestone completate o avviate:
 - M3: scadenze, filtri 30/60/90 giorni e rinnovo rapido.
 - M4: dashboard operativa con KPI e widget basati sui dati M1-M3.
 - M5: sponsor e contributi sponsor monetari/non monetari.
+- M6: eventi, sponsor evento e contributi sponsor collegati opzionalmente a eventi.
 
 M2 include:
 
@@ -76,6 +77,19 @@ M5 introduce:
 M5 non introduce eventi, collegamenti sponsor/eventi, email, report, dashboard
 avanzata, contabilita', fatturazione, IVA o prima nota.
 
+M6 introduce:
+
+- route `/events`, `/events/new`, `/events/[id]`, `/events/[id]/edit`;
+- tabelle `events` e `event_sponsors`;
+- colonna nullable `sponsor_contributions.event_id`;
+- CRUD eventi e archiviazione eventi;
+- collegamento sponsor-eventi;
+- visualizzazione contributi collegati a evento;
+- integrazione scheda sponsor con eventi collegati.
+
+M6 non introduce email, report, dashboard avanzata, pagamenti online,
+contabilita', fatturazione, IVA o prima nota.
+
 ## Setup locale
 
 ### 1. Installazione dipendenze
@@ -98,7 +112,7 @@ SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 
 `SUPABASE_SERVICE_ROLE_KEY` non deve essere usata nel browser. Serve solo per operazioni server controllate o bootstrap operativo fuori dalla UI. Se il bootstrap viene fatto dal Supabase SQL editor, la chiave service role non serve al runtime locale.
 
-### 3. Database fino a M5
+### 3. Database fino a M6
 
 Applicare le migration in ordine:
 
@@ -110,6 +124,8 @@ database/migrations/004_members_roles.sql
 database/migrations/005_membership_plans.sql
 database/migrations/006_memberships_payments.sql
 database/migrations/007_sponsors.sql
+database/migrations/008_events.sql
+database/migrations/009_sponsor_contributions.sql
 ```
 
 Applicare poi i seed richiesti dalle milestone:
@@ -122,8 +138,14 @@ database/seeds/membership_plans.sql
 La migration `007_sponsors.sql` crea sia `sponsors` sia
 `sponsor_contributions`, senza `event_id`.
 
-Le migration `008` e successive sono placeholder per milestone future e non
-vanno applicate durante M5.
+La migration `008_events.sql` crea `events` ed `event_sponsors`.
+
+La migration `009_sponsor_contributions.sql` aggiunge
+`sponsor_contributions.event_id` nullable per collegare opzionalmente un
+contributo sponsor a un evento.
+
+Le migration `010` e successive sono placeholder per milestone future e non
+vanno applicate durante M6.
 
 ### 4. Bootstrap primo super_admin
 
@@ -232,8 +254,14 @@ Documenti principali:
 - `docs/M1_CHECKLIST.md`
 - `docs/M2_IMPLEMENTATION_PLAN.md`
 - `docs/M2_CHECKLIST.md`
+- `docs/M3_IMPLEMENTATION_PLAN.md`
+- `docs/M3_CHECKLIST.md`
+- `docs/M4_IMPLEMENTATION_PLAN.md`
+- `docs/M4_CHECKLIST.md`
 - `docs/M5_IMPLEMENTATION_PLAN.md`
 - `docs/M5_CHECKLIST.md`
+- `docs/M6_IMPLEMENTATION_PLAN.md`
+- `docs/M6_CHECKLIST.md`
 - `docs/SUPABASE_SETUP.md`
 - `docs/SUPABASE_VALIDATION_REPORT.md`
 

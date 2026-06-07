@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { SponsorContribution } from "@/types/sponsor";
 import { formatCurrency } from "@/utils/currency";
-import { formatDate } from "@/utils/date";
+import { formatDate, formatDateTime } from "@/utils/date";
 
 type SponsorContributionTableProps = {
   sponsorId: string;
@@ -33,6 +33,7 @@ export function SponsorContributionTable({
           <tr>
             <th className="px-4 py-3 font-medium">Data</th>
             <th className="px-4 py-3 font-medium">Tipo</th>
+            <th className="px-4 py-3 font-medium">Evento</th>
             <th className="px-4 py-3 font-medium">Importo</th>
             <th className="px-4 py-3 font-medium">Descrizione</th>
             <th className="px-4 py-3 text-right font-medium">Azioni</th>
@@ -48,6 +49,21 @@ export function SponsorContributionTable({
                 <SponsorContributionTypeBadge
                   type={contribution.contributionType}
                 />
+              </td>
+              <td className="px-4 py-3 text-muted-foreground">
+                {contribution.eventId && contribution.eventName ? (
+                  <Link
+                    href={`/events/${contribution.eventId}`}
+                    className="font-medium text-foreground hover:underline"
+                  >
+                    {contribution.eventName}
+                    {contribution.eventStartDatetime
+                      ? `, ${formatDateTime(contribution.eventStartDatetime)}`
+                      : ""}
+                  </Link>
+                ) : (
+                  "-"
+                )}
               </td>
               <td className="px-4 py-3 font-medium">
                 {formatCurrency(contribution.amount)}

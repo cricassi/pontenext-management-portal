@@ -14,6 +14,9 @@ import {
 import { parseCurrencyInput } from "@/utils/currency";
 import { getTodayDateInputValue } from "@/utils/date";
 import { readOptionalString, readRequiredString } from "@/utils/form";
+import { isUuid } from "@/utils/id";
+
+type Relation<T> = T | T[] | null;
 
 type SponsorRow = {
   id: string;
@@ -36,6 +39,7 @@ type SponsorRow = {
 type SponsorContributionRow = {
   id: string;
   sponsor_id: string;
+  event_id: string | null;
   contribution_date: string;
   amount: number | string;
   contribution_type: SponsorContributionType;
@@ -44,6 +48,10 @@ type SponsorContributionRow = {
   created_at: string;
   updated_at: string;
   archived_at: string | null;
+  events: Relation<{
+    name: string;
+    start_datetime: string;
+  }>;
 };
 
 type SponsorValidationResult =
@@ -58,10 +66,14 @@ const sponsorSelect =
   "id, company_name, contact_name, email, phone, website, address, city, vat_number, fiscal_code, notes, status, created_at, updated_at, archived_at";
 
 const sponsorContributionSelect =
-  "id, sponsor_id, contribution_date, amount, contribution_type, description, notes, created_at, updated_at, archived_at";
+  "id, sponsor_id, event_id, contribution_date, amount, contribution_type, description, notes, created_at, updated_at, archived_at, events(name, start_datetime)";
 
 function toNumber(value: number | string) {
   return typeof value === "string" ? Number.parseFloat(value) : value;
+}
+
+function one<T>(relation: Relation<T>) {
+  return Array.isArray(relation) ? (relation[0] ?? null) : relation;
 }
 
 function mapSponsor(row: SponsorRow): Sponsor {
@@ -87,9 +99,14 @@ function mapSponsor(row: SponsorRow): Sponsor {
 function mapSponsorContribution(
   row: SponsorContributionRow,
 ): SponsorContribution {
+  const event = one(row.events);
+
   return {
     id: row.id,
     sponsorId: row.sponsor_id,
+    eventId: row.event_id,
+    eventName: event?.name ?? null,
+    eventStartDatetime: event?.start_datetime ?? null,
     contributionDate: row.contribution_date,
     amount: toNumber(row.amount),
     contributionType: row.contribution_type,
@@ -204,6 +221,7 @@ export function validateSponsorContributionFormData(
     readRequiredString(formData, "contributionDate") || getTodayDateInputValue();
   const amount = parseCurrencyInput(readRequiredString(formData, "amount") || "0");
   const contributionType = readRequiredString(formData, "contributionType");
+  const eventId = readOptionalString(formData, "eventId");
   const description = readOptionalString(formData, "description");
   const notes = readOptionalString(formData, "notes");
   const errors: Record<string, string> = {};
@@ -218,6 +236,10 @@ export function validateSponsorContributionFormData(
 
   if (!Number.isFinite(amount) || amount < 0) {
     errors.amount = "Inserisci un importo maggiore o uguale a 0.";
+  }
+
+  if (eventId && !isUuid(eventId)) {
+    errors.eventId = "Seleziona un evento valido.";
   }
 
   if (
@@ -253,6 +275,7 @@ export function validateSponsorContributionFormData(
       contributionDate,
       amount,
       contributionType,
+      eventId,
       description,
       notes,
     },
@@ -547,6 +570,7 @@ function mapSponsorContributionValues(values: SponsorContributionFormValues) {
     contribution_date: values.contributionDate,
     amount: values.amount,
     contribution_type: values.contributionType,
+    event_id: values.eventId,
     description: values.description,
     notes: values.notes,
   };

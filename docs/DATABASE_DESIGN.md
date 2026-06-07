@@ -277,7 +277,7 @@ Campi:
 - id uuid PK
 - name text not null
 - description text null
-- start_datetime timestamptz null
+- start_datetime timestamptz not null
 - end_datetime timestamptz null
 - location text null
 - status text not null check in `planned`, `confirmed`, `completed`, `cancelled`
@@ -300,6 +300,7 @@ Campi:
 
 - id uuid PK
 - sponsor_id uuid FK sponsors
+- event_id uuid FK events null
 - contribution_date date not null
 - amount numeric(10,2) not null check >= 0
 - contribution_type text not null check in `money`, `goods`, `service`, `other`
@@ -314,8 +315,10 @@ Regole:
 - un contributo appartiene sempre a uno sponsor
 - uno sponsor puo' esistere senza contributi
 - uno sponsor puo' avere zero, uno o piu' contributi
-- `event_id` non e' presente in `sponsor_contributions`
-- il collegamento sponsor/eventi resta fuori dalla tabella contributi
+- `event_id` e' nullable e viene introdotto solo da M6
+- un contributo senza evento resta valido
+- un contributo con `event_id` rappresenta un contributo specifico collegato a un evento
+- un contributo collegato a un evento deve appartenere a uno sponsor gia' collegato a quell'evento tramite `event_sponsors`
 - i contributi monetari richiedono `amount > 0`
 - i contributi non monetari possono avere `amount = 0`
 - i contributi non monetari richiedono `description`
@@ -340,7 +343,7 @@ Campi:
 Vincolo:
 
 ```sql
-unique(event_id, sponsor_id)
+unique(event_id, sponsor_id) where archived_at is null
 ```
 
 ## email_templates
@@ -486,9 +489,11 @@ La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gest
 ```
 
 Nota M5: la migration applicata `007_sponsors.sql` crea sia `sponsors` sia
-`sponsor_contributions`, senza `event_id`. Il placeholder storico
-`009_sponsor_contributions.sql` non fa parte di M5 e non deve reintrodurre il
-collegamento eventi nella tabella contributi.
+`sponsor_contributions`, senza `event_id`.
+
+Nota M6: `008_events.sql` crea `events` ed `event_sponsors`; `009_sponsor_contributions.sql`
+aggiunge `sponsor_contributions.event_id` nullable per collegare opzionalmente
+un contributo sponsor a un evento, senza rendere obbligatorio il collegamento.
 
 ---
 
@@ -496,12 +501,12 @@ collegamento eventi nella tabella contributi.
 
 - non creare app mobile
 - non creare area soci
-- non creare contabilità
+- non creare contabilita'
 - non usare cancellazioni fisiche
 - non salvare quota o scadenza in `members`
 - non usare `members.status` per indicare lo stato associativo
 - usare `start_datetime` e `end_datetime` come campi canonici evento
-- non inserire `event_id` in `sponsor_contributions`
+- mantenere `sponsor_contributions.event_id` nullable e usarlo solo per il collegamento opzionale M6
 - non trattare i contributi sponsor come contabilita', fatturazione, IVA o prima nota
 - non usare float per importi
 - non usare enum PostgreSQL nella prima versione

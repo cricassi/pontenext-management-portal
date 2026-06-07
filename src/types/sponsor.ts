@@ -63,6 +63,9 @@ export type SponsorFilters = {
 export type SponsorContribution = {
   id: string;
   sponsorId: string;
+  eventId: string | null;
+  eventName: string | null;
+  eventStartDatetime: string | null;
   contributionDate: string;
   amount: number;
   contributionType: SponsorContributionType;
@@ -75,6 +78,7 @@ export type SponsorContribution = {
 
 export type SponsorContributionFormValues = {
   contributionDate: string;
+  eventId: string | null;
   amount: number;
   contributionType: SponsorContributionType;
   description: string | null;

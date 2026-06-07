@@ -44,7 +44,7 @@ export const navigationItems = [
     label: "Eventi",
     href: "/events",
     icon: Calendar,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Email",
