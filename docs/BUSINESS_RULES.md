@@ -70,6 +70,26 @@ M4 gestisce monitoraggio e rinnovo delle scadenze, ma non invia email. I promemo
 
 Uno sponsor e' indipendente dai soci.
 
+Uno sponsor puo' esistere senza contributi.
+
+Uno sponsor puo' avere zero, uno o piu' contributi.
+
+Un contributo appartiene sempre a uno sponsor.
+
+I contributi possono essere monetari o non monetari.
+
+Regole contributi:
+
+- i contributi monetari richiedono `amount > 0`;
+- i contributi non monetari possono avere `amount = 0`;
+- i contributi non monetari richiedono `description`;
+- i contributi non generano contabilita';
+- i contributi non generano fatturazione;
+- i contributi non generano IVA;
+- i contributi non generano prima nota.
+
+`sponsor_contributions` non contiene `event_id`.
+
 ## BR-008 - Eventi
 
 Uno sponsor puo' essere collegato a piu' eventi.

@@ -14,6 +14,7 @@ Questo report documenta:
 - M2 - Memberships & Payments.
 - M3 - Expirations & Renewals.
 - M4 - Dashboard.
+- M5 - Sponsors.
 
 Project ref vincolante:
 
@@ -46,6 +47,16 @@ Vincoli rispettati in M2:
 - nessuna tabella sponsor, eventi, email, report o audit creata;
 - nessuna migration successiva a M2 applicata;
 - ogni rinnovo resta rappresentato da una nuova riga in `memberships`.
+
+Vincoli rispettati in M5:
+
+- applicata solo la migration M5 `007_sponsors`;
+- create solo `sponsors` e `sponsor_contributions`;
+- `sponsor_contributions` non contiene `event_id`;
+- nessuna tabella eventi, `event_sponsors`, email, report o dashboard avanzata creata;
+- nessuna logica contabile, fatturazione, IVA o prima nota introdotta;
+- contributi monetari vincolati a `amount > 0`;
+- contributi non monetari ammessi con `amount = 0` e `description` obbligatoria.
 
 ## Progetto Supabase
 
@@ -1065,3 +1076,122 @@ within_30_memberships: 0
 
 La validazione conferma che M4 puo' funzionare senza nuove tabelle o viste, con
 empty states coerenti per il database operativo attualmente vuoto.
+
+## M5 - Migration applicata
+
+E' stata applicata solo la migration M5 richiesta:
+
+```text
+database/migrations/007_sponsors.sql
+```
+
+Migration registrate dal progetto Supabase dopo M5:
+
+```text
+20260606113953  001_extensions
+20260606114014  002_admin_users
+20260606115133  003_harden_admin_functions
+20260606124849  004_members_roles
+20260606221810  005_membership_plans
+20260606221954  006_memberships_payments
+20260607132737  007_sponsors
+```
+
+La migration `007_sponsors` crea:
+
+- `public.sponsors`;
+- `public.sponsor_contributions`.
+
+Non crea:
+
+- `events`;
+- `event_sponsors`;
+- `email_templates`;
+- `email_campaigns`;
+- `email_campaign_recipients`;
+- `reports`;
+- `audit_logs`;
+- viste dashboard o report.
+
+## Tabelle M5
+
+Tabelle M5 confermate sul database live:
+
+| Tabella | RLS | Righe |
+| --- | --- | ---: |
+| `public.sponsors` | attiva | 0 |
+| `public.sponsor_contributions` | attiva | 0 |
+
+Colonne `sponsor_contributions` confermate:
+
+```text
+id
+sponsor_id
+contribution_date
+amount
+contribution_type
+description
+notes
+created_at
+updated_at
+archived_at
+```
+
+Esito:
+
+- `event_id` non e' presente;
+- `sponsor_id` e' obbligatorio e referenzia `public.sponsors(id)`;
+- sponsor senza contributi ammesso;
+- contributi monetari e non monetari gestiti nella stessa tabella.
+
+## RLS e policy M5
+
+RLS confermata attiva su:
+
+- `public.sponsors`;
+- `public.sponsor_contributions`.
+
+Policy M5 presenti:
+
+| Tabella | Policy | Comando | Ruolo |
+| --- | --- | --- | --- |
+| `sponsors` | `sponsors_select_active_admin` | `SELECT` | `authenticated` |
+| `sponsors` | `sponsors_insert_active_admin` | `INSERT` | `authenticated` |
+| `sponsors` | `sponsors_update_active_admin` | `UPDATE` | `authenticated` |
+| `sponsor_contributions` | `sponsor_contributions_select_active_admin` | `SELECT` | `authenticated` |
+| `sponsor_contributions` | `sponsor_contributions_insert_active_admin` | `INSERT` | `authenticated` |
+| `sponsor_contributions` | `sponsor_contributions_update_active_admin` | `UPDATE` | `authenticated` |
+
+Esito:
+
+- policy basate su `app_private.is_active_admin()`;
+- nessuna policy `DELETE`;
+- nessun accesso anonimo.
+
+## Trigger e vincoli M5
+
+Trigger `updated_at` confermati:
+
+- `set_sponsors_updated_at`;
+- `set_sponsor_contributions_updated_at`.
+
+Vincoli principali confermati:
+
+- `sponsors.status in ('active', 'inactive', 'archived')`;
+- `sponsor_contributions.contribution_type in ('money', 'goods', 'service', 'other')`;
+- `sponsor_contributions.amount >= 0`;
+- contributi `money` con `amount > 0`;
+- contributi non monetari con `description` non vuota.
+
+## Test transazionale M5
+
+Eseguito test live con rollback finale.
+
+Esiti:
+
+- sponsor creato in transazione senza contributi: OK;
+- contributo monetario con `amount > 0`: OK;
+- contributo monetario con `amount = 0`: bloccato dal vincolo;
+- contributo non monetario con `amount = 0` e `description`: OK;
+- contributo non monetario senza `description`: bloccato dal vincolo;
+- rollback confermato con `sponsors = 0` e `sponsor_contributions = 0`.
