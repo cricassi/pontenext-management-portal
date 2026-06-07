@@ -88,6 +88,7 @@ Incluso:
 - filtri scadenza: scaduti, entro 30 giorni, entro 60 giorni, entro 90 giorni;
 - evidenza dello stato pagamento della membership in scadenza o scaduta;
 - link/azione di rinnovo verso il flusso M2 di creazione nuova membership;
+- rinnovo rapido da membership scaduta o in scadenza;
 - UI responsive desktop/mobile;
 - service layer dedicato alle scadenze;
 - eventuali query o viste di supporto, senza nuove tabelle;
@@ -171,7 +172,67 @@ Se esistono periodi sovrapposti per lo stesso socio, M3 deve:
 - selezionare comunque la membership con `end_date` maggiore come ultima membership rinnovabile;
 - segnalare nel piano di implementazione o nella UI un possibile warning operativo, se il caso diventa rilevante.
 
-## 5. Filtri
+## 5. Rinnovo rapido
+
+Il rinnovo rapido e' una scorciatoia operativa disponibile dalla lista scadenze per membership scadute o in scadenza.
+
+Disponibilita':
+
+- membership scaduta secondo il filtro `scaduti`;
+- membership in scadenza entro 30, 60 o 90 giorni;
+- membership non archiviata;
+- membership non annullata;
+- socio non archiviato.
+
+Regole vincolanti:
+
+- crea sempre una nuova riga in `memberships`;
+- non modifica la membership precedente;
+- non estende `start_date` o `end_date` della membership precedente;
+- non sposta pagamenti dalla membership precedente alla nuova;
+- non crea pagamenti automatici.
+
+Valori proposti:
+
+- `member_id`: socio della membership precedente;
+- `membership_plan_id`: piano della membership precedente, se ancora attivo e non archiviato;
+- `start_date`: giorno successivo alla `end_date` precedente;
+- `end_date`: calcolata dalla durata del piano selezionato;
+- `minimum_fee`: quota minima del piano selezionato;
+- `expected_fee`: quota proposta dal piano selezionato;
+- `paid_amount`: `0`;
+- `payment_status`: calcolato dai trigger/regole M2 sulla nuova membership;
+- `status`: derivato dalla nuova `end_date` secondo le regole M2.
+
+Modifiche consentite prima del salvataggio:
+
+- l'admin puo' cambiare piano;
+- l'admin puo' modificare `start_date`;
+- l'admin puo' modificare `end_date` o durata;
+- l'admin puo' modificare quota minima e quota prevista secondo le regole M2;
+- l'admin puo' aggiungere note operative.
+
+Pagamento nel rinnovo rapido:
+
+- un eventuale pagamento viene registrato solo se inserito esplicitamente dall'admin;
+- se l'admin non inserisce un pagamento, la nuova membership viene creata senza righe `payments`;
+- il pagamento esplicito deve essere collegato solo alla nuova membership;
+- `paid_amount` e `payment_status` della nuova membership sono aggiornati dalle regole M2 sui pagamenti collegati.
+
+Comportamento UI consigliato:
+
+- l'azione `Rinnovo rapido` apre un form precompilato, non salva immediatamente;
+- il form deve mostrare chiaramente che verra' creata una nuova iscrizione;
+- il form deve indicare la membership di partenza solo come contesto;
+- la conferma deve creare la nuova membership e poi portare al dettaglio della nuova iscrizione.
+
+Query string consigliata:
+
+- `/memberships/new?memberId=<member_id>&renewFrom=<membership_id>&mode=quick`;
+
+Il parametro `renewFrom` serve solo a caricare i default e non deve creare dipendenze o mutazioni sulla membership precedente.
+
+## 6. Filtri
 
 I filtri sono cumulativi per finestra temporale.
 
@@ -229,7 +290,7 @@ Filtri non previsti in M3:
 - dashboard completa;
 - stato anagrafico come proxy dello stato associativo.
 
-## 6. Route previste
+## 7. Route previste
 
 Route principale:
 
@@ -248,6 +309,7 @@ Link operativi:
 - `/members/<member_id>` per aprire la scheda socio;
 - `/memberships/<membership_id>` per aprire la membership corrente/scaduta;
 - `/memberships/new?memberId=<member_id>` per avviare rinnovo come nuova membership.
+- `/memberships/new?memberId=<member_id>&renewFrom=<membership_id>&mode=quick` per rinnovo rapido precompilato.
 
 Protezione route:
 
@@ -263,7 +325,7 @@ Route non previste:
 - nessuna route report;
 - nessuna dashboard completa.
 
-## 7. Componenti UI previsti
+## 8. Componenti UI previsti
 
 Componenti M3:
 
@@ -273,6 +335,8 @@ Componenti M3:
 - `ExpirationCardList.tsx`;
 - `ExpirationStatusBadge.tsx`;
 - `RenewalActionButton.tsx`.
+- `QuickRenewalButton.tsx`;
+- `QuickRenewalSummary.tsx`.
 
 Componenti riutilizzati:
 
@@ -295,10 +359,11 @@ Regole UI:
 - nessun pulsante "Invia promemoria";
 - nessun export;
 - nessun widget sponsor/eventi/email/report.
+- il rinnovo rapido deve aprire un form confermabile, non salvare senza revisione admin.
 
 La pagina `/expirations` deve essere un'interfaccia operativa, non una landing page o una dashboard completa.
 
-## 8. Service layer previsto
+## 9. Service layer previsto
 
 Servizio principale:
 
@@ -316,6 +381,8 @@ Funzioni previste:
 - `getExpirationWindow(endDate, today)`;
 - `getDaysUntilExpiration(endDate, today)`;
 - `buildRenewalHref(memberId, membershipId)`;
+- `getQuickRenewalDefaults(membershipId)`;
+- `validateQuickRenewalAvailability(membershipId)`;
 
 Tipi di filtro:
 
@@ -332,6 +399,8 @@ Regole service:
 - non scrivere su `memberships` per calcolare scadenze;
 - non duplicare la logica di creazione membership gia' presente in M2;
 - il rinnovo deve passare da `renewMembership()` o da `createMembership()` secondo il pattern M2;
+- il rinnovo rapido deve produrre valori precompilati e poi creare una nuova membership solo al salvataggio esplicito;
+- eventuale pagamento rapido deve usare il service M2 dei pagamenti ed essere collegato alla nuova membership;
 - gli errori devono essere messaggi operativi per la UI.
 
 Server action previste:
@@ -340,7 +409,7 @@ Server action previste:
 - se vengono introdotte action per prefill o revalidate, devono essere route-scoped e protette con `requireActiveAdmin()`;
 - nessuna action deve inviare email o generare report.
 
-## 9. Query e viste previste
+## 10. Query e viste previste
 
 Implementazione consigliata per M3 iniziale:
 
@@ -420,32 +489,6 @@ RLS:
 - eventuali viste devono evitare `security definer` non necessario;
 - se una vista richiede `security_invoker`, la scelta va documentata nella migration M3 implementativa.
 
-## 10. Trigger/eventuali automazioni
-
-M3 non deve introdurre trigger per rendere scadute le membership.
-
-Motivo:
-
-- lo stato di scadenza dipende da `current_date`;
-- un trigger non si attiva al passare del tempo;
-- aggiornare periodicamente `memberships.status` a `expired` rischia incoerenze con la regola derivata da `end_date`.
-
-Trigger M2 da mantenere:
-
-- `set_membership_payment_status`;
-- `refresh_membership_payment_totals`;
-- trigger `updated_at`.
-
-Automazioni non previste:
-
-- nessun invio email;
-- nessun promemoria automatico;
-- nessun job schedulato;
-- nessun report automatico;
-- nessuna sincronizzazione esterna.
-
-Se in futuro servira' un promemoria, dovra' essere gestito in M7 Email, non in M3.
-
 ## 11. Acceptance criteria
 
 M3 e' accettabile quando:
@@ -459,6 +502,10 @@ M3 e' accettabile quando:
 - i record con `status = 'cancelled'` sono esclusi dagli elenchi operativi;
 - `members.status` non viene usato come stato associativo;
 - l'azione `Rinnova` crea una nuova membership tramite il flusso M2;
+- il rinnovo rapido e' disponibile da membership scaduta o in scadenza;
+- il rinnovo rapido propone `start_date` come giorno successivo alla `end_date` precedente;
+- il rinnovo rapido propone `end_date` e quota dal piano, lasciando all'admin la modifica prima del salvataggio;
+- il rinnovo rapido registra un pagamento solo se l'admin lo inserisce esplicitamente;
 - nessun rinnovo modifica `start_date` o `end_date` della membership precedente;
 - UI desktop e mobile sono entrambe usabili;
 - non vengono introdotti email, sponsor, eventi, report o dashboard completa;
@@ -477,6 +524,8 @@ Rischi principali:
 - confronti data basati su timezone diverse possono creare errori al cambio giorno;
 - una vista SQL non ben progettata potrebbe aggirare o rendere meno chiara la RLS;
 - l'azione rinnovo potrebbe sembrare una modifica della riga precedente se il copy UI non e' chiaro;
+- il rinnovo rapido potrebbe essere percepito come salvataggio automatico se non apre un form revisionabile;
+- default calcolati da un piano archiviato o inattivo possono proporre dati non selezionabili;
 - introdurre export o promemoria in M3 anticiperebbe report/email;
 - gli indici live sono sufficienti per volumi iniziali, ma la query "latest per member" potrebbe richiedere ottimizzazione con volumi alti;
 - la milestone naming M3/M4 va riallineata nei documenti generali se la roadmap ufficiale cambia.
@@ -487,6 +536,7 @@ Mitigazioni:
 - tenere le date come stringhe `YYYY-MM-DD`/`date`;
 - non salvare scadenze duplicate in `members`;
 - riusare il flusso M2 di creazione membership;
+- trattare il rinnovo rapido come precompilazione verificabile, non come mutazione immediata;
 - documentare test manuali con casi storici e rinnovi multipli;
 - rimandare email e report alle milestone dedicate.
 
