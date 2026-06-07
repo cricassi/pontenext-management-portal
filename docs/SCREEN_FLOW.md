@@ -405,7 +405,7 @@ Le route email definitive sono:
 - creare template
 - selezionare destinatari
 - generare anteprima
-- inviare campagna
+- inviare campagna solo dopo conferma admin
 - vedere storico invii
 
 ## Segmenti iniziali
@@ -415,6 +415,25 @@ Le route email definitive sono:
 - soci con iscrizione scaduta
 - sponsor
 - destinatari custom
+
+## Regole route M7
+
+Creazione e modifica di template/campagne restano dentro le route definitive
+tramite form inline o pannelli:
+
+```text
+/email
+/email/templates
+/email/campaigns
+```
+
+Non sono route M7 iniziali:
+
+```text
+/email/templates/new
+/email/campaigns/new
+/email/campaigns/[id]
+```
 
 ---
 

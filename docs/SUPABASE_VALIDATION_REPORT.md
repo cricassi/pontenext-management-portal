@@ -16,6 +16,7 @@ Questo report documenta:
 - M4 - Dashboard.
 - M5 - Sponsors.
 - M6 - Events.
+- M7 - Email & Campaigns.
 
 Project ref vincolante:
 
@@ -66,6 +67,16 @@ Vincoli rispettati in M6:
 - aggiunta solo la colonna nullable `sponsor_contributions.event_id` a una tabella M5 esistente;
 - nessuna tabella email, report, dashboard avanzata, pagamenti online o contabilita' creata;
 - nessuna logica contabile, fatturazione, IVA o prima nota introdotta.
+
+Vincoli rispettati in M7:
+
+- applicata solo la migration M7 `010_email`;
+- create solo `email_templates`, `email_campaigns` ed
+  `email_campaign_recipients`;
+- nessuna tabella report, dashboard avanzata, contabilita', area soci o
+  automazione schedulata creata;
+- provider Resend configurato solo lato server tramite variabili ambiente;
+- nessuna API key salvata nel database o documentata nel repository.
 
 ## Progetto Supabase
 
@@ -1365,3 +1376,180 @@ Performance Advisor:
 - presenti avvisi informativi `unused_index` su tabelle storiche e su nuovi indici M6;
 - gli avvisi sono coerenti con un database operativo ancora vuoto o poco usato;
 - non sono state rimosse ottimizzazioni previste dalle milestone, perche' gli indici servono ai filtri e alle join operative future.
+
+## M7 - Migration applicata
+
+E' stata applicata solo la migration M7 richiesta:
+
+```text
+database/migrations/010_email.sql
+```
+
+Migration registrate dal progetto Supabase dopo M7:
+
+```text
+20260606113953  001_extensions
+20260606114014  002_admin_users
+20260606115133  003_harden_admin_functions
+20260606124849  004_members_roles
+20260606221810  005_membership_plans
+20260606221954  006_memberships_payments
+20260607132737  007_sponsors
+20260607164703  008_events
+20260607164732  009_sponsor_contributions
+20260607195558  010_email
+```
+
+La migration `010_email` crea:
+
+- `public.email_templates`;
+- `public.email_campaigns`;
+- `public.email_campaign_recipients`.
+
+Non sono state create:
+
+- tabelle report;
+- tabelle dashboard avanzata;
+- tabelle contabili;
+- tabelle area soci;
+- automazioni o scheduled send.
+
+## Tabelle M7
+
+Tabelle M7 confermate sul database live:
+
+| Tabella | RLS |
+| --- | --- |
+| `public.email_templates` | attiva |
+| `public.email_campaigns` | attiva |
+| `public.email_campaign_recipients` | attiva |
+
+Colonne principali `email_templates` confermate:
+
+```text
+id
+name
+subject
+body
+audience
+is_active
+created_by
+created_at
+updated_at
+archived_at
+```
+
+Colonne principali `email_campaigns` confermate:
+
+```text
+id
+template_id
+subject
+body
+audience_type
+status
+provider
+recipient_snapshot_generated_at
+send_confirmed_at
+sent_at
+failed_at
+error_message
+created_by
+sent_by
+created_at
+updated_at
+archived_at
+```
+
+Colonne principali `email_campaign_recipients` confermate:
+
+```text
+id
+campaign_id
+recipient_type
+member_id
+sponsor_id
+email
+recipient_name
+status
+skip_reason
+provider_message_id
+error_message
+sent_at
+opt_out_token_hash
+opted_out_at
+consent_basis_snapshot
+created_at
+updated_at
+```
+
+Esito:
+
+- gli stati campagna M7 sono `draft`, `sent`, `failed`;
+- `provider` e' vincolato a `resend`;
+- i destinatari salvano l'email effettivamente usata;
+- i destinatari possono essere `member`, `sponsor` o `custom`;
+- l'unicita' su `(campaign_id, lower(email))` evita duplicazioni nella stessa
+  campagna.
+
+## RLS e policy M7
+
+RLS confermata attiva su:
+
+- `public.email_templates`;
+- `public.email_campaigns`;
+- `public.email_campaign_recipients`.
+
+Policy M7 presenti:
+
+| Tabella | Comandi |
+| --- | --- |
+| `email_templates` | `SELECT`, `INSERT`, `UPDATE` |
+| `email_campaigns` | `SELECT`, `INSERT`, `UPDATE` |
+| `email_campaign_recipients` | `SELECT`, `INSERT`, `UPDATE` |
+
+Esito:
+
+- policy basate su `app_private.is_active_admin()`;
+- nessuna policy `DELETE`;
+- nessun accesso anonimo.
+
+## Trigger e vincoli M7
+
+Trigger `updated_at` confermati:
+
+- `set_email_templates_updated_at`;
+- `set_email_campaigns_updated_at`;
+- `set_email_campaign_recipients_updated_at`.
+
+Vincoli principali confermati:
+
+- template con `name`, `subject` e `body` non vuoti;
+- `email_templates.audience in ('members', 'sponsors', 'both')`;
+- campagne con `subject` e `body` non vuoti;
+- `email_campaigns.audience_type in ('all_members', 'active_members', 'expired_members', 'sponsors', 'custom')`;
+- `email_campaigns.status in ('draft', 'sent', 'failed')`;
+- `email_campaigns.provider = 'resend'`;
+- destinatari con email non vuota e formato email base;
+- `email_campaign_recipients.status in ('pending', 'sent', 'failed', 'skipped')`;
+- vincolo di coerenza tra `recipient_type`, `member_id` e `sponsor_id`;
+- unique index su `(campaign_id, lower(email))`.
+
+## Assenza out of scope M7
+
+Non risultano presenti nello schema pubblico:
+
+- `reports`;
+- `report_definitions`;
+- `audit_logs`.
+
+M7 non introduce:
+
+- report;
+- dashboard avanzata;
+- area soci;
+- automazioni schedulate;
+- contabilita';
+- fatturazione;
+- IVA;
+- prima nota.

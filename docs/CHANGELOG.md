@@ -1,5 +1,20 @@
 # CHANGELOG.md
 
+# 0.9.0
+
+- Avviata milestone M7 - Email & Campaigns
+- Applicata al progetto Supabase live `PonteNext` la migration `010_email`
+- Create le tabelle `email_templates`, `email_campaigns` ed `email_campaign_recipients`
+- Aggiunti vincoli, indici, RLS, policy admin attivi e trigger `updated_at` per le tabelle M7
+- Configurato provider Resend esclusivamente lato server tramite `RESEND_API_KEY` ed `EMAIL_FROM`
+- Implementate le route definitive `/email`, `/email/templates` e `/email/campaigns`
+- Implementati template email, campagne in bozza, snapshot destinatari, anteprima e invio con conferma admin
+- Implementati segmenti destinatari: tutti i soci, soci attivi, soci scaduti, sponsor e custom/manuale
+- Salvati stato campagna, stato destinatari, email effettivamente utilizzata ed eventuale `provider_message_id`
+- Abilitata la voce navigazione `Email`
+- Aggiornati README, database design, business rules, screen flow, report Supabase e checklist M7
+- Nessuna funzionalita' report, dashboard avanzata, area soci, automazioni schedulate, contabilita', fatturazione, IVA o prima nota introdotta
+
 # 0.8.0
 
 - Avviata milestone M6 - Events

@@ -518,21 +518,18 @@ Uso previsto in M7:
 - valutare Broadcasts/Automations solo in futuro se serve gestione avanzata
   marketing/contatti.
 
-Variabili ambiente previste nella futura PR operativa M7:
+Variabili ambiente operative M7:
 
 ```env
 RESEND_API_KEY=
-EMAIL_FROM_ADDRESS=
-EMAIL_FROM_NAME=
-EMAIL_REPLY_TO=
-EMAIL_PROVIDER=resend
-EMAIL_DAILY_SEND_LIMIT=100
+EMAIL_FROM=
 ```
 
 Regole:
 
 - non usare prefisso `NEXT_PUBLIC_` per `RESEND_API_KEY`;
 - non committare valori reali;
+- `EMAIL_FROM` deve contenere il mittente configurato/autorizzato in Resend;
 - `.env.example` deve contenere solo nomi variabili e descrizioni;
 - prima dell'invio reale configurare dominio verificato e mittente autorizzato;
 - verificare i limiti free-tier al momento dell'implementazione, perche' i piani

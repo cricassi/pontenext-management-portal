@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M6 - Events
+M7 - Email & Campaigns
 ```
 
 Milestone completate o avviate:
@@ -42,6 +42,7 @@ Milestone completate o avviate:
 - M4: dashboard operativa con KPI e widget basati sui dati M1-M3.
 - M5: sponsor e contributi sponsor monetari/non monetari.
 - M6: eventi, sponsor evento e contributi sponsor collegati opzionalmente a eventi.
+- M7: template email, campagne, destinatari storicizzati e invio confermato tramite Resend.
 
 M2 include:
 
@@ -90,6 +91,18 @@ M6 introduce:
 M6 non introduce email, report, dashboard avanzata, pagamenti online,
 contabilita', fatturazione, IVA o prima nota.
 
+M7 introduce:
+
+- route `/email`, `/email/templates`, `/email/campaigns`;
+- tabelle `email_templates`, `email_campaigns`, `email_campaign_recipients`;
+- template email attivi/archiviati;
+- campagne `draft`, `sent`, `failed`;
+- snapshot destinatari per soci, soci attivi, soci scaduti, sponsor e destinatari custom;
+- invio email con conferma admin esplicita tramite Resend server-side.
+
+M7 non introduce report, dashboard avanzata, area soci, automazioni schedulate,
+contabilita', fatturazione, IVA o prima nota.
+
 ## Setup locale
 
 ### 1. Installazione dipendenze
@@ -106,13 +119,20 @@ Copiare `.env.example` in `.env.local` e valorizzare:
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-public-key>
 SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+RESEND_API_KEY=
+EMAIL_FROM=
 ```
 
 `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` sono usate dal client browser, dal middleware e dal server client Supabase.
 
 `SUPABASE_SERVICE_ROLE_KEY` non deve essere usata nel browser. Serve solo per operazioni server controllate o bootstrap operativo fuori dalla UI. Se il bootstrap viene fatto dal Supabase SQL editor, la chiave service role non serve al runtime locale.
 
-### 3. Database fino a M6
+`RESEND_API_KEY` e `EMAIL_FROM` sono usate solo lato server per M7. Non usare il
+prefisso `NEXT_PUBLIC_`, non stampare la chiave nei log e non committare valori
+reali. `EMAIL_FROM` deve corrispondere a un mittente autorizzato/verificato in
+Resend prima dell'invio reale.
+
+### 3. Database fino a M7
 
 Applicare le migration in ordine:
 
@@ -126,6 +146,7 @@ database/migrations/006_memberships_payments.sql
 database/migrations/007_sponsors.sql
 database/migrations/008_events.sql
 database/migrations/009_sponsor_contributions.sql
+database/migrations/010_email.sql
 ```
 
 Applicare poi i seed richiesti dalle milestone:
@@ -144,8 +165,10 @@ La migration `009_sponsor_contributions.sql` aggiunge
 `sponsor_contributions.event_id` nullable per collegare opzionalmente un
 contributo sponsor a un evento.
 
-Le migration `010` e successive sono placeholder per milestone future e non
-vanno applicate durante M6.
+La migration `010_email.sql` crea le tabelle email M7 e abilita RLS admin-only.
+
+Le migration `011` e successive sono placeholder per milestone future e non
+vanno applicate durante M7.
 
 ### 4. Bootstrap primo super_admin
 
@@ -262,6 +285,8 @@ Documenti principali:
 - `docs/M5_CHECKLIST.md`
 - `docs/M6_IMPLEMENTATION_PLAN.md`
 - `docs/M6_CHECKLIST.md`
+- `docs/M7_IMPLEMENTATION_PLAN.md`
+- `docs/M7_CHECKLIST.md`
 - `docs/SUPABASE_SETUP.md`
 - `docs/SUPABASE_VALIDATION_REPORT.md`
 

@@ -122,6 +122,20 @@ Ogni invio email deve salvare:
 
 I promemoria scadenze via email appartengono alla milestone M7.
 
+Regole M7:
+
+- creare una campagna non invia email;
+- generare destinatari non invia email;
+- l'invio richiede conferma esplicita di un admin;
+- ogni campagna salva lo snapshot storico dei destinatari;
+- ogni destinatario salva l'email effettivamente usata;
+- gli stati campagna M7 sono `draft`, `sent`, `failed`;
+- l'invio usa Resend esclusivamente lato server;
+- `RESEND_API_KEY` non deve essere salvata nel database, esposta al browser,
+  stampata nei log o committata;
+- i soci non hanno account e non accedono al sistema;
+- nessun invio automatico, scheduled send o cron viene introdotto in M7.
+
 ## BR-010 - Soft delete
 
 I record principali non devono essere cancellati fisicamente.
