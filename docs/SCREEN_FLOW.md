@@ -331,8 +331,10 @@ Sezioni:
 
 - anagrafica
 - contributi
-- eventi collegati
 - note
+
+Nota: eventi collegati e collegamento sponsor/eventi restano fuori da M5 e
+vengono introdotti solo con la milestone eventi.
 
 ---
 
