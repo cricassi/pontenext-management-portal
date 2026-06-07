@@ -25,6 +25,14 @@ type MembershipFormDefaults = {
   endDate: string;
   minimumFee: number;
   expectedFee: number;
+  notes?: string | null;
+};
+
+type MembershipFormContext = {
+  title: string;
+  description: string;
+  sourceHref?: string;
+  sourceLabel?: string;
 };
 
 type MembershipFormProps = {
@@ -33,6 +41,8 @@ type MembershipFormProps = {
   defaults: MembershipFormDefaults;
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   submitLabel: string;
+  cancelHref?: string;
+  context?: MembershipFormContext;
 };
 
 function fieldError(state: FormState, key: string) {
@@ -51,6 +61,8 @@ export function MembershipForm({
   defaults,
   action,
   submitLabel,
+  cancelHref = "/memberships",
+  context,
 }: MembershipFormProps) {
   const [state, formAction] = useActionState(action, emptyFormState);
   const [selectedPlanId, setSelectedPlanId] = useState(
@@ -101,6 +113,22 @@ export function MembershipForm({
           {state.message ? (
             <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
               {state.message}
+            </div>
+          ) : null}
+
+          {context ? (
+            <div className="grid gap-3 rounded-md border bg-muted/20 p-4 text-sm">
+              <div>
+                <p className="font-medium text-foreground">{context.title}</p>
+                <p className="mt-1 text-muted-foreground">
+                  {context.description}
+                </p>
+              </div>
+              {context.sourceHref && context.sourceLabel ? (
+                <Button asChild variant="outline" size="sm" className="w-fit">
+                  <Link href={context.sourceHref}>{context.sourceLabel}</Link>
+                </Button>
+              ) : null}
             </div>
           ) : null}
 
@@ -200,7 +228,11 @@ export function MembershipForm({
 
             <Field className="md:col-span-2">
               <FieldLabel htmlFor="notes">Note</FieldLabel>
-              <Textarea id="notes" name="notes" />
+              <Textarea
+                id="notes"
+                name="notes"
+                defaultValue={defaults.notes ?? ""}
+              />
               <FieldDescription>
                 Obbligatorie se quota prevista = 0.
               </FieldDescription>
@@ -210,7 +242,7 @@ export function MembershipForm({
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button asChild variant="outline">
-              <Link href="/memberships">Annulla</Link>
+              <Link href={cancelHref}>Annulla</Link>
             </Button>
             <FormSubmitButton>{submitLabel}</FormSubmitButton>
           </div>

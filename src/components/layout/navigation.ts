@@ -32,7 +32,7 @@ export const navigationItems = [
     label: "Scadenze",
     href: "/expirations",
     icon: Calendar,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Sponsor",

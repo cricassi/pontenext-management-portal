@@ -30,14 +30,15 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M2 - Memberships & Payments
+M3 - Expirations & Renewals
 ```
 
 Milestone completate o avviate:
 
 - M0/M0.x: infrastruttura, Supabase Auth, `admin_users`, route protette e bootstrap `super_admin`;
 - M1: soci, ruoli e assegnazione ruoli;
-- M2: piani iscrizione, iscrizioni storiche e pagamenti non contabili.
+- M2: piani iscrizione, iscrizioni storiche e pagamenti non contabili;
+- M3: scadenze, filtri 30/60/90 giorni e rinnovo rapido.
 
 M2 include:
 
@@ -47,7 +48,16 @@ M2 include:
 - migration `membership_plans`, `memberships`, `payments`;
 - seed piani iscrizione base.
 
-Restano fuori scope M2 sponsor, eventi, email, report e dashboard completa.
+M3 include:
+
+- route `/expirations`;
+- filtri scaduti, entro 30, 60 e 90 giorni;
+- pannello scadenza nella scheda socio;
+- rinnovo rapido precompilato.
+
+Restano fuori scope M3 sponsor, eventi, email, report e dashboard completa.
+
+M3 non introduce nuove migration: scadenze e rinnovi rapidi derivano dalle tabelle M2.
 
 ## Setup locale
 
@@ -91,7 +101,7 @@ database/seeds/roles.sql
 database/seeds/membership_plans.sql
 ```
 
-Le migration `007` e successive sono placeholder per milestone future e non vanno applicate durante M2.
+Le migration `007` e successive sono placeholder per milestone future e non vanno applicate durante M3.
 
 ### 4. Bootstrap primo super_admin
 
@@ -159,7 +169,7 @@ npm run lint
 Lo script esegue:
 
 ```bash
-eslint --max-warnings=0 .
+eslint --max-warnings=0 src middleware.ts next.config.mjs tailwind.config.ts postcss.config.js
 ```
 
 ## Struttura
