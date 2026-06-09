@@ -1,5 +1,19 @@
 # CHANGELOG.md
 
+# 1.0.0
+
+- Avviata milestone M8 - Reports & Export
+- Implementata route protetta `/reports`
+- Implementata route tecnica protetta `/reports/export`
+- Implementato service layer report per soci, iscrizioni, quote/pagamenti non contabili, scadenze, sponsor, contributi sponsor, eventi e campagne email
+- Implementato export CSV server-side con intestazioni, escaping e mitigazione formula injection
+- Implementato export XLSX server-side in memoria, senza formule e senza persistenza su disco, database o storage
+- Implementati filtri report e preview responsive desktop/mobile
+- Abilitata la voce navigazione `Report`
+- Confermato che M8 non crea nuove tabelle, non crea migration e non modifica Supabase
+- Aggiornati checklist M8 e report Supabase
+- Nessun PDF, invio automatico email, dashboard avanzata, contabilita', fatturazione, IVA o prima nota introdotti
+
 # 0.9.0
 
 - Avviata milestone M7 - Email & Campaigns
