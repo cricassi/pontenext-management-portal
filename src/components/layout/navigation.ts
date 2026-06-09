@@ -50,7 +50,7 @@ export const navigationItems = [
     label: "Email",
     href: "/email",
     icon: Mail,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Report",

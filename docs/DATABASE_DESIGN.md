@@ -358,6 +358,7 @@ Campi:
 - body text not null
 - audience text not null check in `members`, `sponsors`, `both`
 - is_active boolean default true
+- created_by uuid FK admin_users null
 - created_at timestamptz
 - updated_at timestamptz
 - archived_at timestamptz
@@ -373,13 +374,26 @@ Campi:
 - subject text not null
 - body text not null
 - audience_type text not null check in `all_members`, `active_members`, `expired_members`, `sponsors`, `custom`
-- status text not null check in `draft`, `scheduled`, `sent`, `failed`
-- scheduled_at timestamptz null
+- status text not null check in `draft`, `sent`, `failed`
+- provider text not null default `resend`
+- recipient_snapshot_generated_at timestamptz null
+- send_confirmed_at timestamptz null
 - sent_at timestamptz null
+- failed_at timestamptz null
+- error_message text null
 - created_by uuid FK admin_users null
+- sent_by uuid FK admin_users null
 - created_at timestamptz
 - updated_at timestamptz
 - archived_at timestamptz
+
+Regole:
+
+- `draft`, `sent` e `failed` sono gli stati canonici M7.
+- M7 non implementa `scheduled` o invio automatico.
+- Creare o modificare una campagna non invia email.
+- Generare destinatari non invia email.
+- L'invio richiede conferma esplicita admin e avviene solo lato server tramite Resend.
 
 ## email_campaign_recipients
 
@@ -389,14 +403,30 @@ Campi:
 
 - id uuid PK
 - campaign_id uuid FK email_campaigns
+- recipient_type text not null check in `member`, `sponsor`, `custom`
 - member_id uuid FK members null
 - sponsor_id uuid FK sponsors null
 - email text not null
 - recipient_name text null
 - status text not null check in `pending`, `sent`, `failed`, `skipped`
+- skip_reason text null
+- provider_message_id text null
 - error_message text null
 - sent_at timestamptz null
+- opt_out_token_hash text null
+- opted_out_at timestamptz null
+- consent_basis_snapshot text null
 - created_at timestamptz
+- updated_at timestamptz
+
+Regole:
+
+- ogni riga salva l'email effettivamente usata nella campagna;
+- per `recipient_type = member`, `member_id` e' valorizzato e `sponsor_id` e' nullo;
+- per `recipient_type = sponsor`, `sponsor_id` e' valorizzato e `member_id` e' nullo;
+- per `recipient_type = custom`, `member_id` e `sponsor_id` sono nulli;
+- la stessa email non viene duplicata nella stessa campagna;
+- l'eventuale opt-out viene gestito senza esporre dati o token in chiaro.
 
 ## audit_logs
 
@@ -494,6 +524,10 @@ Nota M5: la migration applicata `007_sponsors.sql` crea sia `sponsors` sia
 Nota M6: `008_events.sql` crea `events` ed `event_sponsors`; `009_sponsor_contributions.sql`
 aggiunge `sponsor_contributions.event_id` nullable per collegare opzionalmente
 un contributo sponsor a un evento, senza rendere obbligatorio il collegamento.
+
+Nota M7: `010_email.sql` crea `email_templates`, `email_campaigns` ed
+`email_campaign_recipients`; l'invio e' server-side tramite Resend, non
+automatico, e richiede conferma amministratore.
 
 ---
 
