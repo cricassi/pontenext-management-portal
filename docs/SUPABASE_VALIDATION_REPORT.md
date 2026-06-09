@@ -17,6 +17,7 @@ Questo report documenta:
 - M5 - Sponsors.
 - M6 - Events.
 - M7 - Email & Campaigns.
+- M8 - Reports & Export.
 
 Project ref vincolante:
 
@@ -77,6 +78,15 @@ Vincoli rispettati in M7:
   automazione schedulata creata;
 - provider Resend configurato solo lato server tramite variabili ambiente;
 - nessuna API key salvata nel database o documentata nel repository.
+
+Vincoli rispettati in M8:
+
+- nessuna migration creata;
+- nessuna migration applicata;
+- nessuna tabella report creata;
+- nessuna modifica Supabase eseguita;
+- report/export basati solo su query read-only verso le tabelle M0-M7;
+- nessun PDF, dashboard avanzata, invio email automatico o logica contabile introdotti.
 
 ## Progetto Supabase
 
@@ -1549,6 +1559,113 @@ M7 non introduce:
 - dashboard avanzata;
 - area soci;
 - automazioni schedulate;
+- contabilita';
+- fatturazione;
+- IVA;
+- prima nota.
+
+## M8 - Reports & Export
+
+Data verifica: 2026-06-09
+
+Progetto verificato:
+
+```text
+name: PonteNext
+project ref: uhxfpsamenjhyrfgwckw
+region: eu-central-1
+status: ACTIVE_HEALTHY
+postgres: 17.6.1.127
+```
+
+### Stato migration M8
+
+M8 non introduce migration operative.
+
+Migration live confermate:
+
+```text
+001_extensions
+002_admin_users
+003_harden_admin_functions
+004_members_roles
+005_membership_plans
+006_memberships_payments
+007_sponsors
+008_events
+009_sponsor_contributions
+010_email
+```
+
+Non sono state create o applicate migration M8.
+
+### Tabelle e RLS
+
+Tabelle applicative `public` confermate:
+
+```text
+admin_users
+members
+roles
+member_roles
+membership_plans
+memberships
+payments
+sponsors
+sponsor_contributions
+events
+event_sponsors
+email_templates
+email_campaigns
+email_campaign_recipients
+```
+
+RLS risulta attiva su tutte le tabelle applicative presenti.
+
+Controllo aggregato:
+
+```text
+public_tables_without_rls: 0
+delete_policy_count: 0
+report_or_audit_tables: 0
+```
+
+Non risultano presenti nello schema pubblico:
+
+- `reports`;
+- `report_definitions`;
+- `audit_logs`.
+
+### Implementazione M8
+
+M8 usa esclusivamente il service layer applicativo e il Supabase server client
+autenticato.
+
+Le route introdotte sono:
+
+- `/reports`;
+- `/reports/export`.
+
+Regole confermate:
+
+- `/reports` chiama `requireActiveAdmin()` prima della preview;
+- `/reports/export` chiama `requireActiveAdmin()` prima di leggere il form e
+  generare il file;
+- nessun uso di service role per bypassare RLS;
+- nessun export pubblico o anonimo;
+- nessun file esportato salvato su Supabase Storage o nel database.
+
+### Out of scope M8
+
+M8 non introduce:
+
+- nuove tabelle;
+- nuove migration;
+- modifiche Supabase;
+- PDF;
+- dashboard avanzata;
+- invio automatico email;
+- area soci;
 - contabilita';
 - fatturazione;
 - IVA;

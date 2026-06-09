@@ -56,7 +56,7 @@ export const navigationItems = [
     label: "Report",
     href: "/reports",
     icon: BarChart3,
-    enabled: false,
+    enabled: true,
   },
   {
     label: "Impostazioni",
