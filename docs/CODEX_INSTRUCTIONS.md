@@ -111,3 +111,33 @@ Per ogni milestone:
 Codex deve lavorare solo sulla milestone indicata dall'utente.
 
 Se la milestone non è indicata, chiedere quale milestone eseguire.
+
+---
+
+# 10. Migration and Backup Documentation Maintenance
+
+Codex deve aggiornare `docs/MIGRATION_AND_BACKUP.md` ogni volta che modifica:
+
+- migration database;
+- schema Supabase;
+- RLS/policy;
+- Auth/admin bootstrap;
+- variabili ambiente;
+- provider email;
+- hosting/deploy;
+- backup/restore procedure.
+
+Regole operative:
+
+- ogni PR che modifica uno dei punti sopra deve includere aggiornamento o
+  conferma esplicita di `docs/MIGRATION_AND_BACKUP.md`;
+- non committare `.env.local`, chiavi, backup o export dati;
+- non stampare service role key, `RESEND_API_KEY`, password database o
+  connection string;
+- se una migration cambia ordine, dipendenze o seed, aggiornare anche
+  `DATABASE_DESIGN.md` e `CHANGELOG.md`;
+- se cambiano Auth o bootstrap admin, verificare login admin reale dopo la
+  modifica;
+- se cambiano RLS/policy, documentare verifica RLS e assenza/presenza di policy
+  `DELETE`;
+- su nuovi progetti Supabase verificare anche grant/Data API oltre a RLS.
