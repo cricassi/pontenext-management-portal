@@ -30,18 +30,18 @@ export function BrandLogo({
   }
 
   return (
-    <div className={cn("flex min-w-0 items-center gap-3", className)}>
-      <div className="relative h-11 w-14 shrink-0 overflow-hidden rounded-md bg-black ring-1 ring-white/10">
+    <div className={cn("flex min-w-0 items-center gap-2 sm:gap-3", className)}>
+      <div className="relative h-10 w-12 shrink-0 overflow-hidden rounded-md bg-black ring-1 ring-white/10 sm:h-11 sm:w-14">
         <Image
           src={logoSrc}
           alt=""
           fill
-          sizes="56px"
+          sizes="(max-width: 640px) 48px, 56px"
           className="object-contain"
           priority={priority}
         />
       </div>
-      <div className="min-w-0 leading-none">
+      <div className="min-w-0 flex-1 leading-none">
         <p className="truncate text-sm font-extrabold uppercase tracking-normal text-white">
           Ponte <span className="text-primary">Next</span>
         </p>

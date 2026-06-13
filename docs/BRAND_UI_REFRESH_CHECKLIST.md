@@ -18,6 +18,8 @@ Ultimo aggiornamento: 2026-06-13
 - [x] Bottoni primari allineati al rosso brand.
 - [x] Badge/empty state coerenti con la palette.
 - [x] Documentazione brand UI aggiunta.
+- [x] Ordinamento elenco soci aggiunto come controllo read-only accanto ai
+  filtri anagrafici.
 
 # Vincoli rispettati
 
@@ -25,7 +27,8 @@ Ultimo aggiornamento: 2026-06-13
 - [x] Nessuna migration creata.
 - [x] Nessuna modifica Supabase.
 - [x] Nessuna modifica RLS/policy.
-- [x] Nessuna modifica service layer business.
+- [x] Nessuna modifica service layer business mutativa; il service layer soci
+  gestisce solo ordinamento read-only dell'elenco.
 - [x] Nessuna modifica logica CRUD.
 - [x] Nessuna modifica logica email.
 - [x] Nessuna modifica logica report.
@@ -41,6 +44,7 @@ Ultimo aggiornamento: 2026-06-13
 - [x] `/dashboard`.
 - [x] Componenti condivisi UI: `Button`, `Card`, `Badge`, `EmptyState`, `Input`.
 - [x] Menu mobile chiude su selezione voce, click esterno ed `Escape`.
+- [x] `/members`: controllo ordinamento su elenco anagrafiche.
 
 # Verifiche statiche route protette
 
@@ -64,6 +68,10 @@ Ultimo aggiornamento: 2026-06-13
 - [x] Dashboard mobile.
 - [x] Menu mobile: apertura, chiusura su click esterno, chiusura dopo selezione
   voce.
+- [x] Header mobile senza overflow orizzontale: menu, brand e logout restano
+  dentro il viewport.
+- [x] Contenuto admin protetto da apertura con offset orizzontale/taglio
+  laterale.
 - [x] Navigazione protetta senza sessione: `/dashboard` reindirizza a `/login`.
 - [x] Console browser senza errori rilevanti nelle schermate verificate.
 
@@ -71,6 +79,11 @@ Nota: il browser plugin locale non ha il virtual clipboard installato, quindi la
 digitazione automatica delle credenziali non e' stata ripetuta dopo il rebuild.
 La route protetta e il rendering sono stati verificati via navigazione browser e
 analisi statica del guard `requireActiveAdmin`.
+
+Nota finale: dopo l'aggiunta dell'ordinamento soci, `npm run lint`,
+`npx tsc --noEmit` e `npm run build` sono passati. Un ulteriore avvio locale
+per browser check e' stato interrotto da una sessione Supabase locale invalida
+nel browser (`refresh_token_not_found`), senza modifiche a Supabase.
 
 # Descrizione schermate aggiornate
 

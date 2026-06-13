@@ -62,8 +62,21 @@ export type MemberListItem = Member & {
   primaryRoleName: string | null;
 };
 
+export const MEMBER_SORT_OPTIONS = {
+  NAME_ASC: "name_asc",
+  NAME_DESC: "name_desc",
+  CREATED_DESC: "created_desc",
+  CREATED_ASC: "created_asc",
+  STATUS_ASC: "status_asc",
+  CITY_ASC: "city_asc",
+} as const;
+
+export type MemberSortOption =
+  (typeof MEMBER_SORT_OPTIONS)[keyof typeof MEMBER_SORT_OPTIONS];
+
 export type MemberFilters = {
   query?: string;
   status?: MemberStatus | "all";
   roleId?: string | "all";
+  sort?: MemberSortOption;
 };

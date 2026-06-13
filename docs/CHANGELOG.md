@@ -11,9 +11,15 @@
 - Ottimizzata la login page mobile per stare in una singola visualizzazione
 - Aggiornati admin shell, sidebar, header e navigazione attiva in stile Ponte Next
 - Migliorata la navigazione mobile: chiusura su voce, click esterno ed `Escape`
+- Corretto overflow orizzontale mobile dell'admin header e del contenuto
+  gestionale
+- Aggiunto ordinamento read-only all'elenco soci per nome, data creazione,
+  stato anagrafico e citta'
 - Ritoccati dashboard KPI, azioni rapide, widget, bottoni, badge, input, card ed empty state
 - Aggiornate `UI_GUIDELINES.md` e `COMPONENTS_GUIDE.md` con regole brand UI
-- Nessuna modifica a database, migration, Supabase, RLS, service layer business, logica CRUD, email o report
+- Nessuna modifica a database, migration, Supabase, RLS, logica CRUD, email o report;
+  il service layer soci e' stato toccato solo per ordinamento read-only dell'elenco
+  anagrafiche
 
 # 1.0.0
 

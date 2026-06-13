@@ -81,6 +81,14 @@ Campo ricerca standard.
 
 Filtri desktop.
 
+Regole:
+
+- negli elenchi anagrafici deve contenere anche l'ordinamento quando utile;
+- l'ordinamento deve essere espresso in query string e applicato in modo
+  read-only;
+- su mobile i controlli devono andare a colonna ed evitare overflow
+  orizzontale.
+
 ## MobileFiltersSheet
 
 Filtri mobile.

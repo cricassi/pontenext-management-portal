@@ -46,10 +46,10 @@ export function MobileNav() {
   }, [isOpen]);
 
   return (
-    <div ref={navRef} className="relative lg:hidden">
+    <div ref={navRef} className="relative shrink-0 lg:hidden">
       <button
         type="button"
-        className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
+        className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
         onClick={() => setIsOpen((current) => !current)}
