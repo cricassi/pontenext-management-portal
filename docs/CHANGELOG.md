@@ -1,5 +1,13 @@
 # CHANGELOG.md
 
+# 1.0.1
+
+- Aggiunto `docs/MIGRATION_AND_BACKUP.md` con runbook per migrazione, ricreazione Supabase, backup, restore, rotazione chiavi, cambio provider email e cambio hosting
+- Documentato l'ordine migration operativo corrente da `001_extensions` a `010_email`
+- Chiariti seed necessari, bootstrap del primo `super_admin`, gestione Supabase Auth, RLS, grant/Data API, variabili ambiente e segreti
+- Aggiornate le istruzioni Codex con la regola di manutenzione della documentazione migration/backup
+- Nessun codice applicativo, migration, Supabase o Vercel modificato
+
 # 1.0.0
 
 - Avviata milestone M8 - Reports & Export
