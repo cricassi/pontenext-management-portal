@@ -28,9 +28,9 @@ function getActionKindVariant(kind: DashboardActionItem["kind"]) {
   switch (kind) {
     case "expired_membership":
     case "incomplete_fee":
-      return "warning";
+      return "default";
     case "expiring_membership":
-      return "outline";
+      return "warning";
   }
 }
 
@@ -48,7 +48,7 @@ export function DashboardActionItems({ items }: DashboardActionItemsProps) {
 
   return (
     <>
-      <div className="hidden overflow-hidden rounded-lg border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-lg border bg-card shadow-sm shadow-zinc-950/5 md:block">
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -62,7 +62,10 @@ export function DashboardActionItems({ items }: DashboardActionItemsProps) {
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b last:border-b-0">
+              <tr
+                key={item.id}
+                className="border-b transition-colors hover:bg-muted/30 last:border-b-0"
+              >
                 <td className="px-4 py-3">
                   <Badge variant={getActionKindVariant(item.kind)}>
                     {getActionKindLabel(item.kind)}
@@ -110,7 +113,10 @@ export function DashboardActionItems({ items }: DashboardActionItemsProps) {
 
       <div className="grid gap-3 md:hidden">
         {items.map((item) => (
-          <article key={item.id} className="rounded-lg border bg-card p-4">
+          <article
+            key={item.id}
+            className="rounded-lg border bg-card p-4 shadow-sm shadow-zinc-950/5"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="truncate text-base font-semibold tracking-normal">

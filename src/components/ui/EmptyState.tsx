@@ -15,7 +15,8 @@ export function EmptyState({
   actionLabel,
 }: EmptyStateProps) {
   return (
-    <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-8 text-center">
+    <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed bg-card p-8 text-center shadow-sm shadow-zinc-950/5">
+      <div className="mb-4 h-1 w-12 rounded-full bg-primary" aria-hidden="true" />
       <h2 className="text-base font-semibold tracking-normal text-foreground">
         {title}
       </h2>

@@ -24,7 +24,7 @@ export function RecentRenewals({ renewals }: RecentRenewalsProps) {
 
   return (
     <>
-      <div className="hidden overflow-hidden rounded-lg border bg-card md:block">
+      <div className="hidden overflow-hidden rounded-lg border bg-card shadow-sm shadow-zinc-950/5 md:block">
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -38,7 +38,10 @@ export function RecentRenewals({ renewals }: RecentRenewalsProps) {
           </thead>
           <tbody>
             {renewals.map((renewal) => (
-              <tr key={renewal.membershipId} className="border-b last:border-b-0">
+              <tr
+                key={renewal.membershipId}
+                className="border-b transition-colors hover:bg-muted/30 last:border-b-0"
+              >
                 <td className="px-4 py-3">
                   <Link
                     href={`/members/${renewal.memberId}`}
@@ -76,7 +79,10 @@ export function RecentRenewals({ renewals }: RecentRenewalsProps) {
 
       <div className="grid gap-3 md:hidden">
         {renewals.map((renewal) => (
-          <article key={renewal.membershipId} className="rounded-lg border bg-card p-4">
+          <article
+            key={renewal.membershipId}
+            className="rounded-lg border bg-card p-4 shadow-sm shadow-zinc-950/5"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="truncate text-base font-semibold tracking-normal">

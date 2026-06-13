@@ -17,15 +17,23 @@ L'interfaccia deve essere:
 - sobria
 - moderna
 - adatta a desktop e smartphone
+- coerente con l'identita' Ponte Next: nero, rosso, bianco
 
 Non deve sembrare un sito vetrina.
 
-Il riferimento visivo è una dashboard amministrativa simile a:
+Il riferimento visivo resta una dashboard amministrativa simile a:
 
 - Supabase Dashboard
 - Linear
 - Notion
 - Stripe Dashboard
+
+La prima identita' visuale Ponte Next aggiunge:
+
+- sidebar/header scuri;
+- contenuto gestionale chiaro;
+- rosso come accento operativo;
+- logo locale come elemento di brand, senza usare font decorativi nella UI.
 
 ---
 
@@ -59,10 +67,12 @@ Componenti consigliati:
 Tema iniziale:
 
 - light mode
-- sfondo chiaro
+- sfondo chiaro `#F7F7F5`
 - card bianche
 - bordi leggeri
 - testi ad alto contrasto
+- nero istituzionale `#0B0B0B` per sidebar/header
+- rosso primario `#E12A1C` per CTA, focus e navigazione attiva
 
 Dark mode esclusa dalla prima versione.
 
@@ -279,6 +289,22 @@ Usare colore primario solo per:
 - stato attivo della navigazione
 
 Gli stati devono essere leggibili anche senza affidarsi solo al colore.
+
+Palette brand Ponte Next:
+
+```text
+Nero istituzionale: #0B0B0B
+Rosso primario:     #E12A1C
+Rosso hover:        #B91F15
+Background:         #F7F7F5
+Card:               #FFFFFF
+Testo principale:   #18181B
+Testo secondario:   #71717A
+Bordi:              #E4E4E7
+```
+
+Non usare il font brush/grunge del logo nei testi gestionali.
+Per dettagli completi vedere `docs/BRAND_UI_GUIDELINES.md`.
 
 ---
 

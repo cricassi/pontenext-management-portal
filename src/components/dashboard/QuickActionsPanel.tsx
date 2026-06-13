@@ -21,10 +21,12 @@ export function QuickActionsPanel({ actions }: QuickActionsPanelProps) {
 
         return (
           <Link key={action.href} href={action.href} className="block">
-            <Card className="h-full transition-colors hover:border-primary/40">
+            <Card className="h-full transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md">
               <CardHeader className="flex-row items-center justify-between gap-3 pb-3">
                 <CardTitle className="text-sm">{action.label}</CardTitle>
-                <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
+                <span className="inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <Icon aria-hidden="true" className="size-4" />
+                </span>
               </CardHeader>
               <CardContent>
                 <p className="text-sm leading-6 text-muted-foreground">

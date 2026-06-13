@@ -37,13 +37,15 @@ export function DashboardKpiGrid({ kpis }: DashboardKpiGridProps) {
 
         return (
           <Link key={kpi.key} href={kpi.href} className="block">
-            <Card className="h-full transition-colors hover:border-primary/40">
+            <Card className="group h-full transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md">
               <CardHeader className="flex-row items-start justify-between gap-3 pb-3">
                 <CardTitle className="text-sm leading-5">{kpi.label}</CardTitle>
-                <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
+                <span className="inline-flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <Icon aria-hidden="true" className="size-5" />
+                </span>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-semibold tracking-normal">
+                <p className="text-3xl font-semibold tracking-normal text-foreground">
                   {kpi.value}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-muted-foreground">

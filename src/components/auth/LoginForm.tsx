@@ -72,7 +72,7 @@ export function LoginForm({ isSupabaseConfigured, nextPath }: LoginFormProps) {
   }
 
   return (
-    <Card>
+    <Card className="border-zinc-200 shadow-xl shadow-zinc-950/5">
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>
@@ -90,27 +90,29 @@ export function LoginForm({ isSupabaseConfigured, nextPath }: LoginFormProps) {
         <form onSubmit={handleSubmit}>
           <FieldGroup>
             <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              aria-invalid={Boolean(errorMessage)}
-            />
+              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="nome@esempio.it"
+                required
+                aria-invalid={Boolean(errorMessage)}
+              />
             </Field>
 
             <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              aria-invalid={Boolean(errorMessage)}
-            />
+              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="La tua password"
+                required
+                aria-invalid={Boolean(errorMessage)}
+              />
             </Field>
 
             {errorMessage ? (
@@ -119,7 +121,11 @@ export function LoginForm({ isSupabaseConfigured, nextPath }: LoginFormProps) {
               </p>
             ) : null}
 
-            <Button type="submit" disabled={isSubmitting || !isSupabaseConfigured}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || !isSupabaseConfigured}
+            >
               {isSubmitting ? "Accesso in corso..." : "Accedi"}
             </Button>
           </FieldGroup>

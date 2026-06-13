@@ -1,5 +1,20 @@
 # CHANGELOG.md
 
+# 1.1.0
+
+- Avviato UI Brand Refresh - PonteNext Visual Identity
+- Aggiunto asset logo Ponte Next locale in `public/brand`
+- Aggiunta guida `docs/BRAND_UI_GUIDELINES.md`
+- Aggiunta checklist `docs/BRAND_UI_REFRESH_CHECKLIST.md`
+- Aggiornati token colore Tailwind su palette nero, rosso, bianco e grigi chiari
+- Brandizzata la login page con layout split desktop e logo Ponte Next
+- Ottimizzata la login page mobile per stare in una singola visualizzazione
+- Aggiornati admin shell, sidebar, header e navigazione attiva in stile Ponte Next
+- Migliorata la navigazione mobile: chiusura su voce, click esterno ed `Escape`
+- Ritoccati dashboard KPI, azioni rapide, widget, bottoni, badge, input, card ed empty state
+- Aggiornate `UI_GUIDELINES.md` e `COMPONENTS_GUIDE.md` con regole brand UI
+- Nessuna modifica a database, migration, Supabase, RLS, service layer business, logica CRUD, email o report
+
 # 1.0.0
 
 - Avviata milestone M8 - Reports & Export
