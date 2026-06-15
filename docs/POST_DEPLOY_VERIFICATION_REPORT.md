@@ -2,41 +2,50 @@
 
 # PonteNext Management Portal - Post-Deploy Verification
 
-Data verifica: 2026-06-15
+Data verifica: 2026-06-16
 
 Repository: `cricassi/pontenext-management-portal`
 
-Branch locale verificato: `main` aggiornato da `origin/main`, poi branch
-documentale `codex/post-deploy-verification`
+Branch report: `codex/post-deploy-verification`
 
-Commit main verificato: `5680d3c26492815522f97cf78413b947f39011aa`
+Commit main locale verificato: `5680d3c26492815522f97cf78413b947f39011aa`
 
-URL Vercel verificato: `https://management-portal.vercel.app`
+URL Vercel verificato: `https://pontenext-management-portal.vercel.app`
 
 Progetto Supabase verificato: `PonteNext`
 (`uhxfpsamenjhyrfgwckw`)
 
-Esito complessivo: **non approvato**
+Esito complessivo: **approvato con riserva operativa**
 
-Decisione finale: **deploy approvato: no**
+Decisione finale: **deploy approvato: si', con raccomandazioni M9**
 
 ---
 
 # 1. Sintesi esecutiva
 
-La verifica post-deploy non puo' essere approvata per due problemi bloccanti:
+La verifica e' stata rieseguita usando il dominio Vercel corretto:
 
-1. L'URL Vercel live `https://management-portal.vercel.app` restituisce
-   `500 Internal Server Error` su `/`, `/login` e sulle route admin protette.
-2. La PR Brand Refresh `#36` risulta ancora aperta e non mergiata su `main`;
-   quindi il repository `main` verificato non contiene il refresh grafico che il
-   contesto considera completato.
+`https://pontenext-management-portal.vercel.app`
 
-Le verifiche locali su repository sono passate (`lint`, `typecheck`, `build`),
-e Supabase live risulta attivo e coerente con le migration M0-M8. Tuttavia il
-deploy pubblico non e' utilizzabile: login, routing, auth, dashboard, UI brand,
-report/export e verifica Resend lato runtime non sono completabili online finche'
-il 500 resta presente.
+Il deploy online risulta funzionante:
+
+- `/login` e' accessibile;
+- le route admin senza sessione reindirizzano a `/login`;
+- il login admin reale funziona;
+- il redirect post-login porta a `/dashboard`;
+- le route principali autenticate caricano senza errori browser;
+- logout funzionante;
+- dopo logout `/dashboard` torna a `/login?next=%2Fdashboard`;
+- Supabase live e' healthy e RLS risulta attiva;
+- Resend risulta configurato nella UI Email senza inviare email reali;
+- UI Brand Refresh visibile online;
+- responsive mobile base verificato su dashboard.
+
+Resta una riserva operativa: GitHub segnala ancora la PR `#36` Brand Refresh
+aperta e non mergiata su `main`, mentre il dominio live mostra il refresh
+grafico. Questo indica un possibile disallineamento tra branch/release sorgente
+e deploy effettivamente pubblicato. Non blocca l'uso del deploy verificato, ma
+va risolto prima di proseguire con M9.
 
 ---
 
@@ -47,7 +56,8 @@ il 500 resta presente.
 - Nessuna modifica al database Supabase.
 - Nessuna modifica a dati live.
 - Nessuna email reale inviata.
-- Nessuna API key o secret stampata nel report.
+- Nessuna API key o secret stampata.
+- Export non scaricato.
 - Query Supabase eseguite solo su metadata/schema o conteggi tecnici.
 
 ---
@@ -56,7 +66,7 @@ il 500 resta presente.
 
 ## Esito
 
-Parzialmente verificata, con blocco runtime live.
+Parzialmente verificata.
 
 ## Evidenze locali
 
@@ -84,6 +94,17 @@ Parzialmente verificata, con blocco runtime live.
 - `RESEND_API_KEY`
 - `EMAIL_FROM`
 
+## Verifica indiretta runtime
+
+Le env Vercel non sono state lette direttamente, ma il runtime online conferma
+in modo indiretto:
+
+- Supabase URL/anon key presenti, perche' login Supabase Auth e lettura
+  `admin_users` funzionano online;
+- Resend env presenti, perche' la pagina `/email` mostra provider Resend
+  configurato;
+- route server-side e build Next.js funzionanti sul dominio corretto.
+
 ## Limite verifica
 
 Il connector Vercel non ha esposto strumenti callable in questa sessione e la
@@ -91,22 +112,14 @@ CLI `vercel` non risulta disponibile localmente. Di conseguenza non e' stato
 possibile leggere direttamente dal progetto Vercel la lista delle variabili
 ambiente configurate in Production.
 
-Il 500 live rende comunque necessario controllare nel dashboard Vercel:
-
-- framework preset Next.js;
-- build command `npm run build` o equivalente;
-- root directory corretta;
-- presenza delle variabili richieste in Production;
-- runtime logs del deployment associati agli `x-vercel-id` rilevati.
-
 ## Esposizione variabili sensibili nel client
 
 Verifica locale:
 
-- `SUPABASE_SERVICE_ROLE_KEY` non risulta usata in `src`.
+- `SUPABASE_SERVICE_ROLE_KEY` non risulta usata in `src`;
 - `RESEND_API_KEY` e `EMAIL_FROM` sono lette solo in
-  `src/services/email-provider.service.ts`, lato server.
-- Il bundle client locale `.next/static` non contiene i nomi:
+  `src/services/email-provider.service.ts`, lato server;
+- il bundle client locale `.next/static` non contiene i nomi:
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `RESEND_API_KEY`
   - `EMAIL_FROM`
@@ -118,37 +131,29 @@ Verifica locale:
 
 ## Esito
 
-Fallito.
+Passato.
 
-## Risultati HTTP live
+## Risultati HTTP senza sessione
 
-Richieste read-only eseguite su `https://management-portal.vercel.app`.
+Richieste read-only eseguite su
+`https://pontenext-management-portal.vercel.app`.
 
 | Route | Esito atteso senza sessione | Esito rilevato |
 | --- | --- | --- |
-| `/` | redirect/app shell o login | `500` |
-| `/login` | `200` | `500` |
-| `/dashboard` | redirect a `/login` | `500` |
-| `/members` | redirect a `/login` | `500` |
-| `/memberships` | redirect a `/login` | `500` |
-| `/expirations` | redirect a `/login` | `500` |
-| `/sponsors` | redirect a `/login` | `500` |
-| `/events` | redirect a `/login` | `500` |
-| `/email` | redirect a `/login` | `500` |
-| `/reports` | redirect a `/login` | `500` |
-| `/reports/export` | redirect a `/login` o errore autorizzativo controllato | `500` |
-| `/favicon.ico` | asset favicon se configurato | `404` |
+| `/` | redirect a login | `307` -> `/login?next=%2F` |
+| `/login` | `200` | `200` |
+| `/dashboard` | redirect a login | `307` -> `/login?next=%2Fdashboard` |
+| `/members` | redirect a login | `307` -> `/login?next=%2Fmembers` |
+| `/memberships` | redirect a login | `307` -> `/login?next=%2Fmemberships` |
+| `/expirations` | redirect a login | `307` -> `/login?next=%2Fexpirations` |
+| `/sponsors` | redirect a login | `307` -> `/login?next=%2Fsponsors` |
+| `/events` | redirect a login | `307` -> `/login?next=%2Fevents` |
+| `/email` | redirect a login | `307` -> `/login?next=%2Femail` |
+| `/reports` | redirect a login | `307` -> `/login?next=%2Freports` |
+| `/reports/export` | redirect a login | `307` -> `/login?next=%2Freports%2Fexport` |
 
-Header rilevato su `/login`:
-
-- status: `500 Internal Server Error`
-- server: `Vercel`
-- body: vuoto
-- esempio `x-vercel-id`: `fra1::g8wwj-1781560238003-ee83b25b58a7`
-
-Il browser interno ha inoltre bloccato l'apertura della URL con
-`net::ERR_BLOCKED_BY_CLIENT`; la verifica HTTP diretta conferma comunque il
-problema server-side.
+Nota: `/favicon.ico` restituisce ancora `404`. Non e' bloccante, ma va
+corretto in hardening/UI polish.
 
 ---
 
@@ -156,22 +161,29 @@ problema server-side.
 
 ## Esito
 
-Non completabile.
+Passato per i casi testabili senza modificare dati live.
 
-## Dettagli
+## Verifiche eseguite
 
-L'utente ha fornito credenziali admin reali per il test, ma non sono state
-trasmesse perche' `/login` restituisce `500` prima di mostrare il form.
+- Login admin reale: passato.
+- Redirect post-login: passato, arrivo su `/dashboard`.
+- Ruolo visualizzato: `Super Admin`.
+- Logout: passato, ritorno a `/login`.
+- Protezione post-logout: passato, `/dashboard` reindirizza a
+  `/login?next=%2Fdashboard`.
 
-Verifiche non completabili online:
+## Verifiche non eseguite
 
-- login admin reale;
-- redirect post-login;
-- logout;
-- utente non admin negato;
-- admin `inactive` o `archived` negato.
+Non sono stati testati:
 
-Verifica statica locale:
+- utente Auth non admin;
+- admin `inactive`;
+- admin con `archived_at` valorizzato.
+
+Motivo: non sono disponibili credenziali dedicate e il vincolo della verifica
+impone di non modificare dati live.
+
+## Verifica statica locale
 
 - tutte le route admin passano dal layout `src/app/(admin)/layout.tsx`;
 - il layout chiama `requireActiveAdmin()`;
@@ -188,7 +200,7 @@ Verifica statica locale:
 
 ## Esito
 
-Passato per le verifiche read-only eseguibili.
+Passato.
 
 ## Progetto
 
@@ -251,7 +263,7 @@ concesso tramite Data API per quella tabella.
 
 ## Esito
 
-Parzialmente verificato.
+Passato, senza invio reale.
 
 ## Verifica locale
 
@@ -260,14 +272,14 @@ Parzialmente verificato.
 - `RESEND_API_KEY` viene letto solo via `process.env.RESEND_API_KEY`.
 - `EMAIL_FROM` viene letto solo via `process.env.EMAIL_FROM`.
 - Nessuna API key e' stata letta o stampata.
-- Nessuna email reale e' stata inviata.
 
-## Limite verifica
+## Verifica online
 
-Non e' stato possibile verificare dal dashboard Vercel che `RESEND_API_KEY` ed
-`EMAIL_FROM` siano presenti in Production per assenza di strumenti Vercel
-callable nella sessione. Inoltre il 500 live impedisce di raggiungere la pagina
-email o lo stato provider online.
+- Pagina `/email` autenticata raggiunta.
+- Provider Resend presente nella UI.
+- Stato provider indicato come configurato.
+- Nessuna azione di invio avviata.
+- Nessuna email reale inviata.
 
 ---
 
@@ -275,88 +287,114 @@ email o lo stato provider online.
 
 ## Esito
 
-Fallito / non verificabile online.
+Passato online, con riserva GitHub/main.
 
-## Problema bloccante
+## Verifiche desktop
 
-La PR `#36` `UI Brand Refresh - PonteNext Visual Identity` risulta:
+- `/login` accessibile.
+- Titolo pagina: `PonteNext Management Portal`.
+- Login brandizzato rilevato.
+- Asset logo Ponte Next caricati.
+- Nessun errore console su login.
+- Nessun overflow orizzontale su login.
+- Dashboard autenticata leggibile.
+- Sidebar/header brandizzati visibili.
+- Nessun errore console sulle route verificate.
+- Nessuna immagine rotta sulle route verificate.
 
-- stato: `open`;
-- merged: `false`;
-- head: `codex/ui-brand-refresh`;
-- ultimo commit head: `42a7f34984d8b8eedb5b3f2fa924c15f64a5e659`;
-- base `main`: `5680d3c26492815522f97cf78413b947f39011aa`.
+## Verifiche mobile base
 
-Il `main` locale aggiornato contiene ancora la login pre-refresh e il
-`CHANGELOG.md` parte da `1.0.0` M8, senza sezione Brand Refresh.
+Viewport testato: `390x844`.
 
-## Verifiche online non completabili
+- `/dashboard` mobile caricata.
+- Menu mobile presente.
+- Bottone `Esci` presente.
+- Menu mobile apribile.
+- Nessun overflow orizzontale prima dell'apertura menu.
+- Nessun overflow orizzontale dopo apertura menu.
+- Nessun errore console.
 
-A causa del 500 su `/login` e sulle route admin non sono verificabili:
+## Riserva
 
-- login brandizzato;
-- sidebar/header brandizzati;
-- dashboard leggibile online;
-- responsive mobile base online;
-- asset logo/favicon online.
-
-Nota: `favicon.ico` sul dominio live restituisce `404`.
+GitHub segnala ancora PR `#36` Brand Refresh aperta e non mergiata su `main`,
+mentre il dominio live mostra il Brand Refresh. Questo va riallineato per
+evitare che il prossimo deploy da `main` sovrascriva o perda il refresh.
 
 ---
 
-# 9. Report / Export
+# 9. Route autenticate verificate
+
+Verifica browser autenticata, senza modificare dati:
+
+| Route | H1 rilevato | Esito |
+| --- | --- | --- |
+| `/dashboard` | `Dashboard` | passato |
+| `/members` | `Soci` | passato |
+| `/memberships` | `Iscrizioni` | passato |
+| `/expirations` | `Scadenze` | passato |
+| `/sponsors` | `Sponsor` | passato |
+| `/events` | `Eventi` | passato |
+| `/email` | `Email` | passato |
+| `/reports` | `Report` | passato |
+
+Per tutte:
+
+- sessione mantenuta;
+- nessun testo di errore applicativo;
+- nessun overflow orizzontale rilevato;
+- nessuna immagine rotta rilevata;
+- nessun errore console rilevante.
+
+---
+
+# 10. Report / Export
 
 ## Esito
 
-Fallito online.
+Passato per route e protezione, senza download.
 
 ## Dettagli
 
-- `/reports` restituisce `500`.
-- `/reports/export` restituisce `500`.
+- `/reports` senza sessione reindirizza a login.
+- `/reports` autenticata carica correttamente.
+- `/reports/export` senza sessione reindirizza a login.
 - Non e' stato avviato alcun download.
 - Non sono stati scaricati dati reali massivi.
 
-Verifica locale/statica:
-
-- route `/reports` presente nel build Next.js;
-- route `/reports/export` presente nel build Next.js;
-- export implementato server-side;
-- nessun file export viene scritto su disco secondo la review M8 precedente.
-
 ---
 
-# 10. Sicurezza
+# 11. Sicurezza
 
 ## Esito
 
-Parzialmente passato localmente, fallito online per indisponibilita' runtime.
+Passato con riserve operative.
 
 ## Verifiche passate
 
-- Route admin protette staticamente da `requireActiveAdmin()`.
+- Route admin protette da redirect senza sessione.
+- Login richiede admin attivo in `admin_users`.
+- Logout invalida la sessione browser.
+- Nessun accesso anonimo diretto a `public.members`.
+- RLS attiva sulle tabelle applicative.
+- Nessuna policy `DELETE`.
 - Nessun uso applicativo locale di `SUPABASE_SERVICE_ROLE_KEY` in `src`.
 - Resend lato server.
 - Nessun nome di secret sensibile rilevato nel bundle client locale
   `.next/static`.
-- Supabase RLS attiva sulle tabelle applicative.
-- Nessuna policy `DELETE`.
-- Accesso anonimo diretto ai dati negato su `public.members`.
+- Nessun errore console sulle pagine verificate.
 
-## Verifiche non completabili
+## Riserve
 
-- Nessun errore console/network online: non completabile per 500 live e blocco
-  browser `ERR_BLOCKED_BY_CLIENT`.
-- Nessun errore server esposto all'utente: il body HTTP del 500 e' vuoto, ma
-  resta necessario controllare i runtime logs Vercel.
-- Nessuna variabile sensibile esposta dal deployment live: non verificabile in
-  modo diretto senza accesso a configurazione/log Vercel.
+- Env Vercel Production non lette direttamente per assenza tool Vercel/CLI.
+- Utente non admin e admin inactive/archived non testati per evitare modifiche
+  ai dati live.
+- PR Brand Refresh non mergiata su `main`.
 
 ---
 
-# 11. Verifiche tecniche locali
+# 12. Verifiche tecniche locali
 
-Comandi eseguiti su `main` aggiornato:
+Comandi eseguiti su `main` aggiornato durante la prima stesura del report:
 
 - `npm run lint`: passato al secondo tentativo. Il primo tentativo e' rimasto
   appeso fino al timeout senza emettere errori.
@@ -382,129 +420,110 @@ Nota build:
 
 ---
 
-# 12. Problemi bloccanti
+# 13. Problemi bloccanti
 
-## B1 - Vercel live restituisce 500 su `/login` e route principali
-
-Impatto:
-
-- applicazione non utilizzabile online;
-- login admin non eseguibile;
-- route protette non verificabili;
-- UI/brand non verificabile;
-- report/export non verificabile.
-
-Evidenza:
-
-- `https://management-portal.vercel.app/` -> `500`
-- `https://management-portal.vercel.app/login` -> `500`
-- route admin verificate -> `500`
-- body risposta vuoto;
-- server header: `Vercel`.
-
-## B2 - Brand Refresh non e' su `main`
-
-Impatto:
-
-- il contesto "Brand Refresh completato" non coincide con lo stato reale di
-  `main`;
-- il deploy production potrebbe non puntare alla versione attesa;
-- il report post-deploy non puo' approvare il brand refresh come pubblicato.
-
-Evidenza:
-
-- PR `#36` risulta aperta e non mergiata;
-- `main` locale aggiornato e' fermo al merge PR `#34` M8;
-- `docs/CHANGELOG.md` su `main` non contiene la sezione Brand Refresh.
-
-## B3 - Configurazione Vercel/env Production non verificabile dal connector
-
-Impatto:
-
-- non e' possibile confermare direttamente la presenza in Vercel delle env:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-  - `RESEND_API_KEY`
-  - `EMAIL_FROM`
-- il 500 live richiede verifica manuale o accesso ai runtime logs.
+Nessun problema bloccante rilevato sul dominio corretto.
 
 ---
 
-# 13. Problemi non bloccanti
+# 14. Problemi non bloccanti
 
-- `favicon.ico` restituisce `404`; da sistemare dopo il ripristino runtime.
-- Browser plugin interno blocca la URL live con `net::ERR_BLOCKED_BY_CLIENT`;
-  la verifica HTTP diretta e' stata usata come fallback.
-- Lint locale ha richiesto un secondo tentativo per timeout del primo run, ma e'
-  poi passato senza errori.
+## NB1 - PR Brand Refresh ancora aperta
+
+Impatto:
+
+- il deploy live mostra il Brand Refresh;
+- GitHub segnala pero' PR `#36` ancora aperta e non mergiata su `main`;
+- il prossimo deploy da `main` potrebbe non corrispondere al live verificato.
+
+Raccomandazione:
+
+- chiarire se il dominio production sta puntando a `main`, a una preview o a un
+  alias manuale;
+- mergiare PR `#36` oppure riallineare `main` allo stato live prima di M9.
+
+## NB2 - `favicon.ico` assente
+
+`/favicon.ico` restituisce `404`.
+
+Raccomandazione:
+
+- aggiungere favicon coerente con asset Ponte Next.
+
+## NB3 - Env Vercel non lette direttamente
+
+Le env Production non sono state lette direttamente da dashboard/API Vercel.
+La verifica runtime e' positiva, ma resta consigliato un check manuale dei nomi
+variabile nel dashboard Vercel.
 
 ---
 
-# 14. Rischi residui
+# 15. Rischi residui
 
-- Possibile disallineamento tra dominio production, branch deployato e PR
-  Brand Refresh.
-- Possibile mancanza o errata configurazione delle env Production in Vercel.
-- Possibile errore runtime non visibile dal body HTTP e consultabile solo dai
-  logs Vercel.
-- Auth admin reale non verificata end-to-end online.
-- Resend non verificato online, solo staticamente lato codice.
-- Export non verificato online.
+- Disallineamento tra sorgente GitHub `main`, PR `#36` e deployment live.
+- Assenza verifica diretta delle env Vercel Production.
+- Casi auth negativi non testati con credenziali dedicate:
+  - Auth user non admin;
+  - admin inactive;
+  - admin archived.
+- Export endpoint non testato da autenticato per evitare download di dati reali.
 
 ---
 
-# 15. Raccomandazioni per M9 Hardening
+# 16. Raccomandazioni per M9 Hardening
 
-1. Risolvere immediatamente il 500 Vercel consultando runtime logs del
-   deployment production, usando gli `x-vercel-id` rilevati come riferimento.
-2. Verificare nel dashboard Vercel le env Production richieste, senza esporre i
-   valori:
+1. Riallineare GitHub `main` e deployment live, risolvendo lo stato PR `#36`.
+2. Verificare nel dashboard Vercel, senza esporre valori, le env Production:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `RESEND_API_KEY`
    - `EMAIL_FROM`
-3. Chiarire se il deploy da approvare e' production `main` o preview della PR
-   `#36`.
-4. Se Brand Refresh deve essere in production, mergiare PR `#36` e attendere il
-   redeploy production prima di ripetere questa verifica.
-5. Aggiungere un controllo smoke post-deploy automatico:
+3. Aggiungere smoke test post-deploy automatici:
    - `/login` deve rispondere `200`;
    - route admin senza sessione devono reindirizzare a `/login`;
+   - login admin dedicato di test in ambiente non production o con dati
+     controllati;
    - `/reports/export` senza sessione non deve esportare dati.
-6. Aggiungere logging server controllato per errori runtime critici, senza
-   stampare segreti.
-7. Aggiungere favicon/logo production dopo il ripristino del runtime.
-8. Considerare una pagina health server-side non sensibile per distinguere:
+4. Aggiungere una favicon Ponte Next.
+5. Creare credenziali dedicate per test negativi auth senza alterare dati reali.
+6. Aggiungere una pagina health server-side non sensibile per verificare:
    - deploy raggiungibile;
    - env Supabase configurate;
    - provider email configurato;
-   - database raggiungibile.
+   - database raggiungibile;
+   - nessun segreto esposto.
 
 ---
 
-# 16. Checklist operativa post-deploy
+# 17. Checklist operativa post-deploy
 
-- [x] Repository `main` aggiornato localmente.
-- [x] Stato PR Brand Refresh verificato su GitHub.
-- [x] URL Vercel live verificato via HTTP.
-- [x] `/login` verificata via HTTP.
-- [x] Route admin protette verificate via HTTP.
+- [x] Dominio corretto verificato:
+  `https://pontenext-management-portal.vercel.app`.
+- [x] `/login` accessibile.
+- [x] Route admin senza sessione reindirizzano a login.
+- [x] Login admin reale.
+- [x] Redirect post-login.
+- [x] Dashboard autenticata.
+- [x] Route principali autenticate.
+- [x] Logout.
+- [x] Protezione post-logout.
 - [x] Supabase project status verificato.
 - [x] Migration Supabase verificate.
 - [x] RLS verificata su metadata.
 - [x] Policy verificate su metadata.
 - [x] Accesso anonimo diretto ai dati testato con query read-only.
 - [x] Resend verificato staticamente lato server.
+- [x] Resend verificato online come configurato, senza invio.
+- [x] UI Brand verificata online.
+- [x] Responsive mobile base verificato.
 - [x] Bundle client locale controllato per nomi di secret sensibili.
 - [x] `npm run lint`.
 - [x] `npx tsc --noEmit`.
 - [x] `npm run build`.
-- [ ] Login admin reale online.
-- [ ] Logout online.
-- [ ] Dashboard online.
-- [ ] UI/Brand online.
-- [ ] Export online protetto.
-- [ ] Variabili env Vercel Production verificate direttamente da dashboard/API.
+- [ ] Utente Auth non admin negato.
+- [ ] Admin inactive negato.
+- [ ] Admin archived negato.
+- [ ] Env Vercel Production verificate direttamente da dashboard/API.
+- [ ] PR Brand Refresh riallineata a `main`.
 
