@@ -111,3 +111,21 @@ Per ogni milestone:
 Codex deve lavorare solo sulla milestone indicata dall'utente.
 
 Se la milestone non è indicata, chiedere quale milestone eseguire.
+
+---
+
+# 10. Migration and Backup Documentation Maintenance
+
+Codex deve aggiornare `docs/MIGRATION_AND_BACKUP.md` ogni volta che modifica:
+
+- migration database;
+- schema Supabase;
+- RLS/policy;
+- Auth/admin bootstrap;
+- variabili ambiente;
+- provider email;
+- hosting/deploy;
+- procedure backup/restore.
+
+Se una modifica impatta migrazione, restore o operativita' di ambiente, la
+documentazione backup non e' opzionale. Va aggiornata nella stessa PR.

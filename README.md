@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M7 - Email & Campaigns
+M9 - Final Hardening
 ```
 
 Milestone completate o avviate:
@@ -43,6 +43,9 @@ Milestone completate o avviate:
 - M5: sponsor e contributi sponsor monetari/non monetari.
 - M6: eventi, sponsor evento e contributi sponsor collegati opzionalmente a eventi.
 - M7: template email, campagne, destinatari storicizzati e invio confermato tramite Resend.
+- M8: report operativi ed export CSV/XLSX.
+- UI Brand Refresh: identita' visiva Ponte Next applicata a login, layout admin e dashboard.
+- M9: hardening finale, verifiche live, backup/migrazione e documentazione operativa.
 
 M2 include:
 
@@ -103,6 +106,29 @@ M7 introduce:
 M7 non introduce report, dashboard avanzata, area soci, automazioni schedulate,
 contabilita', fatturazione, IVA o prima nota.
 
+M8 introduce:
+
+- route `/reports`;
+- route tecnica protetta `/reports/export`;
+- report soci, iscrizioni, pagamenti non contabili, scadenze, sponsor,
+  contributi sponsor, eventi e campagne email;
+- export CSV e XLSX server-side;
+- filtri e preview responsive.
+
+M8 non introduce nuove tabelle, migration, PDF, invii automatici email,
+dashboard avanzata, contabilita', fatturazione, IVA o prima nota.
+
+Il Brand Refresh introduce:
+
+- login brandizzata Ponte Next;
+- sidebar/header scuri;
+- palette nero, rosso, bianco e grigi chiari;
+- bottoni primari rossi;
+- miglioramenti responsive mobile.
+
+M9 introduce solo hardening e documentazione operativa. Non modifica database,
+Supabase, migration, provider email o funzionalita' applicative.
+
 ## Setup locale
 
 ### 1. Installazione dipendenze
@@ -127,12 +153,12 @@ EMAIL_FROM=
 
 `SUPABASE_SERVICE_ROLE_KEY` non deve essere usata nel browser. Serve solo per operazioni server controllate o bootstrap operativo fuori dalla UI. Se il bootstrap viene fatto dal Supabase SQL editor, la chiave service role non serve al runtime locale.
 
-`RESEND_API_KEY` e `EMAIL_FROM` sono usate solo lato server per M7. Non usare il
+`RESEND_API_KEY` e `EMAIL_FROM` sono usate solo lato server per le campagne email. Non usare il
 prefisso `NEXT_PUBLIC_`, non stampare la chiave nei log e non committare valori
 reali. `EMAIL_FROM` deve corrispondere a un mittente autorizzato/verificato in
 Resend prima dell'invio reale.
 
-### 3. Database fino a M7
+### 3. Database fino a M9
 
 Applicare le migration in ordine:
 
@@ -167,8 +193,10 @@ contributo sponsor a un evento.
 
 La migration `010_email.sql` crea le tabelle email M7 e abilita RLS admin-only.
 
+M8, Brand Refresh e M9 non introducono migration.
+
 Le migration `011` e successive sono placeholder per milestone future e non
-vanno applicate durante M7.
+vanno applicate durante M9.
 
 ### 4. Bootstrap primo super_admin
 
@@ -202,6 +230,8 @@ set
 Questa operazione non passa dalla UI M0. Va eseguita solo in fase di bootstrap iniziale da Supabase SQL editor, CLI o script controllato con service role.
 
 La procedura completa di verifica Supabase e' documentata in `docs/SUPABASE_SETUP.md`.
+Le procedure di migrazione, backup e restore sono documentate in
+`docs/MIGRATION_AND_BACKUP.md`.
 
 ### 5. Avvio
 
@@ -287,6 +317,16 @@ Documenti principali:
 - `docs/M6_CHECKLIST.md`
 - `docs/M7_IMPLEMENTATION_PLAN.md`
 - `docs/M7_CHECKLIST.md`
+- `docs/M8_IMPLEMENTATION_PLAN.md`
+- `docs/M8_CHECKLIST.md`
+- `docs/M8_VERIFICATION_REPORT.md`
+- `docs/BRAND_UI_GUIDELINES.md`
+- `docs/BRAND_UI_REFRESH_CHECKLIST.md`
+- `docs/BRAND_REFRESH_VERIFICATION_REPORT.md`
+- `docs/MIGRATION_AND_BACKUP.md`
+- `docs/POST_DEPLOY_VERIFICATION_REPORT.md`
+- `docs/M9_HARDENING_REPORT.md`
+- `docs/M9_CHECKLIST.md`
 - `docs/SUPABASE_SETUP.md`
 - `docs/SUPABASE_VALIDATION_REPORT.md`
 

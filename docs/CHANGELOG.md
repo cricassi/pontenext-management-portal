@@ -1,5 +1,26 @@
 # CHANGELOG.md
 
+# 1.2.0
+
+- Avviata milestone M9 - Final Hardening
+- Eseguita verifica sicurezza applicativa su route admin, guard server-side,
+  service role, API key, Resend ed export
+- Eseguita validazione Supabase live in sola lettura su progetto `PonteNext`
+- Confermato che le migration live operative sono `001`-`010`
+- Confermato RLS attiva sulle tabelle applicative e nessuna policy `DELETE`
+- Eseguiti Supabase Security Advisor e Performance Advisor
+- Documentato warning non bloccante `auth_leaked_password_protection`
+- Documentate raccomandazioni performance su foreign key email senza indice
+- Creata guida `docs/MIGRATION_AND_BACKUP.md`
+- Creata checklist `docs/M9_CHECKLIST.md`
+- Creato report `docs/M9_HARDENING_REPORT.md`
+- Creato `docs/POST_DEPLOY_VERIFICATION_REPORT.md`
+- Aggiornato `README.md` allo stato M9
+- Aggiornato `docs/CODEX_INSTRUCTIONS.md` con regola di manutenzione
+  documentazione migration/backup
+- Nessuna modifica a codice applicativo, database, migration, Supabase,
+  Vercel, provider email o dati live
+
 # 1.1.0
 
 - Avviato UI Brand Refresh - PonteNext Visual Identity
