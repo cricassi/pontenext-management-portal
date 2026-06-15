@@ -89,10 +89,10 @@ function ExportButton({
   const Icon = isXlsx ? FileSpreadsheet : FileText;
 
   return (
-    <form action="/reports/export" method="post">
+    <form action="/reports/export" method="post" className="min-w-0">
       <HiddenReportFilterFields filters={filters} />
       <input type="hidden" name="format" value={format} />
-      <Button type="submit" variant="outline" disabled={disabled}>
+      <Button type="submit" variant="outline" disabled={disabled} className="w-full sm:w-auto">
         <Icon aria-hidden="true" className="mr-2 size-4" />
         {isXlsx ? "Esporta XLSX" : "Esporta CSV"}
       </Button>
@@ -105,7 +105,7 @@ export function ReportExportActions({
   disabled,
 }: ReportExportActionsProps) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row">
+    <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row">
       <ExportButton
         filters={filters}
         format={REPORT_EXPORT_FORMAT.CSV}

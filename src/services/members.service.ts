@@ -1,11 +1,13 @@
 import { getSupabaseServerClientOrThrow } from "@/services/supabase.service";
 import {
+  MEMBER_SORT_OPTIONS,
   MEMBER_STATUS,
   type Member,
   type MemberFilters,
   type MemberFormValues,
   type MemberListItem,
   type MemberRoleAssignment,
+  type MemberSortOption,
   type MemberStatus,
 } from "@/types/member";
 import { readOptionalString, readRequiredString } from "@/utils/form";
@@ -53,6 +55,17 @@ type MemberValidationResult =
 
 const memberSelect =
   "id, first_name, last_name, email, phone, address, city, postal_code, province, country, birth_date, fiscal_code, profession, notes, status, created_at, updated_at, archived_at";
+
+const memberCollator = new Intl.Collator("it", {
+  numeric: true,
+  sensitivity: "base",
+});
+
+const memberStatusSortOrder: Record<MemberStatus, number> = {
+  active: 0,
+  inactive: 1,
+  archived: 2,
+};
 
 function mapMember(row: MemberRow): Member {
   return {
@@ -145,6 +158,62 @@ function memberMatchesQuery(member: Member, query: string) {
     .toLowerCase();
 
   return searchable.includes(normalizedQuery);
+}
+
+function compareText(first: string | null, second: string | null) {
+  return memberCollator.compare(first ?? "", second ?? "");
+}
+
+function compareMemberName(first: MemberListItem, second: MemberListItem) {
+  const lastNameComparison = compareText(first.lastName, second.lastName);
+
+  if (lastNameComparison !== 0) {
+    return lastNameComparison;
+  }
+
+  const firstNameComparison = compareText(first.firstName, second.firstName);
+
+  if (firstNameComparison !== 0) {
+    return firstNameComparison;
+  }
+
+  return first.createdAt.localeCompare(second.createdAt);
+}
+
+function sortMembers(
+  members: MemberListItem[],
+  sort: MemberSortOption = MEMBER_SORT_OPTIONS.NAME_ASC,
+) {
+  return members.toSorted((first, second) => {
+    switch (sort) {
+      case MEMBER_SORT_OPTIONS.NAME_DESC:
+        return compareMemberName(second, first);
+      case MEMBER_SORT_OPTIONS.CREATED_DESC:
+        return (
+          second.createdAt.localeCompare(first.createdAt) ||
+          compareMemberName(first, second)
+        );
+      case MEMBER_SORT_OPTIONS.CREATED_ASC:
+        return (
+          first.createdAt.localeCompare(second.createdAt) ||
+          compareMemberName(first, second)
+        );
+      case MEMBER_SORT_OPTIONS.STATUS_ASC:
+        return (
+          memberStatusSortOrder[first.status] -
+            memberStatusSortOrder[second.status] ||
+          compareMemberName(first, second)
+        );
+      case MEMBER_SORT_OPTIONS.CITY_ASC:
+        return (
+          compareText(first.city, second.city) ||
+          compareMemberName(first, second)
+        );
+      case MEMBER_SORT_OPTIONS.NAME_ASC:
+      default:
+        return compareMemberName(first, second);
+    }
+  });
 }
 
 export function validateMemberFormData(
@@ -263,13 +332,14 @@ export async function getMembers(filters: MemberFilters = {}) {
     };
   });
 
-  if (filters.roleId && filters.roleId !== "all") {
-    return items.filter((member) =>
-      member.activeRoles.some((role) => role.roleId === filters.roleId),
-    );
-  }
+  const filteredItems =
+    filters.roleId && filters.roleId !== "all"
+      ? items.filter((member) =>
+          member.activeRoles.some((role) => role.roleId === filters.roleId),
+        )
+      : items;
 
-  return items;
+  return sortMembers(filteredItems, filters.sort);
 }
 
 export async function getMemberById(memberId: string) {

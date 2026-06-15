@@ -7,7 +7,11 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { getMembers } from "@/services/members.service";
 import { getAssignableRoles } from "@/services/roles.service";
-import type { MemberFilters as MemberFiltersType } from "@/types/member";
+import {
+  MEMBER_SORT_OPTIONS,
+  type MemberFilters as MemberFiltersType,
+  type MemberSortOption,
+} from "@/types/member";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +27,16 @@ function readSearchParam(
   return Array.isArray(value) ? value[0] : value;
 }
 
+function isMemberSortOption(value: string | undefined): value is MemberSortOption {
+  return Object.values(MEMBER_SORT_OPTIONS).includes(value as MemberSortOption);
+}
+
 function getFilters(
   params: Record<string, string | string[] | undefined>,
 ): MemberFiltersType {
   const status = readSearchParam(params, "status");
   const roleId = readSearchParam(params, "roleId");
+  const sort = readSearchParam(params, "sort");
 
   return {
     query: readSearchParam(params, "q")?.trim() || undefined,
@@ -36,6 +45,7 @@ function getFilters(
         ? status
         : "all",
     roleId: roleId && roleId !== "all" ? roleId : "all",
+    sort: isMemberSortOption(sort) ? sort : MEMBER_SORT_OPTIONS.NAME_ASC,
   };
 }
 

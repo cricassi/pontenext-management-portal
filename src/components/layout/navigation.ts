@@ -65,3 +65,7 @@ export const navigationItems = [
     enabled: true,
   },
 ] as const;
+
+export function isNavigationItemActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}

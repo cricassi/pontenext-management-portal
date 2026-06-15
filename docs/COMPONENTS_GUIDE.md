@@ -42,6 +42,18 @@ Contiene:
 - descrizione breve
 - azione primaria
 
+## BrandLogo
+
+Mostra l'identita' Ponte Next usando asset locale.
+
+Regole:
+
+- usare `public/brand/ponte-next-logo.jpg`;
+- non caricare loghi da URL remoti;
+- usare variante compatta per header/sidebar;
+- usare variante full per login o superfici brand;
+- non deformare il rapporto immagine.
+
 ---
 
 # 3. Data Components
@@ -68,6 +80,14 @@ Campo ricerca standard.
 ## FilterBar
 
 Filtri desktop.
+
+Regole:
+
+- negli elenchi anagrafici deve contenere anche l'ordinamento quando utile;
+- l'ordinamento deve essere espresso in query string e applicato in modo
+  read-only;
+- su mobile i controlli devono andare a colonna ed evitare overflow
+  orizzontale.
 
 ## MobileFiltersSheet
 
@@ -132,6 +152,13 @@ Props:
 - actionLabel
 - actionHref/actionCallback
 
+Visual:
+
+- fondo card bianco;
+- bordo tratteggiato leggero;
+- accento rosso minimo;
+- testo operativo, non promozionale.
+
 ## LoadingState
 
 Per caricamento dati.
@@ -171,3 +198,5 @@ PaymentStatusBadge.tsx
 - Non duplicare badge e card tra moduli.
 - Ogni componente deve avere props tipizzate TypeScript.
 - Separare componenti generici e componenti di dominio.
+- Per refresh visuali usare token semantici e `docs/BRAND_UI_GUIDELINES.md`.
+- Non introdurre nuove dipendenze UI senza necessita' documentata.

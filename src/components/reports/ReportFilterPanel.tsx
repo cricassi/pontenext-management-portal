@@ -25,13 +25,13 @@ function SelectField({
   options: Array<{ value: string; label: string }>;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <Label htmlFor={id}>{label}</Label>
       <select
         id={id}
         name={name}
         defaultValue={value ?? "all"}
-        className="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="h-10 w-full min-w-0 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -55,7 +55,7 @@ function DateField({
   value?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <Label htmlFor={id}>{label}</Label>
       <Input id={id} name={name} type="date" defaultValue={value ?? ""} />
     </div>
@@ -70,19 +70,19 @@ export function ReportFilterPanel({
   const config = selectedDefinition.filters;
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
         <CardTitle>Filtri report</CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="grid gap-4 lg:grid-cols-4">
-          <div className="flex flex-col gap-2 lg:col-span-2">
+        <form className="grid min-w-0 gap-4 lg:grid-cols-4">
+          <div className="flex min-w-0 flex-col gap-2 lg:col-span-2">
             <Label htmlFor="reportType">Report</Label>
             <select
               id="reportType"
               name="reportType"
               defaultValue={filters.reportType}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="h-10 w-full min-w-0 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               {definitions.map((definition) => (
                 <option key={definition.type} value={definition.type}>
@@ -92,7 +92,7 @@ export function ReportFilterPanel({
             </select>
           </div>
 
-          <div className="relative flex flex-col gap-2 lg:col-span-2">
+          <div className="relative flex min-w-0 flex-col gap-2 lg:col-span-2">
             <Label htmlFor="q">{config.queryLabel ?? "Cerca"}</Label>
             <div className="relative">
               <Search
@@ -196,19 +196,19 @@ export function ReportFilterPanel({
             />
           ) : null}
 
-          <div className="flex items-end">
-            <label className="flex h-10 items-center gap-2 rounded-md border bg-background px-3 text-sm">
+          <div className="flex min-w-0 items-end">
+            <label className="flex h-10 w-full min-w-0 items-center gap-2 rounded-md border bg-card px-3 text-sm">
               <input
                 type="checkbox"
                 name="includeArchived"
                 defaultChecked={filters.includeArchived}
                 className="size-4 rounded border-input"
               />
-              Includi archiviati
+              <span className="truncate">Includi archiviati</span>
             </label>
           </div>
 
-          <div className="flex items-end">
+          <div className="flex min-w-0 items-end">
             <Button type="submit" className="w-full">
               Aggiorna anteprima
             </Button>

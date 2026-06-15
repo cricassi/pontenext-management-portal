@@ -20,7 +20,7 @@ export function ReportsOverview({ preview }: ReportsOverviewProps) {
   const hasRows = preview.previewRows.length > 0;
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader className="gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -36,7 +36,9 @@ export function ReportsOverview({ preview }: ReportsOverviewProps) {
             mostrate al massimo {preview.previewLimit} righe.
           </p>
         </div>
-        <ReportExportActions filters={preview.filters} />
+        <div className="min-w-0 shrink-0">
+          <ReportExportActions filters={preview.filters} />
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {hasRows ? (
