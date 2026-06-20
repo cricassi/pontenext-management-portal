@@ -8,7 +8,7 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
     <header className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:justify-between">
       <div className="min-w-0">
-        <h1 className="break-words text-2xl font-semibold tracking-normal text-foreground">
+        <h1 className="break-words text-xl font-semibold tracking-normal text-foreground sm:text-2xl">
           {title}
         </h1>
         {description ? (

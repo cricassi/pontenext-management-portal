@@ -49,13 +49,14 @@ export function MobileNav() {
     <div ref={navRef} className="relative shrink-0 lg:hidden">
       <button
         type="button"
-        className="inline-flex h-10 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
+        className="inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-0 rounded-md border border-white/15 bg-white/5 px-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10 min-[391px]:gap-2 min-[391px]:px-3"
         aria-expanded={isOpen}
         aria-controls="mobile-navigation"
+        aria-label="Apri menu"
         onClick={() => setIsOpen((current) => !current)}
       >
         <Menu aria-hidden="true" className="size-4" />
-        Menu
+        <span className="sr-only min-[391px]:not-sr-only">Menu</span>
       </button>
       {isOpen ? (
         <nav

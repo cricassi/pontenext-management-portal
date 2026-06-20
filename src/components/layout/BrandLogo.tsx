@@ -30,8 +30,13 @@ export function BrandLogo({
   }
 
   return (
-    <div className={cn("flex min-w-0 items-center gap-2 sm:gap-3", className)}>
-      <div className="relative h-10 w-12 shrink-0 overflow-hidden rounded-md bg-black ring-1 ring-white/10 sm:h-11 sm:w-14">
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-1.5 min-[391px]:gap-2 sm:gap-3",
+        className,
+      )}
+    >
+      <div className="relative h-9 w-11 shrink-0 overflow-hidden rounded-md bg-black ring-1 ring-white/10 min-[391px]:h-10 min-[391px]:w-12 sm:h-11 sm:w-14">
         <Image
           src={logoSrc}
           alt=""
@@ -42,10 +47,10 @@ export function BrandLogo({
         />
       </div>
       <div className="min-w-0 flex-1 leading-none">
-        <p className="truncate text-sm font-extrabold uppercase tracking-normal text-white">
+        <p className="truncate text-xs font-extrabold uppercase tracking-normal text-white min-[391px]:text-sm">
           Ponte <span className="text-primary">Next</span>
         </p>
-        <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-normal text-white/55">
+        <p className="mt-1 hidden truncate text-[10px] font-medium uppercase tracking-normal text-white/55 min-[391px]:block">
           Management Portal
         </p>
       </div>

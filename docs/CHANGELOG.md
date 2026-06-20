@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+# 1.2.1
+
+- Migliorato layout mobile per viewport stretti tipo iPhone SE
+- Reso l'header mobile piu' compatto con menu e logout icon-only sotto 391px
+- Ridotto il padding mobile di card, contenuto principale e titoli pagina
+- Esplicitato il viewport `device-width` nel layout Next.js
+- Aggiornate le icone di navigazione con simboli piu' descrittivi per dashboard, iscrizioni, scadenze, eventi, email, report e impostazioni
+- Nessuna modifica a database, Supabase, migration, service layer o logica applicativa
+
 # 1.2.0
 
 - Avviata milestone M9 - Final Hardening

@@ -1,11 +1,12 @@
 import {
-  BarChart3,
-  Calendar,
-  CreditCard,
+  CalendarClock,
+  CalendarDays,
+  FileSpreadsheet,
   Handshake,
-  Home,
-  Mail,
-  Settings,
+  IdCard,
+  LayoutDashboard,
+  Send,
+  SlidersHorizontal,
   Users,
 } from "lucide-react";
 
@@ -13,7 +14,7 @@ export const navigationItems = [
   {
     label: "Dashboard",
     href: "/dashboard",
-    icon: Home,
+    icon: LayoutDashboard,
     enabled: true,
   },
   {
@@ -25,13 +26,13 @@ export const navigationItems = [
   {
     label: "Iscrizioni",
     href: "/memberships",
-    icon: CreditCard,
+    icon: IdCard,
     enabled: true,
   },
   {
     label: "Scadenze",
     href: "/expirations",
-    icon: Calendar,
+    icon: CalendarClock,
     enabled: true,
   },
   {
@@ -43,25 +44,25 @@ export const navigationItems = [
   {
     label: "Eventi",
     href: "/events",
-    icon: Calendar,
+    icon: CalendarDays,
     enabled: true,
   },
   {
     label: "Email",
     href: "/email",
-    icon: Mail,
+    icon: Send,
     enabled: true,
   },
   {
     label: "Report",
     href: "/reports",
-    icon: BarChart3,
+    icon: FileSpreadsheet,
     enabled: true,
   },
   {
     label: "Impostazioni",
     href: "/settings",
-    icon: Settings,
+    icon: SlidersHorizontal,
     enabled: true,
   },
 ] as const;
