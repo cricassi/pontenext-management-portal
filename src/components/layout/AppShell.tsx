@@ -13,16 +13,16 @@ type AppShellProps = {
 
 export function AppShell({ admin, children }: AppShellProps) {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background">
-      <div className="flex min-h-screen min-w-0">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-background">
+      <div className="flex min-h-screen w-full max-w-full min-w-0 overflow-x-clip">
         <Sidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex w-full max-w-full min-w-0 flex-1 flex-col overflow-x-clip">
           <header className="sticky top-0 z-20 border-b border-zinc-900 bg-[#0B0B0B] text-white shadow-sm">
-            <div className="flex h-14 min-w-0 items-center gap-1.5 px-2 sm:h-16 sm:gap-4 sm:px-4 md:px-6">
-              <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
+            <div className="grid h-14 w-full max-w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:h-16 sm:gap-4 sm:px-4 md:px-6">
+              <div className="min-w-0">
                 <MobileNav />
-                <BrandLogo className="min-w-0 flex-1 lg:hidden" priority />
               </div>
+              <BrandLogo className="min-w-0 lg:hidden" priority />
               <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
                 <div className="hidden min-w-0 text-right sm:block">
                   <p className="truncate text-sm font-medium text-white">
@@ -47,8 +47,10 @@ export function AppShell({ admin, children }: AppShellProps) {
               </div>
             </div>
           </header>
-          <main className="min-w-0 flex-1 overflow-x-hidden px-3 py-5 sm:px-4 sm:py-6 md:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-7xl min-w-0">{children}</div>
+          <main className="w-full max-w-full min-w-0 flex-1 overflow-x-clip px-4 py-5 sm:px-4 sm:py-6 md:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-clip">
+              {children}
+            </div>
           </main>
         </div>
       </div>
