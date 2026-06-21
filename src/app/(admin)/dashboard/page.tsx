@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   const data = await getDashboardPageData();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full max-w-full min-w-0 flex-col gap-6 overflow-x-hidden">
       <PageHeader
         title="Dashboard"
         description="Vista operativa su soci, scadenze, rinnovi e quote da seguire con i dati disponibili dopo M3."
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
         <DashboardActionItems items={data.actionItems} />
       </DashboardSection>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid w-full max-w-full min-w-0 gap-6 overflow-x-hidden xl:grid-cols-2">
         <DashboardSection
           title="Prossime scadenze"
           description="Ultime membership rinnovabili in scadenza entro 30 giorni."
