@@ -6,7 +6,7 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <header className="flex w-full max-w-full min-w-0 flex-col gap-4 overflow-x-clip md:flex-row md:items-start md:justify-between">
+    <header className="flex w-full max-w-full min-w-0 flex-col gap-4 overflow-x-hidden md:flex-row md:items-start md:justify-between">
       <div className="w-full max-w-full min-w-0">
         <h1 className="break-words text-xl font-semibold tracking-normal text-foreground sm:text-2xl">
           {title}

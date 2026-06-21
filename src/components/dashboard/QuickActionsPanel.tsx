@@ -15,7 +15,7 @@ const iconByActionLabel: Record<string, LucideIcon> = {
 
 export function QuickActionsPanel({ actions }: QuickActionsPanelProps) {
   return (
-    <div className="grid min-w-0 max-w-full gap-3 overflow-x-clip md:grid-cols-3">
+    <div className="grid min-w-0 max-w-full gap-3 overflow-x-hidden md:grid-cols-3">
       {actions.map((action) => {
         const Icon = iconByActionLabel[action.label] ?? UserPlus;
 

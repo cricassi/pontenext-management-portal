@@ -12,7 +12,7 @@ export function DashboardSection({
   children,
 }: DashboardSectionProps) {
   return (
-    <section className="flex min-w-0 max-w-full flex-col gap-3 overflow-x-clip">
+    <section className="flex min-w-0 max-w-full flex-col gap-3 overflow-x-hidden">
       <div className="flex min-w-0 max-w-full flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h2 className="break-words text-base font-semibold tracking-normal text-foreground">

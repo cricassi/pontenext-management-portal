@@ -3,8 +3,8 @@
 # 1.2.1
 
 - Migliorato layout mobile per viewport stretti tipo iPhone SE
-- Rafforzato il blocco anti-overflow orizzontale su Safari/iPhone con contenitori `max-width` e header mobile a griglia
-- Reso l'header mobile piu' compatto con menu e logout icon-only sotto 391px
+- Rafforzato il blocco anti-overflow orizzontale su Safari/iPhone con `overflow-x-hidden`, contenitori `max-width` e header mobile a griglia
+- Reso l'header mobile piu' compatto con menu e logout icon-only sotto 391px, senza span `sr-only` che possono aumentare lo `scrollWidth` su Safari
 - Ridotto il padding mobile di card, contenuto principale e titoli pagina
 - Esplicitato il viewport `device-width` nel layout Next.js
 - Aggiornate le icone di navigazione con simboli piu' descrittivi per dashboard, iscrizioni, scadenze, eventi, email, report e impostazioni

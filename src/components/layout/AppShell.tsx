@@ -13,10 +13,10 @@ type AppShellProps = {
 
 export function AppShell({ admin, children }: AppShellProps) {
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-background">
-      <div className="flex min-h-screen w-full max-w-full min-w-0 overflow-x-clip">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
+      <div className="flex min-h-screen w-full max-w-full min-w-0 overflow-x-hidden">
         <Sidebar />
-        <div className="flex w-full max-w-full min-w-0 flex-1 flex-col overflow-x-clip">
+        <div className="flex w-full max-w-full min-w-0 flex-1 flex-col overflow-x-hidden">
           <header className="sticky top-0 z-20 border-b border-zinc-900 bg-[#0B0B0B] text-white shadow-sm">
             <div className="grid h-14 w-full max-w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:h-16 sm:gap-4 sm:px-4 md:px-6">
               <div className="min-w-0">
@@ -41,14 +41,14 @@ export function AppShell({ admin, children }: AppShellProps) {
                     aria-label="Esci"
                   >
                     <LogOut aria-hidden="true" className="size-4 min-[391px]:mr-2" />
-                    <span className="sr-only min-[391px]:not-sr-only">Esci</span>
+                    <span className="hidden min-[391px]:inline">Esci</span>
                   </Button>
                 </form>
               </div>
             </div>
           </header>
-          <main className="w-full max-w-full min-w-0 flex-1 overflow-x-clip px-4 py-5 sm:px-4 sm:py-6 md:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-clip">
+          <main className="w-full max-w-full min-w-0 flex-1 overflow-x-hidden px-4 py-5 sm:px-4 sm:py-6 md:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-hidden">
               {children}
             </div>
           </main>

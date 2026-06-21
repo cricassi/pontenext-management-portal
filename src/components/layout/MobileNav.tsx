@@ -56,7 +56,7 @@ export function MobileNav() {
         onClick={() => setIsOpen((current) => !current)}
       >
         <Menu aria-hidden="true" className="size-4" />
-        <span className="sr-only min-[391px]:not-sr-only">Menu</span>
+        <span className="hidden min-[391px]:inline">Menu</span>
       </button>
       {isOpen ? (
         <nav

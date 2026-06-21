@@ -31,7 +31,7 @@ const iconByKpiKey: Record<DashboardKpiKey, LucideIcon> = {
 
 export function DashboardKpiGrid({ kpis }: DashboardKpiGridProps) {
   return (
-    <div className="grid min-w-0 max-w-full gap-4 overflow-x-clip md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid min-w-0 max-w-full gap-4 overflow-x-hidden md:grid-cols-2 xl:grid-cols-4">
       {kpis.map((kpi) => {
         const Icon = iconByKpiKey[kpi.key];
 
