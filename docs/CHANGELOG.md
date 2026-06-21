@@ -2,10 +2,9 @@
 
 # 1.2.2
 
-- Aggiunto `docs/USER_OPERATIONS_MANUAL.md` con manuale operativo per amministratori
-- Aggiunto `docs/TECHNICAL_MAINTENANCE_MANUAL.md` con manuale tecnico per manutenzione, modifiche e migrazione
-- Aggiunto `docs/VIDEO_GUIDES.md` con piano, copioni e checklist per piccoli video formativi
-- Aggiunta cartella `docs/assets/videos` con regole per eventuali video demo committabili
+- Aggiunto `docs/USER_OPERATIONS_MANUAL.docx` con manuale operativo per amministratori
+- Aggiunto `docs/TECHNICAL_MAINTENANCE_MANUAL.docx` con manuale tecnico per manutenzione, modifiche e migrazione
+- Aggiunto `docs/VIDEO_GUIDES.docx` con piano, copioni e checklist per video MP4 demo fuori repository
 - Aggiornato `README.md` con i nuovi documenti principali
 - Nessuna modifica a codice applicativo, database, Supabase, migration, Vercel o dati live
 
