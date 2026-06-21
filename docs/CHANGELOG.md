@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+# 1.2.2
+
+- Aggiunto `docs/USER_OPERATIONS_MANUAL.md` con manuale operativo per amministratori
+- Aggiunto `docs/TECHNICAL_MAINTENANCE_MANUAL.md` con manuale tecnico per manutenzione, modifiche e migrazione
+- Aggiunto `docs/VIDEO_GUIDES.md` con piano, copioni e checklist per piccoli video formativi
+- Aggiunta cartella `docs/assets/videos` con regole per eventuali video demo committabili
+- Aggiornato `README.md` con i nuovi documenti principali
+- Nessuna modifica a codice applicativo, database, Supabase, migration, Vercel o dati live
+
 # 1.2.1
 
 - Migliorato layout mobile per viewport stretti tipo iPhone SE
