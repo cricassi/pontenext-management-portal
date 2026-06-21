@@ -64,13 +64,26 @@
       width: 100%;
     }
 
+    html.admin-viewport-lock,
+    body.admin-viewport-lock {
+      height: 100%;
+      max-height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
     [data-admin-shell] {
+      inset: 0;
+      max-block-size: 100dvh;
       max-inline-size: 100%;
       min-inline-size: 0;
       overflow-x: hidden;
+      overflow-y: auto;
       overscroll-behavior-x: none;
+      position: fixed;
       touch-action: pan-y pinch-zoom;
       width: 100%;
+      -webkit-overflow-scrolling: touch;
     }
 
     [data-admin-shell] *,
