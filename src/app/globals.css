@@ -64,6 +64,12 @@
       width: 100%;
     }
 
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+
     html.admin-viewport-lock,
     body.admin-viewport-lock {
       height: 100%;

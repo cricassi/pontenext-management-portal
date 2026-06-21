@@ -6,6 +6,7 @@
 - Rafforzato il blocco anti-overflow orizzontale su Safari/iPhone con `overflow-x-hidden`, contenitori `max-width`, `100svw`, `touch-action: pan-y pinch-zoom` e header mobile a griglia
 - Reso l'header mobile piu' compatto con menu e logout icon-only sotto 391px, senza span `sr-only` che possono aumentare lo `scrollWidth` su Safari
 - Ridotto il padding mobile di card, contenuto principale e titoli pagina
+- Impostati input, select e textarea mobile a 16px per evitare l'auto-zoom iOS dopo il login
 - Limitata esplicitamente la dashboard mobile a `100svw` e bloccati html/body admin su mobile, usando lo shell admin fixed come unico contenitore di scroll verticale per impedire pan orizzontale anche con preview toolbar Vercel
 - Esplicitato il viewport `device-width` nel layout Next.js
 - Aggiornate le icone di navigazione con simboli piu' descrittivi per dashboard, iscrizioni, scadenze, eventi, email, report e impostazioni
