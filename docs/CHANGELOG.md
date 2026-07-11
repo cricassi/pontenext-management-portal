@@ -1,9 +1,19 @@
-# CHANGELOG.md
+﻿# CHANGELOG.md
 
 # 1.2.3
 
 - Corretto menu mobile admin: il dropdown ora usa posizionamento `fixed` e non viene piu' tagliato dall'header con `overflow-hidden`
 - Nessuna modifica a database, Supabase, migration, service layer o logica applicativa
+
+# 1.2.2
+
+- Aggiunto `docs/USER_OPERATIONS_MANUAL.docx` con manuale operativo per amministratori
+- Aggiunto `docs/TECHNICAL_MAINTENANCE_MANUAL.docx` con manuale tecnico per manutenzione, modifiche e migrazione
+- Aggiunto `docs/VIDEO_GUIDES.docx` con piano, copioni e checklist per video MP4 demo fuori repository
+- Integrati screenshot operativi embedded nei tre documenti DOCX
+- Prodotti video MP4 demo fuori repository in `D:\SviluppoCodex\pontenext-training-videos\mp4`
+- Aggiornato `README.md` con i nuovi documenti principali
+- Nessuna modifica a codice applicativo, database, Supabase, migration, Vercel o dati live
 
 # 1.2.1
 
@@ -237,3 +247,4 @@
 
 - Creata struttura iniziale progetto
 - Aggiunti documenti PRD, MD, ADR, database design, business rules, screen flow e UI guidelines
+
