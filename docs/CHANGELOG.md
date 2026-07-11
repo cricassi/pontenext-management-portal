@@ -1,4 +1,9 @@
-# CHANGELOG.md
+﻿# CHANGELOG.md
+
+# 1.2.3
+
+- Corretto menu mobile admin: il dropdown ora usa posizionamento `fixed` e non viene piu' tagliato dall'header con `overflow-hidden`
+- Nessuna modifica a database, Supabase, migration, service layer o logica applicativa
 
 # 1.2.2
 
@@ -242,3 +247,4 @@
 
 - Creata struttura iniziale progetto
 - Aggiunti documenti PRD, MD, ADR, database design, business rules, screen flow e UI guidelines
+
