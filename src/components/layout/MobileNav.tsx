@@ -61,7 +61,7 @@ export function MobileNav() {
       {isOpen ? (
         <nav
           id="mobile-navigation"
-          className="absolute left-0 top-12 z-30 flex w-64 flex-col gap-1 rounded-md border border-white/10 bg-[#0B0B0B] p-2 text-white shadow-xl"
+          className="fixed left-3 right-3 top-16 z-50 flex max-h-[calc(100dvh-5rem)] w-auto flex-col gap-1 overflow-y-auto rounded-md border border-white/10 bg-[#0B0B0B] p-2 text-white shadow-xl sm:left-4 sm:right-auto sm:w-72"
           aria-label="Navigazione mobile"
         >
           {navigationItems.map((item) => {

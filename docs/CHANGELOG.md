@@ -1,5 +1,10 @@
 # CHANGELOG.md
 
+# 1.2.3
+
+- Corretto menu mobile admin: il dropdown ora usa posizionamento `fixed` e non viene piu' tagliato dall'header con `overflow-hidden`
+- Nessuna modifica a database, Supabase, migration, service layer o logica applicativa
+
 # 1.2.1
 
 - Migliorato layout mobile per viewport stretti tipo iPhone SE
