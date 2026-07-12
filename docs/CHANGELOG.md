@@ -1,5 +1,11 @@
 ﻿# CHANGELOG.md
 
+# 1.2.4
+
+- Aggiunto spazio di sicurezza inferiore globale allo shell admin mobile per mantenere pulsanti e azioni finali sopra la barra comandi di Safari su iPhone
+- Aggiunto `scroll-padding-bottom` al contenitore mobile per rendere raggiungibili anche i controlli portati in vista tramite focus o navigazione
+- Nessuna modifica a database, Supabase, migration, service layer o logica applicativa
+
 # 1.2.3
 
 - Corretto menu mobile admin: il dropdown ora usa posizionamento `fixed` e non viene piu' tagliato dall'header con `overflow-hidden`

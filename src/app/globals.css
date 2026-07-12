@@ -79,6 +79,10 @@
     }
 
     [data-admin-shell] {
+      --admin-mobile-bottom-safe: max(
+        7rem,
+        calc(env(safe-area-inset-bottom, 0px) + 5.5rem)
+      );
       inset: 0;
       max-block-size: 100dvh;
       max-inline-size: 100%;
@@ -87,6 +91,7 @@
       overflow-y: auto;
       overscroll-behavior-x: none;
       position: fixed;
+      scroll-padding-bottom: var(--admin-mobile-bottom-safe);
       touch-action: pan-y pinch-zoom;
       width: 100%;
       -webkit-overflow-scrolling: touch;
@@ -102,6 +107,7 @@
       max-inline-size: 100%;
       overflow-x: hidden;
       overscroll-behavior-x: none;
+      padding-bottom: var(--admin-mobile-bottom-safe) !important;
       touch-action: pan-y pinch-zoom;
       width: 100%;
     }
