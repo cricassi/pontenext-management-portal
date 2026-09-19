@@ -1,5 +1,22 @@
 ﻿# CHANGELOG.md
 
+# Pianificato - M10 revisionato (2026-09-19)
+
+- Creato `docs/M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md`, in sostituzione del piano
+  annullato della PR #46: nessun permission group, scope multiplo o readonly.
+- Separate le future PR M10-A (visibilita' globale DB-backed dei campi facoltativi),
+  M10-B (export Excel completo) e M10-C (import esclusivamente di nuovi soci).
+- Annullato l'import multi-tabella: C consente solo INSERT in `public.members`,
+  con modello dedicato, dry-run, controllo duplicati, conferma super_admin e
+  operazione atomica; nessun UPDATE/UPSERT, relazione o account automatico.
+- Documentati schema/RLS live in sola lettura, indici email/fiscale non univoci,
+  limiti Vercel, concorrenza, ricevute dry-run e gestione degli esiti ambigui.
+- Aggiornati Master Plan, ADR, Business Rules, Database Design, UI Guidelines
+  e Migration and Backup; Excel esplicitamente distinto da backup/restore.
+- Verifiche della base: lint, typecheck locale e build superati.
+- PR esclusivamente documentale: nessun codice, migration, dipendenza, modifica
+  Supabase/Vercel, import/export reale o invio email.
+
 # 1.2.4
 
 - Aggiunto spazio di sicurezza inferiore globale allo shell admin mobile per mantenere pulsanti e azioni finali sopra la barra comandi di Safari su iPhone

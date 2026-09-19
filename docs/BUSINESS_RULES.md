@@ -151,3 +151,40 @@ Non implementare:
 - prima nota
 - bilanci
 - partita doppia
+
+## BR-012 - Visibilita' globale dei campi, prevista M10-A
+
+La configurazione dei campi e' una preferenza UI globale, non un permesso:
+soltanto visible/hidden e soltanto per campi facoltativi. Obbligatori e
+controlli condizionalmente necessari al workflow non possono essere nascosti.
+Admin attivi leggono/applicano; solo super_admin attivi modificano/reset.
+
+Un campo nascosto mantiene il valore nel DB. Negli update i campi assenti non
+diventano null, false, zero o FK scollegate. Le create usano esclusivamente
+default gia' previsti/null per facoltativi. Le impostazioni di visibilita' non
+cambiano report, export, email, segmentazioni o il formato import soci.
+
+## BR-013 - Portabilita' Excel e soli nuovi soci, prevista M10-B/C
+
+Piano: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
+Funzioni non ancora implementate; precedente import multi-tabella annullato.
+
+- Export completo e import soci sono operazioni distinte riservate a super_admin
+  attivi, con verifica server-side e RLS.
+- `pontenext-full-export-v1` esporta le tabelle business previste anche archiviate,
+  non segreti/Auth; non e' un dump o un file di restore.
+- `pontenext-new-members-import-v1` contiene solo README e members. Il workbook
+  completo e' rifiutato dall'import, non elaborato parzialmente.
+- L'import crea solo nuove righe members mediante un unico INSERT atomico.
+  Mai UPDATE, UPSERT, DELETE, MERGE, archiviazione o riattivazione di soci.
+- Nome e cognome obbligatori; UUID/timestamp dal DB, status active dal server,
+  country vuoto -> Italia, archived_at null. Campi tecnici dal file vietati.
+- Un errore o duplicato certo blocca tutto; un possibile duplicato richiede
+  presa visione. Email non considerata univoca; fiscale normalizzato uguale
+  trattato come conflitto anche per record inattivi/archiviati.
+- Dry-run senza scritture, preview normalizzata, hash/ricevuta verificati e
+  conferma sono obbligatori; nessun inserimento parziale o retry automatico.
+- Non crea ruoli, assegnazioni, iscrizioni, quote, pagamenti, account o email.
+  Le relazioni vengono gestite successivamente con le funzioni ordinarie.
+- Test separati prima del live. Codex richiede `IMPORT NUOVI SOCI LIVE APPROVATO`
+  riferito allo stesso file/hash validato prima del primo import reale.

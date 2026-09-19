@@ -222,12 +222,44 @@ Release candidate.
 
 ---
 
+# M10 - Visibilita' globale e portabilita' Excel
+
+Stato: pianificazione revisionata, non implementata. La PR #46 e' annullata;
+non recuperare permission group, readonly, scope o configurazioni personali.
+
+Piano vincolante: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
+
+Tre PR operative distinte:
+
+1. **M10-A - Simple Database Field Visibility**: soli stati visible/hidden,
+   campi facoltativi, preferenze globali nella nuova `ui_field_visibility`,
+   pagina `/settings/field-visibility`. Admin attivi leggono/applicano;
+   solo super_admin attivi modificano. Nessuna perdita dei valori nascosti.
+2. **M10-B - Complete Excel Export**: `/settings/data-import-export`, export
+   XLSX completo delle 13 tabelle business previste, solo super_admin. Non e'
+   un backup Supabase e non sostituisce gli export filtrati M8.
+3. **M10-C - New Members Excel Import**: modello dedicato, dry-run e conferma;
+   singolo INSERT atomico esclusivamente in `public.members`. Nessun UPDATE,
+   UPSERT, DELETE, import multi-tabella, ruolo, iscrizione, pagamento o account
+   creato automaticamente.
+
+Verifica post-merge A prima di B, verifica export B prima di C, test C su
+ambiente separato prima del live. Non cambiare strutture delle tabelle business.
+Eventuali funzioni additive per snapshot B e transazione C richiedono revisione
+e approvazione nelle rispettive PR, non sono implementate dal piano.
+
+Gate operativi: `MIGRATION M10-A LIVE APPROVATA` per la futura migration A;
+`IMPORT NUOVI SOCI LIVE APPROVATO` per il primo import live sul file/hash
+validato. La documentazione non costituisce autorizzazione a eseguirli.
+
+---
+
 # Regole per Codex
 
 Per ogni milestone:
 
 1. leggere PRD, ADR e DATABASE_DESIGN
-2. creare o aggiornare migration
+2. creare o aggiornare migration solo nelle fasi implementative, se necessarie e autorizzate
 3. creare API/service layer
 4. creare UI
 5. creare test

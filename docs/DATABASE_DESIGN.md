@@ -545,3 +545,62 @@ automatico, e richiede conferma amministratore.
 - non usare float per importi
 - non usare enum PostgreSQL nella prima versione
 - aggiornare questo documento se cambia il modello dati
+
+---
+
+# 11. Proposta M10 revisionata, non applicata
+
+Riferimento: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
+Verifica metadati live PonteNext `uhxfpsamenjhyrfgwckw` del 2026-09-19:
+migration operative applicate `001`-`010`; file `011`-`014` sopra elencati
+ancora placeholder. Non applicarli, rinumerarli o riscrivere migration storiche.
+Nessuna modifica live nella fase di piano.
+
+## 11.1 ui_field_visibility proposta M10-A
+
+Unica nuova tabella prevista: `public.ui_field_visibility`.
+
+| Campo | Specifica proposta |
+| --- | --- |
+| id | uuid PK, default generazione UUID |
+| screen_key | text NOT NULL, chiave nota |
+| field_key | text NOT NULL, coppia configurabile nota |
+| is_visible | boolean NOT NULL DEFAULT true |
+| updated_by | uuid NOT NULL, FK public.admin_users.id |
+| created_at | timestamptz NOT NULL DEFAULT now() |
+| updated_at | timestamptz NOT NULL DEFAULT now(), trigger |
+| archived_at | timestamptz nullable |
+
+Unicita' parziale `(screen_key, field_key)` con archived_at null. Tabella vuota
+all'inizio, default visible da registro codice; salvare stati espliciti true/false,
+reset tramite archiviazione del solo override. Coppie configurabili validate
+nel registro e tramite CHECK coerente. Nessun permission group/scope/readonly.
+
+RLS: SELECT per admin attivi, INSERT/UPDATE solo super_admin attivi, autore
+verificato, nessuna policy DELETE/anon. updated_by non e' Auth UUID: risolvere
+`admin_users.auth_user_id = auth.uid()` e usare `admin_users.id`.
+Migration futura solo additiva, nessun ALTER/DML delle tabelle business o seed
+business. Nome indicativo `015_ui_field_visibility.sql`, da riverificare in fase
+implementativa; nessun file SQL creato dal piano.
+
+## 11.2 Export e import non modificano il modello business
+
+M10-B: manifest esplicito di 13 tabelle, incluse righe archiviate; esclusi Auth,
+admin_users e materiale di sicurezza come opt_out_token_hash. Le FK admin
+restano UUID con riferimenti esterni documentati. L'export non e' un dump.
+
+M10-C: solo INSERT nuovi members. Le colonne importabili sono first_name,
+last_name, email, phone, address, city, postal_code, province, country,
+birth_date, fiscal_code, profession, notes. source_row_reference e' soltanto
+metadato del file/report, non una colonna DB. id, status, timestamp e archived_at
+non vengono accettati dal file. Nessuna relazione automatica o nuova tabella audit.
+
+Gli indici live members_email_idx e members_fiscal_code_idx non sono UNIQUE.
+Il trigger members esistente agisce solo su UPDATE, non crea relazioni su INSERT.
+Il piano non aggiunge UNIQUE email/fiscale o bonifiche di dati. Controlli import
+prudenziali su duplicati, anche inattivi/archiviati, precedono l'INSERT atomico.
+
+Per snapshot coerente B e controllo duplicati transazionale C sono proposte
+funzioni additive separate, SECURITY INVOKER con sessione/RLS e guard super_admin,
+da approvare e testare nelle future PR. Nessuna alterazione di members o altre
+tabelle business; policy CRUD manuale members invariata.
