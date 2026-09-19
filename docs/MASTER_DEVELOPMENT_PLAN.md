@@ -96,43 +96,40 @@ Gestione iscrizioni completa.
 
 ---
 
-# M3 – Dashboard
+# M3 – Scadenze e rinnovi
 
 ## Perimetro
 
-Dashboard parziale basata solo sui dati disponibili dopo M2.
-
-## Widget
-
-- soci anagraficamente attivi
-- soci con iscrizione attiva
-- soci con iscrizione scaduta
-- rinnovi in scadenza
-
-## Deliverable
-
-Home amministrativa iniziale funzionante.
-
-Nota: widget sponsor ed eventi verranno aggiunti solo dopo M5 e M6.
-
----
-
-# M4 – Scadenze
+Gestione scadenze e rinnovi sulle memberships esistenti dopo M2.
 
 ## Funzioni
 
-- filtro scaduti
-- filtro entro 30 giorni
-- filtro entro 60 giorni
-- filtro entro 90 giorni
-- azione rinnovo
-- export elenco, se previsto dalla milestone
+- filtro scaduti e scadenze entro 30/60/90 giorni
+- storico rinnovi
+- rinnovo rapido, sempre con una nuova membership
 
 ## Deliverable
 
-Monitoraggio rinnovi.
+Monitoraggio e rinnovo delle iscrizioni, senza estendere quelle precedenti.
 
-Nota: M4 non invia email. I promemoria via email restano rimandati a M7.
+Nessun invio email automatico. Riferimento: `M3_IMPLEMENTATION_PLAN.md`.
+
+---
+
+# M4 – Dashboard operativa
+
+## Funzioni
+
+- KPI soci attivi, scadenze entro 30 giorni, iscrizioni scadute e quote incomplete
+- nuovi soci e rinnovi negli ultimi 30 giorni
+- widget da gestire subito, prossime scadenze e ultimi rinnovi
+- azioni rapide sui flussi gia' disponibili
+
+## Deliverable
+
+Dashboard operativa sui soli dati M1-M3, non dashboard direzionale.
+
+Nessuna email o report introdotti da M4. Riferimento: `M4_IMPLEMENTATION_PLAN.md`.
 
 ---
 
@@ -222,12 +219,44 @@ Release candidate.
 
 ---
 
+# M10 - Configurable Field Visibility & Permission-Ready Policies
+
+## Stato
+
+Piano documentale, non implementazione. Riferimento per il futuro sviluppo:
+[M10_FIELD_VISIBILITY_IMPLEMENTATION_PLAN.md](M10_FIELD_VISIBILITY_IMPLEMENTATION_PLAN.md).
+
+## Obiettivo
+
+Configurazione globale dei campi delle schermate esistenti con stati
+`editable`, `readonly`, `hidden`, senza perdita dati e con enforcement server-side.
+
+## Perimetro proposto
+
+- registro tipizzato e versionato nel codice, override soltanto per chiavi note
+- pagina `/settings/field-visibility`, modifica solo per super_admin attivi
+- futura tabella `ui_field_policies`, RLS e soft delete degli override
+- campi obbligatori mai hidden; readonly create soltanto con default server certo
+- resolver condiviso e letture per schermata, senza query per singolo campo
+- predisposizione permission_group non operativa: nessun CRUD gruppi o assegnazione
+- integrazione progressiva di anagrafiche, relazioni, quote, email e filtri report
+
+## Deliverable e sequenza
+
+Prima approvare il piano, poi PR separate per motore/Impostazioni, anagrafiche,
+relazioni/quote e comunicazioni/filtri. La configurazione UI non costituisce da
+sola un'autorizzazione DB per colonna. Default, campi condizionali e confine di
+sicurezza sono specificati nel piano. Nessuna migration o modifica live nella
+PR di pianificazione.
+
+---
+
 # Regole per Codex
 
 Per ogni milestone:
 
 1. leggere PRD, ADR e DATABASE_DESIGN
-2. creare o aggiornare migration
+2. creare o aggiornare migration solo nelle fasi di implementazione che lo richiedono
 3. creare API/service layer
 4. creare UI
 5. creare test

@@ -95,6 +95,34 @@ Schermate utilizzabili da viewport minimo 360px.
 
 Seguire le milestone del Master Development Plan.
 
-M3 produce una dashboard parziale basata solo sui dati disponibili dopo M2.
+M3 gestisce scadenze e rinnovi storici; M4 produce una dashboard operativa sui
+dati disponibili da M1-M3, secondo i rispettivi Implementation Plan.
 
-M4 non invia email. I promemoria scadenze sono rimandati a M7.
+M3 e M4 non inviano email. Il workflow email appartiene a M7 e richiede conferma admin.
+
+## AD-016 - Policy dei campi (proposta M10, non implementata)
+
+Riferimento: [M10_FIELD_VISIBILITY_IMPLEMENTATION_PLAN.md](M10_FIELD_VISIBILITY_IMPLEMENTATION_PLAN.md).
+
+Registro di schermate/campi tipizzato e versionato nel repository come fonte
+autorevole. Il database proposto `ui_field_policies` salva solo override validi,
+non campi arbitrari. Route definitiva `/settings/field-visibility`.
+
+Inizialmente opera solo lo scope global. Le colonne scope_type/scope_id
+predispongono permission_group, ma un vincolo ne impedisce l'uso finche' non
+esistono gruppi, assegnazioni e relative autorizzazioni. Precedenza futura:
+override dei gruppi, poi global, poi default; tra gruppi prevale lo stato piu'
+restrittivo (hidden, readonly, editable).
+
+Modifica configurazione riservata ai super_admin attivi, lettura agli admin
+attivi. RLS e privilegi minimi sulla nuova tabella, nessuna policy DELETE.
+Resolver server centralizzato e caricamento condiviso per schermata, non per campo.
+
+Readonly e hidden richiedono enforcement nelle action/service e DTO filtrati;
+un update conserva i valori non editabili, senza riscriverli nella patch.
+Obbligatori mai hidden; readonly in create soltanto con default server certo.
+
+Le policy non costituiscono un sistema completo di autorizzazioni: le RLS
+business correnti sono per riga, non impongono da sole restrizioni sulle colonne
+via Data API. Il limite e la futura evoluzione sono espliciti nel piano.
+Nessuna implementazione, migration o modifica live e' introdotta da questo ADR.

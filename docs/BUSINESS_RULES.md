@@ -64,7 +64,7 @@ Non deve essere salvata nella tabella `members`.
 
 Alla scadenza, il rinnovo non prolunga la riga esistente: deve essere registrata una nuova iscrizione con proprio periodo, quota e stato pagamento.
 
-M4 gestisce monitoraggio e rinnovo delle scadenze, ma non invia email. I promemoria email vengono introdotti solo in M7.
+M3 gestisce monitoraggio e rinnovo delle scadenze, ma non invia email. Il workflow email viene introdotto solo in M7, con conferma admin.
 
 ## BR-007 - Sponsor
 
@@ -151,3 +151,27 @@ Non implementare:
 - prima nota
 - bilanci
 - partita doppia
+
+## BR-012 - Configurazione campi (piano M10, non ancora operativo)
+
+Riferimento: [M10_FIELD_VISIBILITY_IMPLEMENTATION_PLAN.md](M10_FIELD_VISIBILITY_IMPLEMENTATION_PLAN.md).
+
+- Ogni campo supportato ha un default nel registro del codice; il database
+  proposto contiene soltanto override conosciuti, inizialmente globali.
+- Editable non esonera dalle validazioni business e dai permessi dell'operazione.
+- Readonly impedisce la modifica anche attraverso le action/service server.
+- Hidden esclude il valore dai payload della schermata, senza cancellarlo o
+  sovrascriverlo sul record. In create usa null o default server ammesso.
+- Un campo obbligatorio non puo' essere hidden. In create e' editable, salvo
+  default certo sul server che consenta readonly; in edit puo' essere readonly.
+- Le dipendenze condizionali, come note per quota zero e description per
+  contributi non monetari, non possono essere aggirate con la configurazione.
+- Solo super_admin attivi salvano/reset policy; gli admin attivi le applicano.
+- Il reset archivia soltanto override; nessun DELETE fisico o modifica ai dati business.
+- Nascondere un campo non revoca consenso email, non cambia un report e non
+  costituisce un permesso globale sul dato. Restano guard, service/action e RLS.
+- I ruoli associativi dei soci non sono permission group degli amministratori.
+  I gruppi futuri non vengono gestiti o attivati in M10.
+
+Queste regole orientano la futura implementazione; il piano non modifica il
+comportamento corrente, lo schema live o le regole delle milestone M0-M9.

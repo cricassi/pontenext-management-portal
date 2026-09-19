@@ -1,5 +1,21 @@
 ﻿# CHANGELOG.md
 
+# Unreleased - Piano M10 (2026-09-19)
+
+- Creato `M10_FIELD_VISIBILITY_IMPLEMENTATION_PLAN.md`: registro schermate/campi,
+  stati editable/readonly/hidden, override globali, vincoli required/default,
+  resolver, enforcement server-side, RLS proposte e predisposizione permission group.
+- Scelta la route futura `/settings/field-visibility`, con modifica riservata
+  ai super_admin attivi e rollout in PR progressive.
+- Censiti form incorporati e moduli reali, inclusi limiti Data API/RLS, proiezione
+  dei valori hidden e conservazione dei dati negli aggiornamenti.
+- Verificati in sola lettura cataloghi e migration `001`-`010` del solo progetto
+  Supabase PonteNext; nessuna tabella policy o gruppi gia' operativa.
+- Allineati Master Plan, ADR e Business Rules al piano M10 e corretti i vecchi
+  riferimenti invertiti M3/M4 rispetto alle milestone effettivamente implementate.
+- Nessuna implementazione M10, modifica applicativa, migration, modifica
+  Supabase/Vercel/dati live o invio email in questa PR documentale.
+
 # 1.2.4
 
 - Aggiunto spazio di sicurezza inferiore globale allo shell admin mobile per mantenere pulsanti e azioni finali sopra la barra comandi di Safari su iPhone
