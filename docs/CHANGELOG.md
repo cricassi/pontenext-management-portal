@@ -1,5 +1,26 @@
 ﻿# CHANGELOG.md
 
+# M10-B - Complete Excel Export (2026-09-19)
+
+- Implementata `/settings/data-import-export`, con sola informativa/export e
+  endpoint POST protetto; accesso esclusivo a super_admin attivi verificato
+  server-side prima delle letture, client Supabase di sessione e RLS invariata.
+- Workbook in memoria `pontenext-full-export-v1`: README, METADATA e 13 fogli
+  business con archiviati, UUID/FK, date ISO, importi numerici e booleani nativi.
+- Manifest esplicito, nessun SELECT *, paging e doppia lettura confrontata;
+  non snapshot transazionale. Nessuna RPC/migration: superata l'ipotesi iniziale
+  del piano, rispettato il vincolo read-only dell'implementazione.
+- Limiti fail-closed 10.000 record, 10 MiB dati, 3 MiB XLSX e 25 secondi;
+  nessun file parziale, nessuna persistenza su disco/Storage o log dei dati.
+- Riutilizzato writer XLSX M8, mantenendo il contratto report esistente;
+  formula injection neutralizzata con celle testo e quotePrefix. Nessuna dipendenza.
+- Esclusi Auth, admin_users, token/hash opt-out, chiavi e configurazioni segrete.
+- Aggiunti test sintetici e checklist M10-B; aggiornati piano, documenti di
+  coerenza e Migration and Backup. Excel resta portabilita', non backup completo.
+- Lint/typecheck/build superati; schema/RLS Supabase verificati solo in lettura;
+  browser redirect anonimo e layout sintetico mobile/desktop verificati.
+- Nessuna modifica Supabase/Vercel, dati live o email; A1/A2/C non avviate.
+
 # Pianificato - M10 revisionato (2026-09-19)
 
 - Creato `docs/M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md`, in sostituzione del piano

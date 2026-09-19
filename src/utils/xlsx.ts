@@ -187,20 +187,25 @@ function buildWorksheetXml(columns: ReportColumn[], rows: ReportRow[]) {
   )}</cols><sheetData>${headerRow}${dataRows}</sheetData></worksheet>`;
 }
 
-function buildWorkbookXml() {
-  return `${XML_DECLARATION}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Report" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+function buildWorkbookXml(names = ["Report"]) {
+  const sheets = names.map((name, index) => `<sheet name="${escapeXml(name)}" sheetId="${index + 1}" r:id="rId${index + 1}"/>`).join("");
+  return `${XML_DECLARATION}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets}</sheets></workbook>`;
 }
 
-function buildWorkbookRelationshipsXml() {
-  return `${XML_DECLARATION}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`;
+function buildWorkbookRelationshipsXml(count = 1, styles = false) {
+  const sheets = Array.from({ length: count }, (_, index) => `<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${index + 1}.xml"/>`).join("");
+  const style = styles ? '<Relationship Id="styles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' : "";
+  return `${XML_DECLARATION}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets}${style}</Relationships>`;
 }
 
 function buildRootRelationshipsXml() {
   return `${XML_DECLARATION}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
 }
 
-function buildContentTypesXml() {
-  return `${XML_DECLARATION}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`;
+function buildContentTypesXml(count = 1, styles = false) {
+  const sheets = Array.from({ length: count }, (_, index) => `<Override PartName="/xl/worksheets/sheet${index + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("");
+  const style = styles ? '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' : "";
+  return `${XML_DECLARATION}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets}${style}</Types>`;
 }
 
 function toEntry(path: string, content: string): ZipEntry {
@@ -218,4 +223,73 @@ export function exportRowsToXlsx(columns: ReportColumn[], rows: ReportRow[]) {
     toEntry("xl/_rels/workbook.xml.rels", buildWorkbookRelationshipsXml()),
     toEntry("xl/worksheets/sheet1.xml", buildWorksheetXml(columns, rows)),
   ]);
+}
+
+export type XlsxCell = string | number | boolean | null;
+export type XlsxSheet = {
+  name: string;
+  columns: { label: string; money?: boolean }[];
+  rows: XlsxCell[][];
+};
+
+function buildTypedCell(value: XlsxCell, reference: string, money = false): string {
+  if (value === null) return "";
+  if (typeof value === "boolean") return `<c r="${reference}" t="b"><v>${value ? 1 : 0}</v></c>`;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new Error("Invalid numeric cell");
+    return `<c r="${reference}" t="n"${money ? ' s="2"' : ""}><v>${value}</v></c>`;
+  }
+  if (value.length > 32767) throw new RangeError("Excel cell limit exceeded");
+  for (const character of value) {
+    const point = character.codePointAt(0)!;
+    if ((point < 32 && point !== 9 && point !== 10 && point !== 13) ||
+      (point >= 0xd800 && point <= 0xdfff) || point === 0xfffe || point === 0xffff) {
+      throw new Error("Unrepresentable XML character");
+    }
+  }
+  // inlineStr never executes formulas; quotePrefix also flags dangerous text in Excel.
+  const style = /^[\s]*[=+\-@]/u.test(value) ? ' s="1"' : "";
+  const text = escapeXml(value.replace(/_x[0-9a-f]{4}_/gi, (match) => `_x005F_${match.slice(1)}`))
+    .replace(/\r/g, "_x000D_");
+  return `<c r="${reference}" t="inlineStr"${style}><is><t xml:space="preserve">${text}</t></is></c>`;
+}
+
+export function exportSheetsToXlsx(sheets: XlsxSheet[], maxBytes: number): Buffer {
+  const names = new Set<string>();
+  for (const sheet of sheets) {
+    const name = sheet.name.toLowerCase();
+    if (!name || name.length > 31 || /[\\/?*\[\]:]/.test(name) || names.has(name) ||
+      sheet.columns.length === 0 || sheet.columns.length > 16384 || sheet.rows.length > 1048575) {
+      throw new Error("Invalid worksheet");
+    }
+    names.add(name);
+  }
+  if (!sheets.length) throw new Error("Workbook requires worksheets");
+  const styles = `${XML_DECLARATION}<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" quotePrefix="1"/><xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const entries = [
+    toEntry("[Content_Types].xml", buildContentTypesXml(sheets.length, true)),
+    toEntry("_rels/.rels", buildRootRelationshipsXml()),
+    toEntry("xl/workbook.xml", buildWorkbookXml(sheets.map((sheet) => sheet.name))),
+    toEntry("xl/_rels/workbook.xml.rels", buildWorkbookRelationshipsXml(sheets.length, true)),
+    toEntry("xl/styles.xml", styles),
+  ];
+  let size = entries.reduce((total, entry) => total + entry.content.length, 0);
+  for (const [index, sheet] of sheets.entries()) {
+    const rows = [sheet.columns.map((column) => column.label), ...sheet.rows];
+    const parts = [`${XML_DECLARATION}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetData>`];
+    for (const [rowIndex, row] of rows.entries()) {
+      if (row.length !== sheet.columns.length) throw new Error("Column count mismatch");
+      const xml = `<row r="${rowIndex + 1}">${row.map((value, columnIndex) =>
+        buildTypedCell(value, `${getColumnName(columnIndex)}${rowIndex + 1}`, rowIndex > 0 && sheet.columns[columnIndex].money),
+      ).join("")}</row>`;
+      size += Buffer.byteLength(xml, "utf8");
+      if (size > maxBytes) throw new RangeError("Workbook size exceeded");
+      parts.push(xml);
+    }
+    parts.push("</sheetData></worksheet>");
+    entries.push(toEntry(`xl/worksheets/sheet${index + 1}.xml`, parts.join("")));
+  }
+  const workbook = createZip(entries);
+  if (workbook.length > maxBytes) throw new RangeError("Workbook size exceeded");
+  return workbook;
 }

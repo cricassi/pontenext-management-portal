@@ -606,7 +606,10 @@ Il trigger members esistente agisce solo su UPDATE, non crea relazioni su INSERT
 Il piano non aggiunge UNIQUE email/fiscale o bonifiche di dati. Controlli import
 prudenziali su duplicati, anche inattivi/archiviati, precedono l'INSERT atomico.
 
-Per snapshot coerente B e controllo duplicati transazionale C sono proposte
-funzioni additive separate, SECURITY INVOKER con sessione/RLS e guard super_admin,
-da approvare e testare nelle future PR. Nessuna alterazione di members o altre
-tabelle business; policy CRUD manuale members invariata.
+M10-B non introduce funzioni SQL o migration: la richiesta di implementazione
+ha escluso l'ipotesi RPC snapshot. Legge con sessione/RLS e guard super_admin,
+tramite paginazione e doppia lettura confrontata, non transazionale.
+Per il controllo duplicati transazionale C resta proposta una funzione additiva,
+SECURITY INVOKER con sessione/RLS e guard super_admin, da approvare e testare
+nella futura PR C. Nessuna alterazione di members o altre tabelle business;
+policy CRUD manuale members invariata.

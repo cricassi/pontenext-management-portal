@@ -380,19 +380,21 @@ Verifiche obbligatorie:
 
 ## 17. Portabilita' Excel M10: non e' backup/restore
 
-Stato al 2026-09-19: **solo progettazione**, nessuna funzione M10 implementata o
-migration applicata. Vedere [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
+Stato al 2026-09-19: **M10-B implementata su branch dedicato**, A1/A2/C ancora
+solo progettazione. Nessuna migration M10 applicata. Vedere
+[M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md) e
+[M10_B_EXPORT_CHECKLIST.md](M10_B_EXPORT_CHECKLIST.md).
 
 Ordine operativo: **M10-B Complete Excel Export -> M10-A1 Field Visibility
 Foundation -> M10-A2 Field Visibility Rollout -> M10-C New Members Excel Import**.
 M10-A conserva la denominazione Field Visibility. L'export read-only viene
-prima per consentire uno snapshot applicativo precedente alle modifiche ai form;
+prima per consentire una copia applicativa precedente alle modifiche ai form;
 la visibilita' viene introdotta progressivamente, l'import di nuove anagrafiche
-per ultimo. Nessun export reale e' eseguito da questa revisione documentale.
+per ultimo. Nessun export reale e' stato eseguito durante i test M10-B.
 
-L'export `pontenext-full-export-v1` previsto in M10-B contiene le 13 tabelle
+L'export `pontenext-full-export-v1` di M10-B contiene le 13 tabelle
 business approvate, README e METADATA, anche record archiviati. E' uno strumento
-di portabilita' applicativa: **non sostituisce un dump PostgreSQL/Supabase**.
+di portabilita' e consultazione: **non sostituisce un dump PostgreSQL/Supabase completo**.
 Non contiene Supabase Auth, password/sessioni/token, policy/RLS, trigger,
 funzioni SQL, DDL, configurazioni infrastrutturali, variabili ambiente o segreti.
 Non esporta admin_users o ui_field_visibility; eventuali FK verso admin_users
@@ -416,9 +418,9 @@ M10-A2 integra progressivamente le schermate con test di non perdita dati prima
 di attivare le preferenze. Risolvere updated_by da
 admin_users.id tramite auth_user_id, non scrivere auth.uid() nella FK. Ordine
 live attuale sempre `001`-`010`; `011`-`014` sono placeholder. Eventuali nuove
-migration/funzioni additive B/A1/C richiedono approvazione e aggiornamento di
+migration/funzioni additive A1/C richiedono approvazione e aggiornamento di
 questa guida al momento dell'implementazione; la numerazione segue l'ordine
-effettivo senza riservare 015 ad A1. A2 riusa la foundation e non richiede nuove
+effettivo; B non ne aggiunge. A2 riusa la foundation e non richiede nuove
 migration salvo necessita' separatamente documentata/approvata. Nessuna risulta
 applicata ora.
 
@@ -434,3 +436,46 @@ Test con dati sintetici su ambiente separato prima del live. Gate Codex per il
 primo import: **IMPORT NUOVI SOCI LIVE APPROVATO**, riferito al file/hash verificato;
 nessuna esecuzione automatica al merge/deploy. Dopo timeout ambiguo non ripetere
 automaticamente: verificare in sola lettura se il commit e' gia' avvenuto.
+
+### 17.1 Procedura export M10-B
+
+1. Concordare una finestra senza modifiche da parte degli altri amministratori.
+2. Accedere con un super_admin attivo; Impostazioni -> Esportazione dati,
+   `/settings/data-import-export`.
+3. Premere **Esporta tutti i dati in Excel**. Non esiste upload/import attivo.
+4. Attendere la risposta: `pontenext-full-export-YYYY-MM-DD-HHmm.xlsx`, data/ora UTC.
+5. Verificare README, METADATA, 13 fogli business e conteggi (esclusa intestazione).
+6. Conservare il download in posizione protetta, non in Git, email pubbliche o
+   storage condiviso non autorizzato. Il server non persiste workbook o righe.
+
+Il service usa esclusivamente il client Supabase di sessione sul progetto
+`uhxfpsamenjhyrfgwckw`, mai service role. Super_admin verificato prima delle query
+business e dopo la lettura. RLS invariata: gli admin ordinari conservano i diritti
+CRUD esistenti, ma non possono usare questa funzione di export completo.
+
+Limiti: 10.000 record complessivi, 10 MiB di JSON normalizzato, 3 MiB di XLSX,
+25 secondi per lettura/generazione, 32.767 caratteri per cella. Oltre limite,
+errore di lettura o dato non rappresentabile: nessun download parziale. Usare
+le procedure di backup sopra per volumi maggiori; non aumentare i limiti senza
+verificare memoria, durata e payload della funzione hosting.
+
+Due letture paginate confrontano contenuto e conteggi. **Non garantiscono uno
+snapshot transazionale**; possono non rilevare tutte le modifiche concorrenti.
+METADATA indica `non_transactional_double_read`; `schema_migration_version` e'
+la baseline verificata del manifest, non una query privilegiata a runtime. Il
+controllo progetto va adeguato esplicitamente e verificato in caso di futura
+migrazione autorizzata verso un nuovo project ref.
+
+UUID/FK e codici sono testo; timestamp ISO mantengono i microsecondi; importi
+numeric(10,2) diventano celle numeriche; booleani nativi. Null = cella assente,
+stringa vuota = `\E`, backslash iniziale letterale raddoppiato. Testi sempre
+`inlineStr`; prefissi `=`, `+`, `-`, `@`, anche dopo spazi, usano `quotePrefix`:
+non si creano formule, macro o hyperlink attivi. Il dato testuale non viene
+troncato o interpretato come codice. Carriage return e sequenze letterali
+`_xHHHH_` usano escape OOXML reversibili. Lettori generici devono rispettare tali
+escape; openpyxl richiede `utils.escape.unescape` per questi inline string.
+
+Auth non e' contenuto nel file; gli UUID `created_by`/`sent_by` restano riferimenti
+esterni ad admin_users. Questo file non ricrea utenti, privilegi, RLS o schema e
+non e' accettato dal futuro import nuovi soci. Ogni restore completo resta
+soggetto alle verifiche precedenti, incluso login admin reale.

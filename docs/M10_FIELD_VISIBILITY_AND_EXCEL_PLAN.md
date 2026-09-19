@@ -1,6 +1,10 @@
 # M10 - Field Visibility and Excel Data Portability
 
-Data: 2026-09-19. Stato: **piano revisionato, non implementato**.
+Data: 2026-09-19. Stato: **M10-B implementata su branch dedicato; A1/A2/C solo pianificate**.
+
+Aggiornamento operativo M10-B: richiesta successiva al piano vieta migration e
+modifiche Supabase. Nessuna RPC snapshot introdotta; vedere sezione 14 e
+[M10_B_EXPORT_CHECKLIST.md](M10_B_EXPORT_CHECKLIST.md) per evidenze e limiti reali.
 
 Base verificata: `main` al commit `b6bc68e215743ba55eb82ad03b463879586d68b5`.
 Progetto verificato in sola lettura: **PonteNext**, `uhxfpsamenjhyrfgwckw`.
@@ -73,12 +77,11 @@ separatamente documentata e approvata. Non introduce readonly o nuovi permessi.
   test su ambiente separato e, eventualmente, primo import live con gate specifico.
 
 B non dipende da `ui_field_visibility`, registro/resolver o helper creati in
-A1: verifica il super_admin con il contesto Auth/admin esistente. Anche l'eventuale
-RPC read-only B deve essere autosufficiente nel controllo del ruolo, senza
-anticipare la foundation o ampliare le autorizzazioni.
+A1: verifica il super_admin con il contesto Auth/admin esistente. B non introduce
+RPC, helper SQL o migration e non amplia le autorizzazioni.
 
-Questa PR non crea codice, migration, file Excel, dipendenze o configurazioni
-Vercel; non legge segreti, non esporta/importa dati reali e non modifica Supabase.
+La PR documentale #47 non ha creato codice, migration, file Excel, dipendenze o
+configurazioni Vercel; non ha esportato/importato dati reali o modificato Supabase.
 Il piano non costituisce autorizzazione a eseguire operazioni live.
 
 ## 2. Evidenze del repository e del database
@@ -111,8 +114,8 @@ attivi, INSERT/UPDATE sulle tabelle business e nessuna policy DELETE.
 I file locali `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e
 `014_seed.sql` sono placeholder, non migration da applicare. Non rinumerare o
 riscrivere `001`-`010`. La numerazione delle eventuali migration additive segue
-l'ordine effettivo B -> A1 -> A2 -> C. Se B introduce la funzione snapshot,
-questa puo' occupare il primo numero libero: non prenotare `015` per A1.
+l'ordine effettivo B -> A1 -> A2 -> C. B non introduce migration o funzioni SQL;
+verificare nuovamente il primo numero libero all'avvio della futura A1.
 Il nome della migration `ui_field_visibility` va scelto all'avvio di A1 dopo
 verifica delle migration effettive di B; nessun file viene creato adesso.
 
@@ -474,12 +477,12 @@ Niente file Excel o dati personali nei log, console, cache CDN o analytics.
 ## 12. M10-B: formato completo e differenza da M8
 
 B e' la **prima fase operativa**, read-only sui dati applicativi. Non legge
-configurazioni M10-A e non richiede che la relativa tabella esista. Lo snapshot
-Excel permette un riferimento dei dati prima degli interventi A2 sui form;
+configurazioni M10-A e non richiede che la relativa tabella esista. La copia
+Excel non transazionale permette un riferimento prima degli interventi A2 sui form;
 resta portabilita' applicativa, non un backup completo o un restore automatico.
 
 Identificatore **`pontenext-full-export-v1`**; nome download
-`pontenext-full-export-v1-<timestamp-UTC>.xlsx`.
+`pontenext-full-export-YYYY-MM-DD-HHmm.xlsx` (UTC).
 
 Questo export include tutti i record autorizzati delle 13 tabelle previste,
 **anche archiviati e inattivi**, senza filtri di pagina, ordinamento UI o
@@ -488,13 +491,13 @@ query al limite predefinito REST e non chiamare completo un file parziale.
 
 L'attuale export `/reports/export` M8 resta distinto: CSV/XLSX filtrati,
 preview e limiti esistenti. Non ampliarne i permessi e non trasformarlo
-automaticamente in export globale. Il writer attuale produce un foglio di
-report, non un manifest typed multi-sheet, e non dispone di parser import.
+automaticamente in export globale. Il writer M8 continua a produrre un foglio
+report; il nuovo percorso multi-sheet tipizzato riusa ZIP/XML senza parser import.
 
 README descrive scopo, formato, tipi, esclusioni, presenza di dati personali e
 incompatibilita' con l'import soci. METADATA registra versione formato/schema,
-timestamp UTC, commit applicativo, migration `001`-`010` rilevate alla futura
-esecuzione, origine non segreta, conteggi per foglio, strategia snapshot,
+timestamp UTC, versione applicativa da package.json, baseline migration del
+manifest verificata `001`-`010`, origine non segreta, conteggi per foglio, strategia lettura,
 colonne escluse e riferimenti esterni. Non inserire token o credenziali.
 
 ## 13. M10-B: manifest dei fogli e relazioni
@@ -531,7 +534,7 @@ codici fiscali e partite IVA sono testo per non perdere zeri iniziali.
 Stringhe come `=...` sono celle di tipo testo, mai formule o hyperlink attivi.
 
 Definire in README un encoding reversibile: null = cella assente, stringa vuota
-= marcatore `\\E`, backslash iniziale letterale raddoppiato. Il decoder di test
+= marcatore `\E`, backslash iniziale letterale raddoppiato. Il decoder di test
 deve distinguere null/vuoto/marker letterale; numeri e booleani non usano marker.
 Nessun troncamento silenzioso di testo, precisione o caratteri XML non rappresentabili:
 incompatibilita' -> export bloccato con messaggio privo di contenuto sensibile.
@@ -541,43 +544,49 @@ Le FK business restano riferimenti ai fogli corrispondenti. `created_by` e
 dichiarare in METADATA che sono riferimenti esterni. Non esportare Auth, password,
 sessioni, chiavi, token, service role, anon key, credenziali o configurazione UI.
 
-## 14. M10-B: snapshot, limiti e implementazione prevista
+## 14. M10-B: consistenza, limiti e implementazione
 
-Letture REST separate non garantiscono uno snapshot coerente durante scritture
-concorrenti. Scelta proposta: futura funzione RPC read-only dedicata al manifest,
-SECURITY INVOKER, search_path sicuro, sessione utente e controllo super_admin,
-che restituisca dati e conteggi con **un unico statement SELECT** e snapshot
-PostgreSQL coerente. Nessuna scrittura, modifica di tabella o bypass RLS.
-La funzione richiedera' una migration additiva separata B da approvare, non
-contenuta nella migration A e non creata in questa PR.
+La richiesta di implementazione esclude migration e modifiche Supabase, quindi
+supera l'ipotesi iniziale di RPC snapshot. Letture REST con sessione utente/RLS,
+manifest esplicito e pagine da 250 record ordinate per id. Conteggi esatti e
+lettura fino all'ultimo record, anche se il server restituisce pagine piu' piccole.
+Due letture complete confrontano SHA-256 di valori normalizzati, ordine e
+conteggi; variazioni rilevate bloccano tutto. Non basta l'uguaglianza dei conteggi.
 
-Se si scegliesse invece paging REST, dichiarare esplicitamente la minore
-consistenza e la necessita' di finestra senza scritture: non presentarlo come
-snapshot atomico equivalente. L'accettazione B richiede la soluzione snapshot
-verificata, non solo conteggi uguali rilevati in istanti diversi.
+**Non e' uno snapshot transazionale PostgreSQL**: doppia lettura non elimina
+tutte le anomalie di concorrenza. Operare in finestra senza scritture da parte
+degli altri amministratori; requisito dichiarato in UI, README e METADATA del
+workbook. Nessun blocco o modifica al database. Per garanzie transazionali usare
+il backup PostgreSQL; un eventuale endpoint snapshot futuro richiede richiesta
+separata e non fa parte di questa fase.
 
-Limiti iniziali proposti: massimo **10.000 righe dati complessive**, **10 MiB**
+Limiti implementati: massimo **10.000 righe dati complessive**, **10 MiB**
 di payload dati prima del writer e **3 MiB** di XLSX finale. Conteggi e limiti
 verificati prima di restituire qualunque download; anche una sola tabella
 eccedente blocca l'intero export. I limiti non autorizzano selezione dei primi N
 record. Volumi superiori richiedono revisione progettuale, non esportazioni
 parziali dichiarate complete o upload automatico di dati su nuovi servizi.
 
-`data-export.service.ts` futuro: autorizzazione, snapshot allowlisted, controllo
-tipi/limiti, serializzazione XLSX in memoria. Libreria e limiti da validare con
-dataset sintetici ampi, testi email lunghi e record archiviati. Il limite nativo
+`data-export.service.ts`: guard super_admin iniziale/finale, controllo progetto,
+letture allowlisted, timeout 25 secondi, controllo tipi/limiti e serializzazione
+XLSX in memoria. Riutilizzato il writer ZIP/XML M8 con nuovo percorso multi-foglio
+tipizzato; nessuna dipendenza aggiunta. Manifest in `src/config/data-export.ts`.
+METADATA dichiara `schema_migration_version` come baseline del manifest
+`20260607195558_010_email`, non come introspezione privilegiata a runtime.
+Il limite nativo
 Excel di 32.767 caratteri per cella impone un controllo preventivo, non slicing.
 [Limiti ufficiali Excel](https://support.microsoft.com/en-us/excel/excel-specifications-and-limits).
 
 ## 15. Test e acceptance M10-B
 
-- Tutti i 15 fogli, manifest esatto, METADATA e conteggi coerenti con lo snapshot.
+- Tutti i 15 fogli, manifest esatto, METADATA e conteggi coerenti con le letture.
 - UUID/FK interni preservati; riferimenti admin esterni esplicitati; nessun Auth.
 - Nessun token/hash opt-out/segreto; confronto del manifest con schema approvato.
 - Attivi, inattivi, archiviati e figli inclusi; nessuna dipendenza da filtri/hidden.
 - Numeri/importi/date/stati conservati; test null/vuoto/marker e zeri iniziali.
 - Celle formula-like esportate come testo; HTML non eseguito; niente macro/link esterni.
-- Letture concorrenti non producono relazioni spezzate da snapshot differenti.
+- Variazioni fra letture bloccano il file; limite non transazionale esplicito,
+  finestra senza scritture richiesta, nessuna promessa di snapshot atomico.
 - Limiti righe/file/cella -> errore, mai dati tagliati; nessun file su disco.
 - Admin ordinario/anon/inactive/archived negati; super_admin soggetto a RLS.
 - M8 invariato; test parser indipendente riapre il workbook e confronta i dati
@@ -960,7 +969,7 @@ presa visione dei warning, indipendentemente dal gate operativo di Codex.
 | --- | --- |
 | field-visibility registry/service | Catalogo, batch load, default, salvataggio configurazione e reset |
 | FieldVisibilitySettings | Modulo/schermata, campi, switch, conferme e modifiche non salvate |
-| data-export.service | Manifest, lettura snapshot RLS, limiti, workbook completo |
+| data-export.service | Manifest, doppia lettura paginata RLS, limiti, workbook completo |
 | members-import.service | Formato, parsing sicuro, normalizzazione condivisa, dry-run, ricevuta, riconferma, singolo INSERT |
 | Validatore membro condiviso | Regole dominio per form e import, senza accesso a file o Supabase |
 | Utility XLSX server-only | Tipi celle, limiti, escaping, workbook; nessun DB client privilegiato |
@@ -1043,7 +1052,7 @@ archiviazione o invio email sul progetto live per collaudare il piano.
 | Minor | Limiti Vercel/Excel diversi al rilascio | Riverifica documentazione/piano effettivo e benchmark prima di B/C |
 
 Prerequisiti ancora da approvare nella rispettiva implementazione: versione
-libreria e audit, eventuali RPC additive B/C, benchmark e massimi effettivi,
+libreria e audit import C, eventuale RPC additiva C, benchmark e massimi effettivi,
 chiave dedicata della ricevuta e regole condivise di lunghezza per nuovi valori.
 Non sono autorizzazioni a cambiare schema/configurazioni nella task attuale.
 
