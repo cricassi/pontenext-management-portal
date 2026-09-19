@@ -87,6 +87,7 @@ escludono ogni anomalia concorrente; per backup consistente usare dump PostgreSQ
 | Browser pagina protetta | `http://127.0.0.1:3011/settings/data-import-export` senza sessione -> `/login?next=%2Fsettings%2Fdata-import-export` |
 | HTTP protetto | Pagina GET, endpoint GET/POST anonimi: 307 verso login, nessun attachment |
 | UI mobile/desktop | Fixture SSR isolata del componente reale e CSS build, senza DB: 375x667 e 1440x900, zero elementi oltre bordo; screenshot ispezionati |
+| Smoke test autenticato | PASS comunicato dall'utente il 2026-09-19 sulla Vercel Preview PR #48: login super_admin, accesso pagina, download e apertura in Excel desktop |
 
 ```bash
 node --require ./tests/register-typescript.cjs ./tests/data-export.test.ts
@@ -111,21 +112,52 @@ sono stati eseguiti separatamente senza cookie. Non e' una regressione export.
 
 Verifica indipendente: openpyxl legge il buffer tramite BytesIO;
 `openpyxl.utils.escape.unescape` decodifica gli escape OOXML negli inline string.
-Nessun workbook reale scaricato, scritto su disco, stampato o allegato.
+Durante la verifica automatizzata Codex, nessun workbook reale scaricato, scritto
+su disco, stampato o allegato. Il test manuale dell'utente e' documentato sotto.
 Riferimenti: [Microsoft ST_Xstring](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/bd0aa042-434a-4ca7-b25f-4e1fd25a954d),
 [openpyxl escape](https://openpyxl.readthedocs.io/en/stable/api/openpyxl.utils.escape.html).
 
+## Smoke test autenticato sulla preview PR #48
+
+Esito: **PASS**, comunicato dall'utente il 2026-09-19. Ambiente: Vercel Preview
+della PR #48. Evidenza: conferma operativa dell'utente, non una nuova esecuzione
+Codex. Commit applicativo della PR al momento della conferma:
+`888a1b1e31ebe8dacd08694e16c9d06820ae29cd`; URL/hash del deploy non comunicati
+separatamente. Nessun workbook acquisito per questo aggiornamento documentale.
+
+- [x] Login super_admin riuscito.
+- [x] Pagina `/settings/data-import-export` accessibile.
+- [x] Download XLSX riuscito.
+- [x] Workbook aperto con Excel desktop senza errori.
+- [x] 15 fogli presenti, inclusi README e METADATA.
+- [x] Conteggi coerenti e record campione verificati dall'utente.
+- [x] Nessun foglio Auth/admin_users; nessun segreto rilevato dall'utente.
+- [x] Nessuna modifica al database durante l'export, come confermato dall'utente.
+- [x] Workbook non committato, non allegato alla PR e non caricato su servizi esterni.
+
+Confermato il percorso positivo autenticato in preview. La comunicazione non
+attesta prove manuali dedicate degli stati pending/errore, condizioni limite o
+scritture concorrenti; non vengono dichiarate superate ulteriori prove manuali.
+Restano valide le verifiche automatiche e le limitazioni di consistenza sopra.
+
 ## Limiti delle verifiche e gate post-merge
 
-- [ ] Smoke test manuale autenticato in preview con super_admin: pending, errore,
-  download e apertura in Excel desktop. Non eseguito con dati personali live.
+- [x] Smoke test manuale autenticato in preview: download e apertura in Excel
+  desktop, eseguito e confermato dall'utente.
 - [ ] Verifica post-merge prima di avviare M10-A1.
-- [ ] Eventuale export reale su azione esplicita dell'operatore, in finestra
-  senza scritture e con conservazione protetta.
 
-Il controllo visuale riguarda la pagina in fixture SSR, non l'intero shell Safari
-con sessione reale; non viene dichiarato un E2E live del download. Nessuno status
-o ruolo di amministratori reali e' stato modificato per i test. Limiti di volume
-e compatibilita' Excel richiedono rivalutazione se lo schema cresce.
+Per gli export successivi resta necessaria l'azione esplicita dell'operatore,
+in finestra senza scritture e con conservazione protetta. Excel non e' un backup
+PostgreSQL e lo smoke test non dimostra consistenza transazionale.
+
+Il controllo visuale Codex riguarda la fixture SSR, non l'intero shell Safari
+con sessione reale. Il percorso autenticato in preview e' stato invece verificato
+dall'utente come sopra. Nessuno status o ruolo di amministratori reali e' stato
+modificato da Codex per i test. Limiti di volume e compatibilita' con altre versioni
+Excel richiedono rivalutazione se lo schema cresce.
+
+Aggiornamento smoke test esclusivamente documentale: `git diff --check` superato;
+lint/typecheck/build non rieseguiti, codice applicativo invariato rispetto alle
+verifiche riportate sopra. Nessun nuovo export eseguito da Codex.
 
 Nessuna implementazione M10-A1, M10-A2 o M10-C avviata.

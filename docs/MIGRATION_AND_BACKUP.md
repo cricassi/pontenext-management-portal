@@ -390,7 +390,11 @@ Foundation -> M10-A2 Field Visibility Rollout -> M10-C New Members Excel Import*
 M10-A conserva la denominazione Field Visibility. L'export read-only viene
 prima per consentire una copia applicativa precedente alle modifiche ai form;
 la visibilita' viene introdotta progressivamente, l'import di nuove anagrafiche
-per ultimo. Nessun export reale e' stato eseguito durante i test M10-B.
+per ultimo. Nessun export reale eseguito da Codex durante i test automatizzati.
+Il 2026-09-19 l'utente ha confermato lo smoke test autenticato sulla preview PR #48:
+download e apertura in Excel desktop riusciti, nessuna modifica al database,
+workbook non committato, allegato alla PR o caricato su servizi esterni. Vedere
+la checklist M10-B per il perimetro della verifica e il gate post-merge.
 
 L'export `pontenext-full-export-v1` di M10-B contiene le 13 tabelle
 business approvate, README e METADATA, anche record archiviati. E' uno strumento

@@ -2,6 +2,11 @@
 
 # M10-B - Complete Excel Export (2026-09-19)
 
+- Ricevuta conferma utente dello smoke test autenticato su Vercel Preview PR #48:
+  login super_admin, accesso pagina, download XLSX e apertura Excel desktop riusciti;
+  15 fogli, README/METADATA, conteggi e campioni verificati. Nessun foglio Auth/admin_users
+  o segreto rilevato, nessuna modifica DB, workbook non condiviso/committato.
+  Aggiornate checklist e guida backup solo documentalmente; verifica post-merge ancora da eseguire.
 - Implementata `/settings/data-import-export`, con sola informativa/export e
   endpoint POST protetto; accesso esclusivo a super_admin attivi verificato
   server-side prima delle letture, client Supabase di sessione e RLS invariata.
