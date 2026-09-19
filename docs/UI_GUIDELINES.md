@@ -326,3 +326,41 @@ Per dettagli completi vedere `docs/BRAND_UI_GUIDELINES.md`.
 - Preferire semplicità, leggibilità e coerenza.
 - Ogni pagina elenco deve avere versione desktop e mobile.
 - Ogni form deve avere validazione client-side minima.
+
+---
+
+# 18. Impostazioni M10, progettazione non implementata
+
+Riferimento: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
+
+`/settings/field-visibility`: preferenze globali visible/hidden per soli campi
+facoltativi. Modulo, schermata, ricerca, label/descrizione, obbligatorieta' e
+switch Visibile. Obbligatori selezionati/disabilitati, con motivo
+"Campo obbligatorio: non può essere nascosto". Admin leggono, super_admin
+modificano. Salva/reset per schermata, conferma e avviso di modifiche non salvate.
+Nessun readonly, gruppo, scope o impostazione personale.
+
+Ordine previsto: M10-B Complete Excel Export, M10-A1 Field Visibility Foundation,
+M10-A2 Field Visibility Rollout, M10-C New Members Excel Import. M10-A conserva
+il nome Field Visibility e comprende entrambe le sottofasi.
+A1 introduce la pagina e il catalogo, ma non modifica le schermate business:
+controlli di configurazione per moduli non integrati disabilitati, applicazione
+non ancora attiva. In A2, abilitazione progressiva solo dopo adattamento di
+mapper/update e test di non perdita dati. Nessun toggle che prometta effetti
+su schermate non ancora integrate.
+
+Lista desktop e card mobile dello stesso contesto condividono screen_key;
+creazione/modifica/dettaglio hanno chiavi indipendenti. Nascondere un controllo
+non azzera il suo valore e non cambia report/export/email. Filtri report nascosti
+ma attivi restano applicati e indicati nel riepilogo dei filtri.
+
+`/settings/data-import-export`: solo super_admin, tre operazioni distinte:
+export completo Excel, download modello nuovi soci, import nuovi soci.
+Modelli diversi: workbook completo non utilizzabile come import. Preview di
+tutte le righe normalizzate, conteggi, errori/conflict bloccanti e warning da
+confermare; nessun INSERT prima di dry-run e conferma. Report finale con UUID
+generati, nessuna promessa di restore o aggiornamento di record esistenti.
+
+Brand Refresh e componenti accessibili esistenti; tabelle desktop, elenchi mobile,
+scroll solo interno alle preview ampie, azioni raggiungibili con tastiera e
+Safari. Mantenere protezioni da zoom/overflow, safe area e scroll padding mobile.
