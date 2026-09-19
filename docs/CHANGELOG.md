@@ -1,5 +1,15 @@
 ﻿# CHANGELOG.md
 
+# Unreleased
+
+## 2026-09-19 - Consolidamento documentazione backup
+
+- Recuperati dalla PR #35 i dettagli ancora utili in `MIGRATION_AND_BACKUP.md`, integrandoli con la guida presente su main.
+- Distinti setup vuoto e restore; chiariti dipendenze Auth/admin, conservazione UUID, effetti dei seed e dei trigger, grant/Data API e schema `app_private`.
+- Documentati copertura backup, verifiche post-restore, cutover/rollback e vincolo Resend da considerare per un futuro cambio provider.
+- Rafforzate le regole di manutenzione in `CODEX_INSTRUCTIONS.md`.
+- Revisione solo documentale: nessuna modifica a codice applicativo, migration, database, segreti o configurazione Vercel; nessun backup/restore o invio email eseguito.
+
 # 1.2.4
 
 - Aggiunto spazio di sicurezza inferiore globale allo shell admin mobile per mantenere pulsanti e azioni finali sopra la barra comandi di Safari su iPhone

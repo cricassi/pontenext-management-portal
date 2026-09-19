@@ -129,3 +129,21 @@ Codex deve aggiornare `docs/MIGRATION_AND_BACKUP.md` ogni volta che modifica:
 
 Se una modifica impatta migrazione, restore o operativita' di ambiente, la
 documentazione backup non e' opzionale. Va aggiornata nella stessa PR.
+
+Nella PR indicare quali sezioni della guida sono cambiate e quali verifiche
+sono state realmente eseguite; non presentare la revisione documentale come
+prova di un restore riuscito.
+
+Regole di manutenzione:
+
+- distinguere inizializzazione vuota, restore e migrazione di dati esistenti;
+- mantenere ordine migration, dipendenze e comportamento dei seed coerenti
+  con i file operativi; aggiornare anche `DATABASE_DESIGN.md` se cambia lo
+  schema e `CHANGELOG.md` per le modifiche documentate;
+- documentare sia RLS/policy sia grant/Data API e schema `app_private`;
+- preservare UUID, collegamenti Auth/admin e storico nei percorsi di restore;
+- non includere dump, dati personali o valori segreti in documenti, log e PR;
+- richiedere verifica con login admin reale dopo bootstrap/restore, riportando
+  come non eseguiti i test non disponibili;
+- descrivere finestra operativa e rollback senza autorizzare implicitamente
+  modifiche a Supabase, provider email o hosting.

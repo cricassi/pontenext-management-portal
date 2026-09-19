@@ -1,12 +1,20 @@
 # Migration and Backup
 
-Data aggiornamento: 2026-06-16
+Data aggiornamento: 2026-09-19
 
 ## 1. Scopo del documento
 
 Questo documento descrive come migrare, ricreare, fare backup e ripristinare PonteNext Management Portal.
 
 La procedura copre repository, database Supabase, Auth, RLS/policy, provider email Resend e hosting Next.js.
+
+Questa revisione consolida i dettagli utili della PR #35 nella guida corrente,
+senza ripristinare il vecchio branch. Riferimento verificato: `main` al commit
+`b6bc68e215743ba55eb82ad03b463879586d68b5`.
+La verifica e' documentale, sulle migration e sui seed locali: non certifica
+un nuovo backup, un restore eseguito o una nuova ispezione del database live.
+Qualunque operazione descritta richiede autorizzazione, ambiente target
+identificato e piano di recupero; questo documento non ne autorizza l'esecuzione.
 
 Regole dure:
 
@@ -43,6 +51,7 @@ Non migrare nel repository:
 Migrare:
 
 - schema `public`;
+- schema privato `app_private`, incluso l'helper RLS;
 - funzioni SQL;
 - trigger;
 - indici;
@@ -62,6 +71,12 @@ In una migrazione reale verificare:
 - redirect URL;
 - relazione tra `auth.users.id` e `public.admin_users.auth_user_id`.
 
+Definire prima del backup se preservare gli utenti Auth con una procedura
+Supabase compatibile oppure ricrearli tramite Dashboard/Admin API. Identita',
+conferme, hash password e sessioni non sono seed applicativi. Non stamparli e
+non inserirli nel repository. Una ricreazione richiede nuove credenziali o un
+recupero password controllato; non promette di conservare password e sessioni.
+
 ### Supabase RLS/policy
 
 RLS e policy devono restare coerenti con la regola admin-only:
@@ -71,12 +86,23 @@ RLS e policy devono restare coerenti con la regola admin-only:
 - accesso con `app_private.is_active_admin()`;
 - nessuna policy `DELETE`, salvo decisione futura documentata.
 
+Eccezione gia' prevista: la policy SELECT di `admin_users` consente anche la
+lettura della propria riga. Non autorizza un admin inattivo/archiviato ad
+accedere ai dati gestionali: il guard e le altre policy devono negarlo.
+
+Controllare sia i grant alle tabelle e alle funzioni sia RLS: il permesso di
+raggiungere una tabella via Data API non equivale al permesso di leggerne tutte
+le righe. Conservare `app_private` fuori dagli schemi esposti, i privilegi
+`USAGE`/`EXECUTE` necessari alle policy e il `search_path` sicuro delle funzioni.
+Non usare service role per sostituire questi controlli nel runtime.
+
 ### Resend
 
 Migrare solo configurazione operativa:
 
 - account/provider;
 - dominio verificato;
+- record DNS richiesti dal provider e limiti di invio;
 - mittente `EMAIL_FROM`;
 - API key tramite variabile ambiente.
 
@@ -87,6 +113,7 @@ Non salvare chiavi API nel database o nel repository.
 Migrare:
 
 - project settings;
+- repository collegato, branch di produzione e commit distribuito;
 - build command;
 - environment variables;
 - dominio;
@@ -100,7 +127,7 @@ Procedura:
 
 1. Creare nuovo progetto Supabase.
 2. Salvare il nuovo project ref.
-3. Configurare URL e anon key in `.env.local`.
+3. Configurare Auth (provider, conferma email, Site URL e redirect URL ammessi) e URL/anon key in `.env.local`.
 4. Applicare solo le migration reali, in ordine.
 5. Applicare i seed necessari.
 6. Creare almeno un utente Supabase Auth.
@@ -111,9 +138,19 @@ Procedura:
 
 Non applicare placeholder futuri come se fossero migration operative.
 
+Questa procedura inizializza un ambiente senza dati pregressi. Per recuperare
+un ambiente popolato seguire le sezioni 8-10: non combinare automaticamente
+replay delle migration, seed e import di un dump completo.
+
+Il repository usa `database/migrations`, non `supabase/migrations`. Verificare
+directory, ordine e progetto selezionato prima di qualsiasi comando CLI di
+applicazione. Non usare `db reset` su un ambiente remoto come passaggio di setup.
+
 ## 4. Ordine migration attuale
 
-Migration operative attuali, applicate su Supabase PonteNext:
+Migration operative presenti nel repository, documentate come applicate nei
+report M0-M9. Prima di intervenire confrontarle con lo storico del progetto
+sorgente e del target, senza dedurre lo stato live dalla sola numerazione locale:
 
 ```text
 001_extensions
@@ -143,7 +180,11 @@ database/migrations/009_sponsor_contributions.sql
 database/migrations/010_email.sql
 ```
 
-I file `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e `014_seed.sql` sono placeholder/futuri nel repository e non risultano applicati al database live.
+I file `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e `014_seed.sql`
+sono placeholder/futuri nel repository verificato; non fanno parte del replay
+operativo. Non modificare migration gia' applicate e non falsificare lo storico
+per far apparire applicato un file. Confrontare nomi, contenuti e dipendenze,
+non solo i timestamp eventualmente assegnati dalla piattaforma.
 
 ## 5. Seed necessari
 
@@ -154,15 +195,37 @@ database/seeds/roles.sql
 database/seeds/membership_plans.sql
 ```
 
-Dopo restore o nuovo ambiente verificare:
+Su un ambiente nuovo:
 
-- ruoli associativi base presenti;
-- piani iscrizione base presenti;
-- eventuali template email coerenti con la configurazione operativa.
+- `004_members_roles.sql` inserisce gia' i sette ruoli base: Presidente,
+  Vicepresidente, Segretario, Tesoriere, Consigliere, Socio Ordinario,
+  Socio Sostenitore;
+- `membership_plans.sql` inizializza Ordinaria (30.00, 12 mesi), Agevolata
+  (15.00, 6 mesi), Sostenitore (30.00, 12 mesi);
+- nessun seed demo, password o utente Auth va caricato in produzione;
+- non e' richiesto un seed email: preservare gli eventuali template esistenti.
+
+Su un restore, preservare invece UUID e configurazioni della sorgente.
+I seed usano upsert per nome: riapplicarli puo' cambiare quote, durata,
+descrizioni e riattivare record archiviati. Non sono operazioni prive di effetti.
+Inoltre il seed incluso in `004` genera UUID nuovi: importare successivamente
+ruoli della sorgente puo' causare conflitti di nome o FK non valide.
+Preferire il percorso schema+dati della sezione 9 per un recupero completo;
+se si sceglie il replay, preparare e verificare su ambiente isolato una
+riconciliazione esplicita degli UUID prima dell'import, senza riscrivere le
+migration storiche o cancellare dati live.
 
 ## 6. Bootstrap primo super_admin
 
-Prima creare l'utente in Supabase Auth.
+Prima creare/confermare l'utente in Supabase Dashboard, Authentication > Users,
+oppure tramite Admin API da un ambiente controllato. Non e' prevista
+registrazione pubblica o accesso per i soci.
+
+Verificare l'identita' dell'operatore, sostituire nome/email segnaposto e usare
+SQL Editor con privilegi owner o un canale amministrativo autorizzato.
+L'upsert seguente concede `super_admin`, riattiva l'account e rimuove
+l'archiviazione: eseguirlo soltanto per l'operatore approvato, non su tutti gli
+admin durante un restore. Non inserire password nel SQL.
 
 Poi inserire o aggiornare la riga applicativa in `public.admin_users`:
 
@@ -193,11 +256,19 @@ set
 
 Controlli dopo bootstrap:
 
+- una sola riga corrisponde all'utente Auth scelto, con `role = 'super_admin'`;
 - login con email/password funziona;
 - `public.admin_users.status = 'active'`;
 - `archived_at is null`;
 - utente Auth non presente in `admin_users` viene negato;
 - admin `inactive` o archiviato viene negato.
+
+Se un utente Auth e' stato ricreato con un nuovo UUID ma esiste gia' la sua
+riga admin, non rilanciare alla cieca l'upsert: il vincolo univoco su email
+puo' bloccarlo. Nel target riconciliare `auth_user_id` mantenendo invariato
+`admin_users.id`, referenziato da pagamenti e campagne. Conservare gli stati
+degli altri amministratori. Non modificare account reali solo per test negativi:
+usare account di prova autorizzati in un ambiente isolato.
 
 ## 7. Variabili ambiente richieste
 
@@ -217,42 +288,98 @@ Regole:
 - `SUPABASE_SERVICE_ROLE_KEY` e' solo server/bootstrap. Mai nel browser.
 - `RESEND_API_KEY` e' solo server-side. Mai nel browser, mai nei log, mai nel repository.
 - `EMAIL_FROM` deve essere un mittente verificato/autorizzato nel provider email.
+- Nessun segreto deve avere prefisso `NEXT_PUBLIC_` o essere riportato in log,
+  screenshot, ticket e report; `.env.example` deve avere valori vuoti.
+- Impostare separatamente Development, Preview e Production. URL e chiave
+  pubblica Supabase devono appartenere allo stesso progetto.
+- Dopo un cambio env eseguire una nuova build/deploy: le variabili pubbliche
+  possono essere incorporate nel bundle durante la build.
 
 ## 8. Backup database
 
-Backup minimo:
+Prima scegliere il metodo e verificare copertura e disponibilita' nel piano
+Supabase: backup gestito, PITR se abilitato, oppure dump logico. Il restore
+gestito puo' richiedere downtime e sovrascrivere dati piu' recenti. I backup
+database non includono i file conservati tramite Storage API, solo i relativi
+metadati: se Storage viene usato, prevedere una copia separata degli oggetti.
+Fonte: [Supabase Database Backups](https://supabase.com/docs/guides/platform/backups).
 
-- dump schema e dati `public`;
-- dump dati necessari a ricostruire Auth, oppure procedura controllata di ricreazione utenti Auth;
-- copia delle migration applicate;
-- copia dei seed;
-- export separato e protetto dei dati personali se richiesto.
+Contenuto da inventariare:
 
-Backup consigliato:
+- schema e dati `public`, incluse righe archiviate e storico destinatari;
+- schema `app_private`, funzioni, trigger, indici, vincoli, policy e grant;
+- strategia dedicata per utenti Auth e loro identita';
+- storico migration, commit, seed di riferimento, versioni Postgres/estensioni;
+- configurazioni Auth, hosting e provider esterni, senza segreti nel report.
 
-- usare strumenti Supabase dashboard/CLI o `pg_dump`;
-- cifrare il dump;
-- salvare fuori dal repository;
-- limitare accesso ai soli operatori autorizzati;
-- annotare project ref, data, ambiente e commit applicativo.
+Il dump standard `supabase db dump` esclude schemi gestiti come `auth` e
+`storage`; il dump predefinito non comprende dati o ruoli custom. La CLI
+documenta opzioni separate per dati e ruoli. Un dump solo `public` non e' un
+backup completo di PonteNext. Verificare copertura dell'artefatto e versione
+CLI prima di scegliere i comandi, inclusa l'esportazione di `app_private`.
+Fonte: [Supabase CLI db dump](https://supabase.com/docs/reference/cli/supabase-db-dump).
 
-Non includere dump database in Git.
+Non riportare connection string/password nella cronologia della shell o nei
+log. Usare un canale sicuro per le credenziali e una destinazione assoluta
+esterna al checkout, cifrata e accessibile solo agli operatori autorizzati.
+Registrare data/ora UTC, sorgente, commit, versione strumenti, checksum,
+copertura, retention, responsabile e obiettivi di perdita dati/downtime (RPO/RTO).
+Un export CSV/XLSX dell'app non sostituisce un backup.
+
+Fermare le scritture durante il backup finale di migrazione, oppure usare una
+strategia di snapshot consistente verificata. Backup Auth e dati applicativi
+devono corrispondere allo stesso stato logico. Provare periodicamente il
+restore in un ambiente isolato; il solo completamento del dump non dimostra
+che il recupero funzioni. Non includere dump o loro contenuti nei commit.
 
 ## 9. Restore database
 
-Procedura:
+### Scelta del percorso
 
-1. Creare o selezionare ambiente target.
-2. Verificare che il target sia quello giusto.
-3. Applicare migration operative `001`-`010`.
-4. Applicare seed.
-5. Ripristinare dati applicativi.
-6. Ripristinare o ricreare utenti Supabase Auth.
-7. Riallineare `admin_users.auth_user_id` agli utenti Auth target.
-8. Verificare RLS attiva.
-9. Verificare policy admin-only.
-10. Eseguire login admin reale.
-11. Eseguire smoke test route protette.
+- **Restore gestito nello stesso progetto:** approvare finestra e punto di
+  ripristino, sospendere l'uso operativo, preservare un backup dello stato
+  corrente e seguire la procedura Supabase. Non rieseguire poi tutte le
+  migration o i seed su uno schema gia' ripristinato.
+- **Restore logico schema+dati su nuovo progetto:** preferibile per recuperare
+  uno stato popolato preservando UUID e configurazioni. Validare compatibilita'
+  di Postgres/estensioni/ruoli; usare un target isolato senza tabelle applicative
+  gia' inizializzate. Seguire la procedura ufficiale adatta all'artefatto.
+- **Replay migration + import dati:** percorso alternativo, non aggiuntivo al
+  dump schema. Richiede la riconciliazione dei seed descritta nella sezione 5
+  e un piano specifico per Auth, FK e trigger. Non e' una procedura automatica.
+
+La guida [Supabase Backup and Restore](https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore)
+documenta anche il recupero separato dello storico migration e considerazioni
+sui trigger. Non copiare un comando di restore senza valutarne gli effetti:
+la modalita' `session_replication_role = replica` puo' disattivare controlli
+basati su trigger, inclusi quelli di integrita'.
+
+### Controlli durante il recupero
+
+1. Identificare esplicitamente source e target; verificare backup, checksum e
+   autorizzazione. Non usare produzione per una prova.
+2. Ripristinare lo schema con un solo percorso scelto sopra; verificare anche
+   `app_private`, proprietari, privilegi e `search_path`.
+3. Ripristinare/ricreare Auth prima dei dati che lo referenziano. Conservare
+   gli UUID dove supportato; altrimenti preparare una mappa protetta nel target.
+4. Importare `admin_users` prima di pagamenti/template/campagne. Preservare
+   il suo `id` applicativo e collegare `auth_user_id` all'utente Auth corretto.
+5. Importare gli altri dati rispettando FK, UUID, record archiviati e storico.
+   Arrestare l'import al primo errore; non proseguire con un restore parziale.
+6. Verificare e riconciliare lo storico migration rispetto allo schema
+   effettivamente recuperato, senza applicare placeholder o seed superflui.
+7. Controllare trigger, vincoli, conteggi e totali prima di collegare l'app.
+8. Verificare grant/Data API, RLS e policy con sessioni non privilegiate.
+9. Eseguire login admin reale e smoke test delle route prima della riapertura.
+
+Il piano di import deve considerare gli effetti dei trigger: importare
+`payments` puo' ricalcolare `paid_amount`, `payment_status` e `updated_at`;
+importare contributi evento storici puo' fallire se lo sponsor, l'evento o il
+legame sono ormai archiviati. Conservare questi dati, senza riattivarli per
+aggirare i controlli. Provare una procedura di restore approvata che preservi
+lo storico; se sospende trigger nella sola sessione di recupero, verificarne
+la riattivazione e l'integrita' risultante prima di aprire il target all'app.
+Non disabilitare RLS per risolvere errori di accesso.
 
 Non considerare il restore valido senza login admin reale riuscito.
 
@@ -263,9 +390,9 @@ Passi:
 1. Congelare modifiche operative durante la finestra di migrazione.
 2. Eseguire backup sorgente.
 3. Creare progetto target.
-4. Applicare migration e seed.
-5. Migrare dati applicativi.
-6. Migrare o ricreare utenti Auth.
+4. Scegliere ed eseguire un solo percorso di restore della sezione 9.
+5. Verificare Auth e collegamenti admin, quindi i dati e le dipendenze importate.
+6. Confrontare conteggi, UUID, storico rinnovi, stati e totali con il backup sorgente.
 7. Aggiornare `.env.local` e variabili ambiente hosting.
 8. Verificare RLS/policy/funzioni.
 9. Verificare login e route protette.
@@ -274,6 +401,35 @@ Passi:
 
 Attenzione: gli UUID Auth cambiano se gli utenti vengono ricreati. In quel caso `admin_users.auth_user_id` deve essere riallineato.
 
+Ordine di dipendenza per un import manuale con vincoli attivi (non sostituisce
+la procedura Auth dedicata o la gestione dei trigger della sezione 9):
+
+```text
+Auth -> admin_users
+roles + members -> member_roles
+members + membership_plans -> memberships -> payments
+sponsors + events -> event_sponsors -> sponsor_contributions
+admin_users -> email_templates -> email_campaigns -> email_campaign_recipients
+```
+
+`payments` dipende anche da `admin_users`; i destinatari campagna possono
+referenziare `members` o `sponsors`. Preservare le FK nullable e l'intero
+storico delle memberships, senza accorpare rinnovi o modificare date/quote.
+
+### Cutover e rollback
+
+Definire responsabile, finestra operativa, criterio di riuscita e termine per
+il ritorno alla sorgente. Conservare la sorgente senza nuove scritture e la
+configurazione precedente in un archivio sicuro, mai in Git. Spostare traffico
+solo dopo i controlli della sezione 14, poi monitorare errori e accessi.
+
+In caso di fallimento prima della riapertura, ripristinare collegamento hosting
+e dominio alla sorgente, verificando anche le env incorporate nella build.
+Se il target ha gia' ricevuto nuove scritture, fermarle e pianificare una
+riconciliazione: un semplice cambio di URL perderebbe i nuovi dati. Non
+tenere due ambienti scrivibili contemporaneamente e non eliminare la sorgente
+finche' il recupero e la conservazione del backup non sono approvati.
+
 ## 11. Rotazione chiavi
 
 Ruotare:
@@ -281,7 +437,8 @@ Ruotare:
 - Supabase anon key se compromessa;
 - Supabase service role key se usata fuori controllo;
 - `RESEND_API_KEY` se sospetta o scaduta;
-- credenziali Vercel/team se necessario.
+- credenziali Vercel/team se necessario;
+- password database e token di automazione GitHub/deploy, quando coinvolti.
 
 Dopo rotazione:
 
@@ -291,6 +448,12 @@ Dopo rotazione:
 - verificare export;
 - verificare stato provider email senza inviare campagne reali;
 - rimuovere vecchie chiavi.
+
+Per una rotazione pianificata, verificare se il tipo di chiave consente
+sovrapposizione temporanea e aggiornare tutti i consumatori prima della revoca.
+In caso di compromissione privilegiare la revoca tempestiva e accettare, se
+necessario, downtime controllato. Valutare l'impatto sulle sessioni Auth.
+Non scambiare tipi di chiave senza verificarne compatibilita' con i client.
 
 ## 12. Cambio provider email
 
@@ -305,6 +468,13 @@ Da aggiornare:
 - gestione errori invio;
 - report M7/M9 se impattati.
 
+La migration `010_email.sql` impone `email_campaigns.provider = 'resend'`.
+Cambiare una env non basta: un cambio provider richiede una decisione separata,
+adattamento del service e valutazione del vincolo con una futura migration
+approvata. Non riscrivere `010` e non alterare lo storico per attribuire al
+nuovo provider invii precedenti. Preservare snapshot destinatari, stati e
+identificativi provider; non ritentare automaticamente campagne ripristinate.
+
 Regole invarianti:
 
 - nessun invio automatico senza conferma admin;
@@ -317,12 +487,21 @@ Regole invarianti:
 Per spostare da Vercel ad altro hosting Next.js:
 
 - verificare supporto Next.js App Router;
+- verificare supporto server-side, Server Actions ed endpoint export: un
+  hosting solo statico non e' sufficiente;
 - configurare build command `npm run build`;
 - configurare runtime Node compatibile;
 - impostare variabili ambiente;
 - configurare dominio;
 - verificare middleware e cookie Supabase SSR;
 - verificare route protette.
+
+Usare versioni e lockfile del repository (`npm ci` prima delle verifiche).
+Per un runtime Node tradizionale il comando applicativo e' `npm run start`
+dopo la build; su Vercel usare l'integrazione Next.js. Verificare dominio/HTTPS,
+Site URL e redirect Auth ammessi, cookie/sessioni e corrispondenza tra commit
+atteso e deploy di produzione. I segreti vanno trasferiti attraverso il
+provider hosting o il secret manager, non esportati in file versionati.
 
 Il cambio hosting non deve cambiare modello dati o RLS.
 
@@ -344,6 +523,24 @@ Verifiche obbligatorie:
 - Resend configurato senza invii reali;
 - nessuna chiave visibile nel bundle client.
 
+Confrontare inoltre conteggi e UUID per tabella, righe archiviate, periodi
+storici delle iscrizioni e FK senza orfani. Verificare che `paid_amount`
+corrisponda alla somma dei payments non archiviati e che lo stato pagamento
+sia coerente, incluso `paid` con quota prevista e pagato entrambi a zero.
+Controllare contributi con/senza evento e snapshot/stati delle campagne.
+
+Verificare con sessioni appropriate, non solo come owner/service role:
+nessun dato gestionale anonimo o accessibile a un non admin; rispettare
+l'eccezione di lettura della propria riga `admin_users`. Controllare grant e
+privilegi predefiniti del target, funzioni SQL con `search_path` sicuro e
+Security Advisor. Provare `/dashboard`, `/members`, `/memberships`,
+`/expirations`, `/sponsors`, `/events`, `/email`, `/reports` e protezione di
+`/reports/export`, senza creare dati o inviare email reali.
+
+Registrare esito, operatore e anomalie senza dati personali. Se un test non e'
+stato eseguito indicarlo come non verificato; un login riuscito non dimostra
+da solo la completezza dei dati ripristinati.
+
 ## 15. Rischi
 
 - Perdita relazione tra `auth.users.id` e `admin_users.auth_user_id`.
@@ -354,26 +551,40 @@ Verifiche obbligatorie:
 - Placeholder migration applicati come migration operative.
 - Redirect Auth non configurati sul nuovo dominio.
 - Invio email reale durante test.
+- Perdita di `app_private`, grant o storico migration in un dump incompleto.
+- Sovrascrittura di personalizzazioni e UUID con seed riapplicati.
+- Alterazione dello storico per effetto dei trigger durante l'import.
+- Perdita di nuove scritture con rollback non riconciliato.
 
 ## 16. Checklist operativa
 
 - [ ] Identificato ambiente sorgente.
 - [ ] Identificato ambiente target.
+- [ ] Responsabile, finestra, RPO/RTO e rollback approvati.
+- [ ] Scelto percorso: ambiente vuoto, restore gestito, schema+dati o replay+import.
 - [ ] Backup creato e cifrato.
+- [ ] Copertura Auth, `public`, `app_private` e configurazioni verificata.
+- [ ] Checksum e restore di prova verificati in un ambiente isolato.
 - [ ] Commit applicativo annotato.
-- [ ] Migration `001`-`010` applicate in ordine.
+- [ ] Schema `001`-`010` ricostruito o ripristinato, senza doppia applicazione.
+- [ ] Storico migration riconciliato con lo schema effettivo.
 - [ ] Placeholder `011`+ non applicati.
-- [ ] Seed ruoli applicato.
-- [ ] Seed piani iscrizione applicato.
+- [ ] Seed ruoli/piani applicati solo su ambiente vuoto; UUID/configurazioni sorgente preservati nel restore.
 - [ ] Utenti Supabase Auth verificati.
-- [ ] Primo `super_admin` bootstrappato.
+- [ ] Admin collegati ad Auth; bootstrap limitato al primo admin autorizzato se necessario.
+- [ ] `admin_users.id`, FK e storico applicativo preservati.
+- [ ] Conteggi, totali pagamenti, stati email e trigger verificati.
 - [ ] `.env.local` creato localmente e non committato.
 - [ ] Variabili hosting configurate.
 - [ ] RLS verificata attiva.
 - [ ] Policy admin-only verificate.
+- [ ] Grant/Data API, eccezione SELECT admin e funzioni hardened verificati.
 - [ ] Login admin reale riuscito.
+- [ ] Test negativi Auth eseguiti su account autorizzati senza alterare utenti reali.
 - [ ] Route protette verificate.
 - [ ] Export verificato senza file su disco.
 - [ ] Email verificata senza invii reali.
 - [ ] Chiavi rotate se necessario.
+- [ ] Traffico spostato dopo verifica; nessun doppio ambiente scrivibile.
+- [ ] Sorgente mantenuta disponibile per rollback nel periodo approvato.
 - [ ] Dump e segreti rimossi da postazioni non autorizzate.
