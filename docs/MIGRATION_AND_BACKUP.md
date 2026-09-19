@@ -383,6 +383,13 @@ Verifiche obbligatorie:
 Stato al 2026-09-19: **solo progettazione**, nessuna funzione M10 implementata o
 migration applicata. Vedere [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
 
+Ordine operativo: **M10-B Complete Excel Export -> M10-A1 Field Visibility
+Foundation -> M10-A2 Field Visibility Rollout -> M10-C New Members Excel Import**.
+M10-A conserva la denominazione Field Visibility. L'export read-only viene
+prima per consentire uno snapshot applicativo precedente alle modifiche ai form;
+la visibilita' viene introdotta progressivamente, l'import di nuove anagrafiche
+per ultimo. Nessun export reale e' eseguito da questa revisione documentale.
+
 L'export `pontenext-full-export-v1` previsto in M10-B contiene le 13 tabelle
 business approvate, README e METADATA, anche record archiviati. E' uno strumento
 di portabilita' applicativa: **non sostituisce un dump PostgreSQL/Supabase**.
@@ -402,12 +409,18 @@ Supabase. Per ricostruzione, Auth, RLS, bootstrap e restore rimangono valide le
 procedure sopra, incluso login admin reale dopo ogni restore. I soci importati
 non ottengono accesso all'applicazione.
 
-Futura M10-A: sola nuova ui_field_visibility, registro nel codice, tabella
-inizialmente vuota e nessuna trasformazione business. Risolvere updated_by da
+Futura M10-A1: sola nuova ui_field_visibility, RLS/helper super_admin, registro,
+resolver e pagina Impostazioni; tabella inizialmente vuota, nessuna trasformazione
+business e nessuna modifica alle schermate o ai mapper/update dei moduli.
+M10-A2 integra progressivamente le schermate con test di non perdita dati prima
+di attivare le preferenze. Risolvere updated_by da
 admin_users.id tramite auth_user_id, non scrivere auth.uid() nella FK. Ordine
 live attuale sempre `001`-`010`; `011`-`014` sono placeholder. Eventuali nuove
-migration/funzioni additive A/B/C richiedono approvazione e aggiornamento di
-questa guida al momento dell'implementazione; non risultano applicate ora.
+migration/funzioni additive B/A1/C richiedono approvazione e aggiornamento di
+questa guida al momento dell'implementazione; la numerazione segue l'ordine
+effettivo senza riservare 015 ad A1. A2 riusa la foundation e non richiede nuove
+migration salvo necessita' separatamente documentata/approvata. Nessuna risulta
+applicata ora.
 
 Il piano C propone una futura chiave server-only MEMBERS_IMPORT_RECEIPT_SECRET
 per ricevute dry-run firmate: non esiste una nuova configurazione in questa PR.

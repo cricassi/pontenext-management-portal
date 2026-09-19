@@ -159,6 +159,13 @@ soltanto visible/hidden e soltanto per campi facoltativi. Obbligatori e
 controlli condizionalmente necessari al workflow non possono essere nascosti.
 Admin attivi leggono/applicano; solo super_admin attivi modificano/reset.
 
+Ordine operativo M10: **B -> A1 -> A2 -> C**. M10-A Field Visibility e'
+suddivisa in A1 Field Visibility Foundation (tabella/RLS/helper, registro,
+resolver e Impostazioni, nessuna schermata business modificata) e A2 Field
+Visibility Rollout (integrazione progressiva e adeguamento mapper/update).
+L'applicazione alle schermate inizia soltanto in A2, dopo i test di non perdita
+dati per il relativo modulo; la sola foundation non nasconde alcun campo business.
+
 Un campo nascosto mantiene il valore nel DB. Negli update i campi assenti non
 diventano null, false, zero o FK scollegate. Le create usano esclusivamente
 default gia' previsti/null per facoltativi. Le impostazioni di visibilita' non
@@ -168,6 +175,11 @@ cambiano report, export, email, segmentazioni o il formato import soci.
 
 Piano: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
 Funzioni non ancora implementate; precedente import multi-tabella annullato.
+
+M10-B Complete Excel Export precede A1/A2 per rendere disponibile uno snapshot
+read-only prima delle modifiche ai form; M10-C New Members Excel Import viene
+implementata per ultima, essendo l'unica fase che inserisce nuove anagrafiche
+business. Lo snapshot non costituisce autorizzazione a modificare o ripristinare dati.
 
 - Export completo e import soci sono operazioni distinte riservate a super_admin
   attivi, con verifica server-side e RLS.

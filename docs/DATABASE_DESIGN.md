@@ -556,9 +556,14 @@ migration operative applicate `001`-`010`; file `011`-`014` sopra elencati
 ancora placeholder. Non applicarli, rinumerarli o riscrivere migration storiche.
 Nessuna modifica live nella fase di piano.
 
-## 11.1 ui_field_visibility proposta M10-A
+## 11.1 ui_field_visibility proposta M10-A1
 
 Unica nuova tabella prevista: `public.ui_field_visibility`.
+M10-A Field Visibility e' suddivisa in A1 Field Visibility Foundation e
+A2 Field Visibility Rollout; l'ordine operativo completo e' **B -> A1 -> A2 -> C**.
+In A1 si predispongono tabella, RLS, helper super_admin, registro, resolver e
+pagina Impostazioni senza modificare schermate business. A2 integra i moduli
+e adegua mapper/update con test di preservazione, senza ricreare la tabella.
 
 | Campo | Specifica proposta |
 | --- | --- |
@@ -579,9 +584,10 @@ nel registro e tramite CHECK coerente. Nessun permission group/scope/readonly.
 RLS: SELECT per admin attivi, INSERT/UPDATE solo super_admin attivi, autore
 verificato, nessuna policy DELETE/anon. updated_by non e' Auth UUID: risolvere
 `admin_users.auth_user_id = auth.uid()` e usare `admin_users.id`.
-Migration futura solo additiva, nessun ALTER/DML delle tabelle business o seed
-business. Nome indicativo `015_ui_field_visibility.sql`, da riverificare in fase
-implementativa; nessun file SQL creato dal piano.
+Migration futura A1 solo additiva, nessun ALTER/DML delle tabelle business o
+seed business. Il numero va scelto dopo le eventuali migration additive B:
+`015` non e' riservato a ui_field_visibility, poiche' B viene sviluppata prima.
+Non applicare placeholder o rinumerare lo storico. Nessun file SQL creato dal piano.
 
 ## 11.2 Export e import non modificano il modello business
 

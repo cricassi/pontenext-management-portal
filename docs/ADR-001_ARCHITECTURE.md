@@ -128,5 +128,22 @@ sono superate da questo piano.
   Eventuali funzioni additive B/C non alterano le tabelle business e richiedono
   revisione dedicata. Nessuna migration o funzionalita' viene creata dal piano.
 
-Tre PR operative separate A/B/C. L'import non e' un restore e non ricrea
-relazioni, iscrizioni, quote, pagamenti o utenti Auth; non invia email.
+Le denominazioni restano M10-A Field Visibility, M10-B Complete Excel Export
+e M10-C New Members Excel Import. L'ordine operativo e' **B -> A1 -> A2 -> C**,
+con quattro PR separate:
+
+1. **M10-B Complete Excel Export**: read-only, snapshot applicativo disponibile
+   prima delle modifiche ai form, senza dipendere da infrastruttura/helper A1.
+2. **M10-A1 Field Visibility Foundation**: migration additiva ui_field_visibility,
+   RLS, helper super_admin, registro, resolver e pagina Impostazioni; nessuna
+   schermata business, mapper o update esistente modificato.
+3. **M10-A2 Field Visibility Rollout**: integrazione progressiva delle preferenze,
+   patch/mapper che preservano valori nascosti e test di non perdita dati per modulo.
+4. **M10-C New Members Excel Import**: ultima fase, unica che inserisce nuove
+   anagrafiche business; test separati prima di qualunque import live.
+
+Verifica post-merge prima di passare alla fase successiva. A1 da sola non
+rende operativa la visibilita' nei moduli: i relativi controlli nelle
+Impostazioni vengono abilitati solo dopo integrazione e test A2.
+L'import non e' un restore e non ricrea relazioni, iscrizioni, quote,
+pagamenti o utenti Auth; non invia email.

@@ -4,8 +4,15 @@
 
 - Creato `docs/M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md`, in sostituzione del piano
   annullato della PR #46: nessun permission group, scope multiplo o readonly.
-- Separate le future PR M10-A (visibilita' globale DB-backed dei campi facoltativi),
-  M10-B (export Excel completo) e M10-C (import esclusivamente di nuovi soci).
+- Mantenute le denominazioni M10-A Field Visibility, M10-B Complete Excel Export
+  e M10-C New Members Excel Import; ordine operativo revisionato in quattro PR:
+  B -> A1 Field Visibility Foundation -> A2 Field Visibility Rollout -> C.
+- Export read-only per primo, per consentire uno snapshot prima delle modifiche
+  ai form; A1 prepara migration additiva/RLS/helper/registro/resolver/Impostazioni
+  senza modificare schermate business; A2 integra progressivamente i moduli,
+  adegua mapper/update e verifica la conservazione dei dati nascosti.
+- Import di nuove anagrafiche per ultimo; allineati gate di fase, dipendenze e
+  criteri di accettazione. Nessuna migration prenotata prima di verificare B.
 - Annullato l'import multi-tabella: C consente solo INSERT in `public.members`,
   con modello dedicato, dry-run, controllo duplicati, conferma super_admin e
   operazione atomica; nessun UPDATE/UPSERT, relazione o account automatico.

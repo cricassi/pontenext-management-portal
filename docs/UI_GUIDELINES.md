@@ -340,6 +340,15 @@ switch Visibile. Obbligatori selezionati/disabilitati, con motivo
 modificano. Salva/reset per schermata, conferma e avviso di modifiche non salvate.
 Nessun readonly, gruppo, scope o impostazione personale.
 
+Ordine previsto: M10-B Complete Excel Export, M10-A1 Field Visibility Foundation,
+M10-A2 Field Visibility Rollout, M10-C New Members Excel Import. M10-A conserva
+il nome Field Visibility e comprende entrambe le sottofasi.
+A1 introduce la pagina e il catalogo, ma non modifica le schermate business:
+controlli di configurazione per moduli non integrati disabilitati, applicazione
+non ancora attiva. In A2, abilitazione progressiva solo dopo adattamento di
+mapper/update e test di non perdita dati. Nessun toggle che prometta effetti
+su schermate non ancora integrate.
+
 Lista desktop e card mobile dello stesso contesto condividono screen_key;
 creazione/modifica/dettaglio hanno chiavi indipendenti. Nascondere un controllo
 non azzera il suo valore e non cambia report/export/email. Filtri report nascosti

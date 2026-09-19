@@ -14,17 +14,68 @@ per campo. Anche la precedente ipotesi di import Excel multi-tabella e' annullat
 
 | Fase | Funzione | Scritture future consentite |
 | --- | --- | --- |
-| M10-A - Simple Database Field Visibility | Visibilita' globale dei soli campi facoltativi | Configurazione nella nuova `ui_field_visibility`; nessuna trasformazione dei dati business |
-| M10-B - Complete Excel Export | Workbook completo delle 13 tabelle business previste | Nessuna scrittura di dati |
-| M10-C - New Members Excel Import | Modello dedicato, dry-run, INSERT di nuovi soci | Solo INSERT in `public.members` |
+| M10-A Field Visibility | Visibilita' globale dei soli campi facoltativi, suddivisa in A1 e A2 | Configurazione nella nuova `ui_field_visibility`; nessuna trasformazione dei dati business |
+| M10-B Complete Excel Export | Workbook completo delle 13 tabelle business previste | Nessuna scrittura di dati |
+| M10-C New Members Excel Import | Modello dedicato, dry-run, INSERT di nuovi soci | Solo INSERT in `public.members` |
 
-Le tre implementazioni richiedono **tre PR operative separate**. Sequenza:
+Le denominazioni A/B/C identificano le funzionalita', **non il loro ordine di
+esecuzione**. Dopo l'approvazione del piano, l'ordine operativo vincolante e'
+il seguente, con **quattro PR operative separate**:
 
-1. Approvazione di questo piano documentale.
-2. M10-A, test e verifica post-merge.
-3. M10-B, test dell'export con dati sintetici e verifica post-merge.
-4. M10-C e test su ambiente separato.
-5. Eventuale primo import live, esclusivamente dopo dry-run e approvazione specifica.
+1. **M10-B Complete Excel Export**.
+2. **M10-A1 Field Visibility Foundation**.
+3. **M10-A2 Field Visibility Rollout**.
+4. **M10-C New Members Excel Import**.
+
+Motivazione: l'export e' read-only sui dati applicativi e permette di ottenere
+uno snapshot Excel prima delle modifiche ai form. La visibilita' richiede
+introduzione progressiva e test di conservazione; l'import e' l'unica fase che
+inserisce nuove anagrafiche business e viene implementato per ultimo. Le
+scritture delle preferenze tecniche A1/A2 non sono import di dati business.
+Lo snapshot Excel non sostituisce il backup PostgreSQL/Supabase.
+
+### 1.1 Confini M10-A1 e M10-A2
+
+**M10-A1 Field Visibility Foundation** comprende esclusivamente la base:
+
+- migration additiva `ui_field_visibility`, vincoli/indici e trigger previsti;
+- RLS e helper super_admin sicuro;
+- registro tipizzato dei campi e resolver centralizzato;
+- pagina `/settings/field-visibility` e relativa gestione della configurazione;
+- test del motore, delle autorizzazioni e della pagina Impostazioni.
+
+**Nessuna schermata business viene modificata in A1**: nessun controllo hidden
+nei form/liste/dettagli/filtri, nessuna lettura delle preferenze nei loro fetch,
+nessuna modifica a mapper, update o validazioni dei moduli. Il catalogo puo'
+essere completo, ma l'applicazione ai moduli resta non attiva fino ad A2.
+
+**M10-A2 Field Visibility Rollout** comprende:
+
+- integrazione progressiva delle policy UI visible/hidden nelle schermate;
+- adattamento dei mapper e degli update per preservare i valori nascosti;
+- test di non perdita dati per stringhe, date, checkbox, FK e campi condizionali;
+- attivazione per modulo solo dopo esito positivo dei relativi test.
+
+A2 riusa infrastruttura, tabella, RLS, registro, resolver e Impostazioni di A1;
+non ricrea la foundation e non richiede una nuova migration salvo necessita'
+separatamente documentata e approvata. Non introduce readonly o nuovi permessi.
+
+### 1.2 Passaggi e verifiche fra le fasi
+
+- **B -> A1**: export testato con dati sintetici, verifica post-merge e possibilita'
+  di ottenere/conservare in modo protetto lo snapshot applicativo pre-rollout.
+  Un eventuale export live richiede autorizzazione: questa revisione non lo esegue.
+- **A1 -> A2**: verifica post-merge della foundation, RLS/resolver corretti e
+  conferma che schermate business, mapper e dati non siano cambiati.
+- **Durante A2**: un gruppo di schermate alla volta, test di preservazione prima
+  di abilitarne le preferenze; verifica finale di regressione e post-merge.
+- **A2 -> C**: visibilita' collaudata; solo allora implementazione dell'import,
+  test su ambiente separato e, eventualmente, primo import live con gate specifico.
+
+B non dipende da `ui_field_visibility`, registro/resolver o helper creati in
+A1: verifica il super_admin con il contesto Auth/admin esistente. Anche l'eventuale
+RPC read-only B deve essere autosufficiente nel controllo del ruolo, senza
+anticipare la foundation o ampliare le autorizzazioni.
 
 Questa PR non crea codice, migration, file Excel, dipendenze o configurazioni
 Vercel; non legge segreti, non esporta/importa dati reali e non modifica Supabase.
@@ -59,8 +110,11 @@ attivi, INSERT/UPDATE sulle tabelle business e nessuna policy DELETE.
 
 I file locali `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e
 `014_seed.sql` sono placeholder, non migration da applicare. Non rinumerare o
-riscrivere `001`-`010`. Un eventuale nome futuro `015_ui_field_visibility.sql`
-va riconfermato all'avvio di M10-A; nessun file viene creato adesso.
+riscrivere `001`-`010`. La numerazione delle eventuali migration additive segue
+l'ordine effettivo B -> A1 -> A2 -> C. Se B introduce la funzione snapshot,
+questa puo' occupare il primo numero libero: non prenotare `015` per A1.
+Il nome della migration `ui_field_visibility` va scelto all'avvio di A1 dopo
+verifica delle migration effettive di B; nessun file viene creato adesso.
 
 ### 2.2 Codice rilevante
 
@@ -98,7 +152,7 @@ campo, non cambia RLS, report, export, email, segmentazioni o permessi CRUD.
 Un campo nascosto non viene cancellato, convertito in null/false o sovrascritto
 quando si modifica un altro campo.
 
-## 4. M10-A: modello dati proposto
+## 4. M10-A1: modello dati della foundation
 
 Una sola nuova tabella, `public.ui_field_visibility`, senza alterare le tabelle
 business o il modello Auth/admin esistente.
@@ -136,10 +190,10 @@ tabella catalogo. Le coppie obbligatorie/non configurabili non sono ammesse.
 Una nuova coppia futura richiedera' aggiornamento coordinato di registro e CHECK;
 rinominare una label non cambia le chiavi.
 
-## 5. M10-A: migration, RLS e salvataggio
+## 5. M10-A1: migration, RLS e salvataggio
 
 La futura migration contiene soltanto nuova tabella, vincoli/indici, trigger
-`updated_at`, abilitazione RLS, policy, eventuale helper sicuro e grant minimi.
+`updated_at`, abilitazione RLS, policy, helper super_admin sicuro e grant minimi.
 Nessun seed business, ALTER di tabelle business, DML sui record esistenti,
 UPDATE/DELETE/DROP/TRUNCATE operativo. L'abilitazione RLS sulla **nuova** tabella
 e le clausole `FOR UPDATE` delle policy non sono modifiche dei dati business.
@@ -152,10 +206,11 @@ e le clausole `FOR UPDATE` delle policy non sono modifiche dei dati business.
 | DELETE | Nessuna policy e nessun grant applicativo |
 | anon | Nessuna policy/grant |
 
-Riutilizzare `app_private.is_active_admin()`. Un eventuale
+Riutilizzare `app_private.is_active_admin()`. L'helper
 `app_private.is_super_admin()` controlla `auth_user_id`, role super_admin,
 status active e archived_at null, con `search_path = ''`, oggetti qualificati,
-EXECUTE minimo e SECURITY DEFINER solo se necessario. Non sostituire la guard
+EXECUTE minimo e SECURITY DEFINER solo se necessario. L'helper appartiene alla
+foundation A1; B deve funzionare senza attenderlo. Non sostituire la guard
 applicativa e non cambiare la lettura di admin_users.
 
 Salva opera sulla schermata selezionata. Dopo validazione, il service rilegge
@@ -182,6 +237,8 @@ File futuro: `src/config/field-visibility-registry.ts`. Campi del registro:
 `screenKey`, `fieldKey`, `module`, `label`, `description`, `isRequired`,
 `configurable`, `defaultVisible`, `displayOrder`. Registro versionato in Git.
 Tutti i campi configurabili iniziano visible; chiavi indipendenti da traduzione.
+Il registro viene predisposto in A1; l'inventario seguente definisce le
+integrazioni da eseguire in A2, non modifiche alle schermate da anticipare in A1.
 
 Liste desktop e relative card mobile usano **la medesima screen_key**; create,
 edit, detail e filtri hanno chiavi distinte. Non aggiungere nella card campi che
@@ -257,6 +314,14 @@ e `/settings/membership-plans` e piu' esplicita di `/settings/fields`.
 con ulteriore controllo super_admin server-side. Il normale admin vede la
 configurazione ma non puo' salvarla o resettarla.
 
+La pagina viene creata in A1. Fino all'integrazione A2 di una schermata, il suo
+catalogo e' consultabile ma switch, Salva e Ripristina per quella schermata
+restano disabilitati, con indicazione di applicazione non ancora attiva. Il
+service di configurazione viene collaudato in ambiente separato senza effetti
+sui form. L'abilitazione segue lo stato di integrazione versionato nel codice,
+non un terzo stato DB o un flag scelto dall'utente. Le operazioni server della
+pagina rifiutano configurazioni operative per schermate non ancora attivate.
+
 Raggruppamento per modulo, selettore schermata, ricerca, label, descrizione,
 indicazione obbligatorio/facoltativo, default e switch **Visibile**. Campi
 obbligatori selezionati e disabilitati con motivo esatto:
@@ -274,11 +339,13 @@ switch accessibili da tastiera, azioni con icone Lucide pertinenti e testo chiar
 Non reintrodurre overflow orizzontale, input piccoli che attivano zoom Safari o
 pulsanti coperti dalla barra inferiore. Conservare safe area e scroll padding.
 
-## 8. Resolver, cache e integrazione M10-A
+## 8. Resolver A1 e integrazione progressiva A2
 
 Un unico service futuro `field-visibility.service.ts`, server-side, carica per
 screen_key tutte le righe attive e risolve una mappa di booleani dal registro.
-Il componente riceve soltanto questa mappa. Per pagine con pannelli multipli,
+In A1 viene usato/testato nella foundation e nella pagina Impostazioni; non
+viene ancora collegato alle schermate business. In A2 il componente integrato
+riceve soltanto questa mappa. Per pagine con pannelli multipli,
 una lettura per insieme di screen_key, **mai una query per campo**.
 
 Memoizzazione limitata alla request/render autenticata: nessuna cache globale
@@ -293,12 +360,18 @@ Errore DB: lettura UI puo' usare default visible con avviso, trattandosi di
 preferenza non riservata; **salvataggio form/configurazione bloccato** se non si
 puo' ricostruire con certezza l'insieme dei campi da preservare.
 
-Rollout tecnico interno A: motore e Impostazioni, poi members/sponsors/events,
-poi ruoli/relazioni/piani/iscrizioni/pagamenti/email/filtri. Non pubblicare toggle
-operativi per componenti non ancora integrati. Ogni gruppo richiede test di
-conservazione dati prima di renderlo configurabile.
+Rollout **A2**, successivo alla verifica post-merge A1: prima members, poi
+sponsors/events, quindi ruoli/relazioni/piani/iscrizioni/pagamenti/email/filtri.
+Per ogni gruppo adeguare prima mapper/update e validazioni di presenza, poi
+integrare liste/card/dettagli/form/filtri e verificare non perdita dati. Solo
+allora abilitare i controlli della relativa schermata nelle Impostazioni.
+Nessun toggle operativo per componenti non ancora integrati; nessuna attivazione
+massiva dei moduli per il solo fatto che A1 sia stata mergiata.
 
-## 9. Preservazione dei valori: requisito bloccante M10-A
+## 9. Preservazione dei valori: requisito bloccante M10-A2
+
+Le modifiche descritte in questa sezione appartengono esclusivamente ad A2.
+A1 non modifica helper condivisi, mapper, update o validazioni dei form business.
 
 Non basta omettere un Input. Oggi `readRequiredString` usa stringa vuota per
 assenza, `readOptionalString` produce null e `readBoolean` false; diversi mapper
@@ -338,13 +411,29 @@ non azzerarlo al submit. L'export completo B non usa affatto questi filtri.
 
 ## 10. Test e acceptance M10-A
 
+### 10.1 M10-A1 Field Visibility Foundation
+
 - Default visible senza righe; hidden; reset mediante archiviazione; no DELETE.
 - Obbligatori e condizionali non nascondibili, anche con request contraffatta.
-- Admin legge/applica ma non modifica; super_admin attivo modifica; anon,
+- Admin legge ma non modifica; super_admin attivo autorizzato alla configurazione; anon,
   inactive, archived e Auth senza admin negati alle operazioni non autorizzate.
 - `updated_by` e' l'ID admin corretto, non Auth UUID; autore arbitrario rifiutato.
 - RLS, grant, CHECK coppie ammesse e unicita' della coppia attiva verificati in DB.
 - Nessuna alterazione/dato trasformato nelle tabelle business dalla migration.
+- Registro, resolver, batch/cache/fallback e salvataggio/reset collaudati con
+  fixture su ambiente separato; nessuna query per singolo campo.
+- Pagina Impostazioni desktop/mobile protetta, catalogo leggibile e controlli
+  delle schermate non integrate disabilitati; rifiuto server di attivazioni premature.
+- Diff A1 privo di modifiche alle schermate business, ai loro mapper/update e
+  alle validazioni; nessun consumo del resolver nei moduli prima di A2.
+- Lint, typecheck, build e verifica post-merge foundation.
+
+Accettazione A1: infrastruttura e pagina pronte, nessuna schermata business
+modificata, nessuna preferenza prematuramente applicata. Non e' ancora il
+completamento funzionale di M10-A Field Visibility.
+
+### 10.2 M10-A2 Field Visibility Rollout
+
 - Hidden non cancella stringhe, date, checkbox o FK; clear esplicito visible valido.
 - Modifica di un altro campo preserva tutti i valori nascosti; cambi concorrenti
   delle preferenze non producono perdita dati.
@@ -353,8 +442,10 @@ non azzerarlo al submit. L'export completo B non usa affatto questi filtri.
 - Report, email, segmentazioni e rinnovi storici invariati; nessuna UI gruppi/readonly.
 - Lint, typecheck, build e test desktop/mobile, incluso Safari e azioni a fondo pagina.
 
-Accettazione: route dedicata, configurazione globale persistita, due soli stati,
-campi facoltativi soltanto, permessi corretti, dati preservati, nessuna regressione.
+Accettazione A2: integrazioni progressive completate, configurazione globale
+persistita e applicata, due soli stati, campi facoltativi soltanto, permessi
+corretti, test di non perdita dati superati per ogni modulo e nessuna regressione.
+M10-A e' completa solo dopo A1 **e** A2; C attende la verifica post-merge A2.
 
 ## 11. Pagina portabilita' e autorizzazioni M10-B/C
 
@@ -381,6 +472,11 @@ Non memorizzare workbook in public, repository, storage o disco temporaneo.
 Niente file Excel o dati personali nei log, console, cache CDN o analytics.
 
 ## 12. M10-B: formato completo e differenza da M8
+
+B e' la **prima fase operativa**, read-only sui dati applicativi. Non legge
+configurazioni M10-A e non richiede che la relativa tabella esista. Lo snapshot
+Excel permette un riferimento dei dati prima degli interventi A2 sui form;
+resta portabilita' applicativa, non un backup completo o un restore automatico.
 
 Identificatore **`pontenext-full-export-v1`**; nome download
 `pontenext-full-export-v1-<timestamp-UTC>.xlsx`.
@@ -828,7 +924,7 @@ non li replica sulla nuova tabella A.
 
 ## 26. Gate live e verifiche prima dell'esecuzione
 
-### M10-A
+### M10-A1, foundation di M10-A
 
 Prima di una futura applicazione live: mostrare SQL completo, classificare
 l'additivita', assenza di UPDATE/DELETE/DROP/TRUNCATE operativo e di ALTER su
@@ -839,6 +935,9 @@ verificare RLS e chiedere esattamente:
 
 Senza quella conferma Codex non applica la migration. Eventuali funzioni future
 B/C richiedono proprie revisioni e approvazioni, non sono autorizzate da questa frase.
+Il nome del gate M10-A resta invariato e si applica alla migration di A1.
+A2 non ripete la migration foundation; eventuali necessita' aggiuntive richiedono
+decisione separata. L'ordine B -> A1 non autorizza migration o export live automatici.
 
 ### M10-C
 
@@ -984,3 +1083,9 @@ Questi esiti certificano soltanto la base attuale, **non** test di funzionalita'
 future. Documenti di coerenza aggiornati in questa PR: Master Plan, ADR,
 Business Rules, Database Design, UI Guidelines, Migration and Backup, Changelog.
 Il merge di questa PR approva un piano, non avvia automaticamente A, B o C.
+
+Revisione dell'ordine operativo nella PR #47: solo documenti, sequenza
+B -> A1 -> A2 -> C e confini foundation/rollout. Le verifiche applicative e
+Supabase sopra sono quelle della precedente preparazione del piano, non nuove
+esecuzioni di questa revisione; per il riordino si verificano diff documentale,
+link e coerenza delle dipendenze. Nessun accesso operativo Supabase/Vercel.

@@ -229,26 +229,38 @@ non recuperare permission group, readonly, scope o configurazioni personali.
 
 Piano vincolante: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
 
-Tre PR operative distinte:
+Denominazioni mantenute: **M10-A Field Visibility**, **M10-B Complete Excel Export**,
+**M10-C New Members Excel Import**. Le lettere non indicano l'ordine di sviluppo.
+Quattro PR operative distinte, nel seguente ordine vincolante:
 
-1. **M10-A - Simple Database Field Visibility**: soli stati visible/hidden,
-   campi facoltativi, preferenze globali nella nuova `ui_field_visibility`,
-   pagina `/settings/field-visibility`. Admin attivi leggono/applicano;
-   solo super_admin attivi modificano. Nessuna perdita dei valori nascosti.
-2. **M10-B - Complete Excel Export**: `/settings/data-import-export`, export
+1. **M10-B Complete Excel Export**: `/settings/data-import-export`, export
    XLSX completo delle 13 tabelle business previste, solo super_admin. Non e'
-   un backup Supabase e non sostituisce gli export filtrati M8.
-3. **M10-C - New Members Excel Import**: modello dedicato, dry-run e conferma;
+   un backup Supabase e non sostituisce gli export filtrati M8. Funziona senza
+   tabella, resolver o helper M10-A.
+2. **M10-A1 Field Visibility Foundation**: migration additiva
+   `ui_field_visibility`, RLS, helper super_admin, registro, resolver e pagina
+   `/settings/field-visibility`. Nessuna schermata business modificata e
+   nessun intervento sui suoi mapper/update; controlli dei moduli non ancora attivi.
+3. **M10-A2 Field Visibility Rollout**: integrazione progressiva visible/hidden
+   nelle schermate, adeguamento mapper/update e test di non perdita dati prima
+   di attivare ciascun modulo. Admin attivi applicano; solo super_admin configurano.
+4. **M10-C New Members Excel Import**: modello dedicato, dry-run e conferma;
    singolo INSERT atomico esclusivamente in `public.members`. Nessun UPDATE,
    UPSERT, DELETE, import multi-tabella, ruolo, iscrizione, pagamento o account
    creato automaticamente.
 
-Verifica post-merge A prima di B, verifica export B prima di C, test C su
-ambiente separato prima del live. Non cambiare strutture delle tabelle business.
+Motivazione: B e' read-only e permette uno snapshot Excel dei dati applicativi
+prima delle modifiche ai form; A viene introdotta progressivamente; C, unica
+fase che inserisce nuove anagrafiche business, viene implementata per ultima.
+
+Verifica export/post-merge B prima di A1, verifica foundation/post-merge A1
+prima di A2, test di preservazione per modulo e verifica post-merge A2 prima
+di C. Test C su ambiente separato prima del live. M10-A e' completa solo dopo
+A1 e A2. Non cambiare strutture delle tabelle business.
 Eventuali funzioni additive per snapshot B e transazione C richiedono revisione
 e approvazione nelle rispettive PR, non sono implementate dal piano.
 
-Gate operativi: `MIGRATION M10-A LIVE APPROVATA` per la futura migration A;
+Gate operativi: `MIGRATION M10-A LIVE APPROVATA` per la futura migration A1;
 `IMPORT NUOVI SOCI LIVE APPROVATO` per il primo import live sul file/hash
 validato. La documentazione non costituisce autorizzazione a eseguirli.
 
