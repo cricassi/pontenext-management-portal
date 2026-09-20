@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CreditCard, Tags } from "lucide-react";
+import { CreditCard, FileSpreadsheet, Tags } from "lucide-react";
+import { requireActiveAdmin } from "@/services/admin-auth.service";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import {
@@ -12,7 +13,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const { admin } = await requireActiveAdmin();
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -21,6 +23,22 @@ export default function SettingsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
+        {admin.role === "super_admin" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Esportazione dati</CardTitle>
+              <CardDescription>File Excel completo dei dati applicativi, inclusi gli archiviati.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild>
+                <Link href="/settings/data-import-export">
+                  <FileSpreadsheet aria-hidden="true" className="mr-2 size-4" />
+                  Apri esportazione
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
         <Card>
           <CardHeader>
             <CardTitle>Ruoli associativi</CardTitle>

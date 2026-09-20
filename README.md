@@ -269,6 +269,29 @@ Lo script esegue:
 eslint --max-warnings=0 src middleware.ts next.config.mjs tailwind.config.ts postcss.config.js
 ```
 
+## Export completo Excel (M10-B)
+
+Un `super_admin` attivo puo' aprire **Impostazioni -> Esportazione dati**
+(`/settings/data-import-export`) e generare un workbook con README, METADATA e
+13 fogli business, inclusi record archiviati. Nessun upload/import disponibile.
+
+Il file e' generato in memoria con la sessione Supabase dell'utente e RLS attiva;
+non include Auth, admin_users, token o segreti. Limiti: 10.000 record, 10 MiB
+normalizzati, 3 MiB XLSX, 25 secondi; nessun download parziale. Due letture
+confrontate non sono uno snapshot transazionale: evitare modifiche concorrenti.
+Il progetto autorizzato e' PonteNext `uhxfpsamenjhyrfgwckw`.
+
+**L'export Excel e' uno strumento di portabilita' e consultazione. Non sostituisce
+un dump PostgreSQL/Supabase completo.** Conservare il file in posizione protetta.
+Dettagli in [MIGRATION_AND_BACKUP.md](docs/MIGRATION_AND_BACKUP.md) e
+[M10_B_EXPORT_CHECKLIST.md](docs/M10_B_EXPORT_CHECKLIST.md).
+
+Test senza dati reali, nuove dipendenze o workbook salvati:
+
+```bash
+node --require ./tests/register-typescript.cjs ./tests/data-export.test.ts
+```
+
 ## Struttura
 
 ```text

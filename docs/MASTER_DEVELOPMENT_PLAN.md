@@ -257,8 +257,10 @@ Verifica export/post-merge B prima di A1, verifica foundation/post-merge A1
 prima di A2, test di preservazione per modulo e verifica post-merge A2 prima
 di C. Test C su ambiente separato prima del live. M10-A e' completa solo dopo
 A1 e A2. Non cambiare strutture delle tabelle business.
-Eventuali funzioni additive per snapshot B e transazione C richiedono revisione
-e approvazione nelle rispettive PR, non sono implementate dal piano.
+M10-B implementata senza migration/RPC: doppia lettura REST confrontata, non
+snapshot transazionale, da eseguire in finestra senza scritture. Eventuali
+funzioni additive per la transazione C richiedono revisione e approvazione nella
+relativa PR; non sono implementate in B.
 
 Gate operativi: `MIGRATION M10-A LIVE APPROVATA` per la futura migration A1;
 `IMPORT NUOVI SOCI LIVE APPROVATO` per il primo import live sul file/hash
