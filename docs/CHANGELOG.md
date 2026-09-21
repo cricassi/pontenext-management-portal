@@ -1,5 +1,58 @@
 ﻿# CHANGELOG.md
 
+# M10-A2.1 - Field Visibility Members Only (2026-09-21)
+
+## Smoke Utente e Review Finale PR #52 (2026-09-22 Europe/Rome)
+
+- Registrato lo smoke autenticato dichiarato dall'utente: configurazione dei
+  quattro screen soci, salvataggio, applicazione visible/hidden e reset riusciti;
+  scritture dirette negate e nessuna modifica business involontaria osservata.
+- Verifica read-only: zero override attivi, 10 righe archiviate members.create,
+  zero override di altri moduli; 105 soci e conteggi business invariati.
+- Risolto blocker B1: il CAS del socio prima proteggeva solo lettura/scrittura
+  durante il submit, non un modulo aperto prima della modifica di un altro admin.
+  Ora la server action riceve la versione del record all'apertura e il server la
+  verifica prima della patch e nell'UPDATE. Nessuna nuova migration o modifica live.
+- Test di preservazione/reset estesi; due regressioni CAS SQL e prova browser
+  con due schede demo positive. Lint, typecheck, build e 62/62 test PASS.
+- Creato M10_A2_1_MEMBERS_REVIEW_REPORT.md, esito finale **MERGE SI** dopo fix B1.
+  Distinti smoke dichiarato, test isolati e limiti del browser preview protetto.
+  L'utente autorizza Ready for review e merge solo dopo review positiva.
+- 015/016/017 invariate, registrate una volta; nessuna riesecuzione o scrittura
+  Supabase durante la review. Nessun altro modulo o M10-C avviato.
+
+## Applicazione approvata 017 e verifica live (2026-09-22 Europe/Rome)
+
+- Ricevuta conferma `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`; applicata solo
+  `017_enable_member_field_visibility_rpc`, versione `20260921221332`.
+  SQL identico al file approvato; 015/016 invariate e non rieseguite.
+- RPC/helper verificati: owner postgres, search_path vuoto, EXECUTE authenticated,
+  anon/service_role negati, writer privato e wrapper invoker. RLS e lock 016 invariati.
+- Test SQL live save/reset con rollback, autore, conflitto, allowlist, rifiuto
+  INSERT/UPDATE/DELETE diretti, auth senza admin e anon: PASS. Nessun DML business.
+  Tabella configurazione ancora vuota; tutti i conteggi pre/post invariati.
+- Security Advisor: solo warning Auth preesistente; performance invariata.
+  Checklist e backup/restore aggiornati nella PR #52. PR ancora in bozza,
+  nessun merge, nessuna attivazione Production o avanzamento ad altri moduli.
+
+## Preparazione precedente al gate (storico)
+
+- Verifica post-merge A1 positiva; report nella PR #51 mergiato, main `e40f790`.
+- Registro versione 2: integrate solo members.list/create/edit/detail. Altri
+  moduli ancora non attivi, nessun readonly, gruppo o import Excel.
+- Preparata `017_enable_member_field_visibility_rpc.sql`, **non applicata live**:
+  RPC pubblica invoker e writer privato controllato, super_admin attivo,
+  allowlist membri, autore derivato, CAS degli stati e lock per schermata,
+  salvataggio atomico e reset soft. Grant e policy del lock 016 invariati.
+- Liste desktop/card mobile, form e dettaglio soci applicano visible/hidden.
+  Form client privo dei valori nascosti; submit rilegge la configurazione;
+  update minimale presence-aware, protezione da richieste manomesse e controllo
+  concorrenza del record. Valori nascosti/assenti e relazioni preservati.
+- Test PostgreSQL isolati e browser demo: nessun dato live modificato.
+  Export, report, segmentazione email e altri moduli non cambiano.
+- Checklist e guide aggiornate. Deploy operativo e verifica RPC live subordinati
+  al gate separato `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`; non rieseguire 015/016.
+
 # M10-A1 - Field Visibility Foundation (2026-09-21)
 
 ## Correzione B1 successiva alla review PR #50: lock 016 preparato

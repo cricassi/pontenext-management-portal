@@ -14,6 +14,10 @@ import { getMemberById } from "@/services/members.service";
 import { getMembershipsByMemberId } from "@/services/memberships.service";
 import { getAssignableRoles } from "@/services/roles.service";
 import { isUuid } from "@/utils/id";
+import { requireActiveAdmin } from "@/services/admin-auth.service";
+import { getFieldVisibility } from "@/services/field-visibility.service";
+import { memberVisibility } from "@/utils/member-visibility";
+import { MemberVisibilityWarning } from "@/components/members/MemberVisibilityWarning";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +26,14 @@ type MemberPageProps = {
 };
 
 export default async function MemberPage({ params }: MemberPageProps) {
+  await requireActiveAdmin();
   const { id } = await params;
 
   if (!isUuid(id)) {
     notFound();
   }
 
+  const snapshot = await getFieldVisibility(["members.detail"]);
   const member = await getMemberById(id);
 
   if (!member) {
@@ -64,7 +70,8 @@ export default async function MemberPage({ params }: MemberPageProps) {
         }
       />
 
-      <MemberDetail member={member} />
+      <MemberVisibilityWarning warning={snapshot.warning} />
+      <MemberDetail member={member} visibility={memberVisibility(snapshot.screens[0])} />
       <MemberRolesPanel memberId={member.id} assignments={assignments} roles={roles} />
       <MemberExpirationPanel memberId={member.id} expiration={expiration} />
       <MembershipHistoryPanel memberId={member.id} memberships={memberships} />

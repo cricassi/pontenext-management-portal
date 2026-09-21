@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import {
   archiveMember,
   createMember,
   updateMember,
-  validateMemberFormData,
 } from "@/services/members.service";
 import {
   archiveMemberRoleAssignment,
@@ -16,29 +15,24 @@ import {
 } from "@/services/member-roles.service";
 import { requireActiveAdmin } from "@/services/admin-auth.service";
 import type { FormState } from "@/types/form";
+import { MemberSubmissionError } from "@/utils/member-visibility";
+import { FieldVisibilityError } from "@/utils/field-visibility";
 
 export async function createMemberAction(
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
   await requireActiveAdmin();
-  const validation = validateMemberFormData(formData);
-
-  if (!validation.ok) {
-    return {
-      message: validation.message,
-      errors: validation.errors,
-    };
-  }
-
   let memberId = "";
 
   try {
-    const member = await createMember(validation.values);
-    memberId = member.id;
+    const result = await createMember(formData);
+    if (!result.ok) return { message: result.message, errors: result.errors };
+    memberId = result.member.id;
   } catch (error) {
+    unstable_rethrow(error);
     return {
-      message: error instanceof Error ? error.message : "Errore salvataggio socio.",
+      message: error instanceof MemberSubmissionError || error instanceof FieldVisibilityError ? error.message : "Impossibile salvare il socio. Ricarica e riprova.",
       errors: {},
     };
   }
@@ -49,24 +43,18 @@ export async function createMemberAction(
 
 export async function updateMemberAction(
   memberId: string,
+  expectedUpdatedAt: string,
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
   await requireActiveAdmin();
-  const validation = validateMemberFormData(formData);
-
-  if (!validation.ok) {
-    return {
-      message: validation.message,
-      errors: validation.errors,
-    };
-  }
-
   try {
-    await updateMember(memberId, validation.values);
+    const result = await updateMember(memberId, formData, expectedUpdatedAt);
+    if (!result.ok) return { message: result.message, errors: result.errors };
   } catch (error) {
+    unstable_rethrow(error);
     return {
-      message: error instanceof Error ? error.message : "Errore salvataggio socio.",
+      message: error instanceof MemberSubmissionError || error instanceof FieldVisibilityError ? error.message : "Impossibile salvare il socio. Ricarica e riprova.",
       errors: {},
     };
   }

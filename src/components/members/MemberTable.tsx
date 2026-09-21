@@ -5,12 +5,14 @@ import { MemberStatusBadge } from "@/components/members/MemberStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { MemberListItem } from "@/types/member";
+import type { MemberVisibility } from "@/utils/member-visibility";
 
 type MemberTableProps = {
   members: MemberListItem[];
+  visibility: MemberVisibility;
 };
 
-export function MemberTable({ members }: MemberTableProps) {
+export function MemberTable({ members, visibility }: MemberTableProps) {
   if (members.length === 0) {
     return (
       <EmptyState
@@ -28,8 +30,8 @@ export function MemberTable({ members }: MemberTableProps) {
         <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
             <th className="px-4 py-3 font-medium">Nome</th>
-            <th className="px-4 py-3 font-medium">Email</th>
-            <th className="px-4 py-3 font-medium">Telefono</th>
+            {visibility.email !== false && <th className="px-4 py-3 font-medium">Email</th>}
+            {visibility.phone !== false && <th className="px-4 py-3 font-medium">Telefono</th>}
             <th className="px-4 py-3 font-medium">Ruolo principale</th>
             <th className="px-4 py-3 font-medium">Stato</th>
             <th className="px-4 py-3 text-right font-medium">Azioni</th>
@@ -45,16 +47,16 @@ export function MemberTable({ members }: MemberTableProps) {
                 >
                   {member.firstName} {member.lastName}
                 </Link>
-                {member.city ? (
+                {visibility.city !== false && member.city ? (
                   <p className="text-xs text-muted-foreground">{member.city}</p>
                 ) : null}
               </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              {visibility.email !== false && <td className="px-4 py-3 text-muted-foreground">
                 {member.email ?? "-"}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
+              </td>}
+              {visibility.phone !== false && <td className="px-4 py-3 text-muted-foreground">
                 {member.phone ?? "-"}
-              </td>
+              </td>}
               <td className="px-4 py-3 text-muted-foreground">
                 {member.primaryRoleName ?? "-"}
               </td>

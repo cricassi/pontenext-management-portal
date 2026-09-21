@@ -13,10 +13,13 @@ import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { emptyFormState, type FormState } from "@/types/form";
-import { MEMBER_STATUS, type Member } from "@/types/member";
+import { MEMBER_STATUS } from "@/types/member";
+import type { MemberFormView, MemberVisibility } from "@/utils/member-visibility";
 
 type MemberFormProps = {
-  member?: Member;
+  member?: MemberFormView;
+  visibility: MemberVisibility;
+  unavailable?: boolean;
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   submitLabel: string;
 };
@@ -27,8 +30,8 @@ function fieldError(state: FormState, key: string) {
   ) : null;
 }
 
-export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
-  const [state, formAction] = useActionState(action, emptyFormState);
+export function MemberForm({ member, action, submitLabel, visibility, unavailable = false }: MemberFormProps) {
+  const [state, formAction, pending] = useActionState(action, emptyFormState);
 
   return (
     <Card>
@@ -63,7 +66,7 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
               {fieldError(state, "lastName")}
             </Field>
 
-            <Field>
+            {visibility.email !== false && <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
@@ -72,9 +75,9 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
                 defaultValue={member?.email ?? ""}
               />
               {fieldError(state, "email")}
-            </Field>
+            </Field>}
 
-            <Field>
+            {visibility.phone !== false && <Field>
               <FieldLabel htmlFor="phone">Telefono</FieldLabel>
               <Input
                 id="phone"
@@ -82,9 +85,9 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
                 type="tel"
                 defaultValue={member?.phone ?? ""}
               />
-            </Field>
+            </Field>}
 
-            <Field>
+            {visibility.birthDate !== false && <Field>
               <FieldLabel htmlFor="birthDate">Data nascita</FieldLabel>
               <Input
                 id="birthDate"
@@ -93,45 +96,45 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
                 defaultValue={member?.birthDate ?? ""}
               />
               {fieldError(state, "birthDate")}
-            </Field>
+            </Field>}
 
-            <Field>
+            {visibility.fiscalCode !== false && <Field>
               <FieldLabel htmlFor="fiscalCode">Codice fiscale</FieldLabel>
               <Input
                 id="fiscalCode"
                 name="fiscalCode"
                 defaultValue={member?.fiscalCode ?? ""}
               />
-            </Field>
+            </Field>}
 
-            <Field className="md:col-span-2">
+            {visibility.address !== false && <Field className="md:col-span-2">
               <FieldLabel htmlFor="address">Indirizzo</FieldLabel>
               <Input
                 id="address"
                 name="address"
                 defaultValue={member?.address ?? ""}
               />
-            </Field>
+            </Field>}
 
-            <Field>
+            {visibility.city !== false && <Field>
               <FieldLabel htmlFor="city">Citta</FieldLabel>
               <Input
                 id="city"
                 name="city"
                 defaultValue={member?.city ?? ""}
               />
-            </Field>
+            </Field>}
 
-            <Field>
+            {visibility.postalCode !== false && <Field>
               <FieldLabel htmlFor="postalCode">CAP</FieldLabel>
               <Input
                 id="postalCode"
                 name="postalCode"
                 defaultValue={member?.postalCode ?? ""}
               />
-            </Field>
+            </Field>}
 
-            <Field>
+            {visibility.province !== false && <Field>
               <FieldLabel htmlFor="province">Provincia</FieldLabel>
               <Input
                 id="province"
@@ -140,7 +143,7 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
                 defaultValue={member?.province ?? ""}
               />
               {fieldError(state, "province")}
-            </Field>
+            </Field>}
 
             <Field>
               <FieldLabel htmlFor="country">Paese</FieldLabel>
@@ -152,14 +155,14 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
               />
             </Field>
 
-            <Field>
+            {visibility.profession !== false && <Field>
               <FieldLabel htmlFor="profession">Professione</FieldLabel>
               <Input
                 id="profession"
                 name="profession"
                 defaultValue={member?.profession ?? ""}
               />
-            </Field>
+            </Field>}
 
             <Field>
               <FieldLabel htmlFor="status">Stato anagrafico</FieldLabel>
@@ -176,14 +179,14 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
               {fieldError(state, "status")}
             </Field>
 
-            <Field className="md:col-span-2">
+            {visibility.notes !== false && <Field className="md:col-span-2">
               <FieldLabel htmlFor="notes">Note</FieldLabel>
               <Textarea
                 id="notes"
                 name="notes"
                 defaultValue={member?.notes ?? ""}
               />
-            </Field>
+            </Field>}
           </FieldGroup>
 
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -192,7 +195,7 @@ export function MemberForm({ member, action, submitLabel }: MemberFormProps) {
                 Annulla
               </Link>
             </Button>
-            <FormSubmitButton>{submitLabel}</FormSubmitButton>
+            <FormSubmitButton disabled={unavailable || pending}>{submitLabel}</FormSubmitButton>
           </div>
         </form>
       </CardContent>

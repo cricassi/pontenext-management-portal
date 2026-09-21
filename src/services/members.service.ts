@@ -1,4 +1,9 @@
+import "server-only";
 import { getSupabaseServerClientOrThrow } from "@/services/supabase.service";
+import { requireActiveAdmin } from "@/services/admin-auth.service";
+import { getFreshFieldVisibility } from "@/services/field-visibility.service";
+import { MemberSubmissionError, memberUpdatePatch, prepareMemberSubmission } from "@/utils/member-visibility";
+import { isUuid } from "@/utils/id";
 import {
   MEMBER_SORT_OPTIONS,
   MEMBER_STATUS,
@@ -218,6 +223,7 @@ function sortMembers(
 
 export function validateMemberFormData(
   formData: FormData,
+  submitted?: ReadonlySet<keyof MemberFormValues>,
 ): MemberValidationResult {
   const firstName = readRequiredString(formData, "firstName");
   const lastName = readRequiredString(formData, "lastName");
@@ -244,15 +250,16 @@ export function validateMemberFormData(
     errors.lastName = "Inserisci il cognome.";
   }
 
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  // Unsubmitted legacy values are preserved verbatim, never rewritten by this patch.
+  if ((!submitted || submitted.has("email")) && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = "Inserisci un indirizzo email valido.";
   }
 
-  if (province && province.length !== 2) {
+  if ((!submitted || submitted.has("province")) && province && province.length !== 2) {
     errors.province = "Usa la sigla provincia di 2 caratteri.";
   }
 
-  if (birthDate && birthDate > new Date().toISOString().slice(0, 10)) {
+  if ((!submitted || submitted.has("birthDate")) && birthDate && birthDate > new Date().toISOString().slice(0, 10)) {
     errors.birthDate = "La data di nascita non puo' essere futura.";
   }
 
@@ -358,11 +365,16 @@ export async function getMemberById(memberId: string) {
   return data ? mapMember(data) : null;
 }
 
-export async function createMember(values: MemberFormValues) {
+export async function createMember(formData: FormData) {
+  await requireActiveAdmin();
+  const visibility = await getFreshFieldVisibility("members.create");
+  const prepared = prepareMemberSubmission(formData, visibility);
+  const validation = validateMemberFormData(prepared.formData);
+  if (!validation.ok) return validation;
   const supabase = await getSupabaseServerClientOrThrow();
   const { data, error } = await supabase
     .from("members")
-    .insert(mapMemberValues(values))
+    .insert(mapMemberValues(validation.values))
     .select(memberSelect)
     .single<MemberRow>();
 
@@ -370,27 +382,40 @@ export async function createMember(values: MemberFormValues) {
     throw new Error("Impossibile creare il socio.");
   }
 
-  return mapMember(data);
+  return { ok: true as const, member: mapMember(data) };
 }
 
 export async function updateMember(
   memberId: string,
-  values: MemberFormValues,
+  formData: FormData,
+  expectedUpdatedAt: string,
 ) {
+  await requireActiveAdmin();
+  if (!isUuid(memberId) || typeof expectedUpdatedAt !== "string" || !Number.isFinite(Date.parse(expectedUpdatedAt))) throw new MemberSubmissionError();
+  const visibility = await getFreshFieldVisibility("members.edit");
+  const current = await getMemberById(memberId);
+  if (!current) throw new MemberSubmissionError("Socio non disponibile. Ricarica la pagina.");
+  if (current.updatedAt !== expectedUpdatedAt) throw new MemberSubmissionError("Il socio e' stato modificato dopo l'apertura del modulo. Ricarica prima di riprovare.");
+  const prepared = prepareMemberSubmission(formData, visibility, current);
+  const validation = validateMemberFormData(prepared.formData, prepared.submitted);
+  if (!validation.ok) return validation;
+  const patch = memberUpdatePatch(validation.values, prepared.submitted, current);
+  if (!Object.keys(patch).length) return { ok: true as const, member: current };
   const supabase = await getSupabaseServerClientOrThrow();
   const { data, error } = await supabase
     .from("members")
-    .update(mapMemberValues(values))
+    .update(patch)
     .eq("id", memberId)
     .is("archived_at", null)
+    .eq("updated_at", expectedUpdatedAt)
     .select(memberSelect)
     .single<MemberRow>();
 
   if (error) {
-    throw new Error("Impossibile aggiornare il socio.");
+    throw new MemberSubmissionError("Impossibile aggiornare il socio o dati modificati nel frattempo. Ricarica prima di riprovare.");
   }
 
-  return mapMember(data);
+  return { ok: true as const, member: mapMember(data) };
 }
 
 export async function archiveMember(memberId: string) {
