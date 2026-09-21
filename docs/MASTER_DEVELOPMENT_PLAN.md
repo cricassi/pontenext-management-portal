@@ -224,7 +224,10 @@ Release candidate.
 
 # M10 - Visibilita' globale e portabilita' Excel
 
-Stato: pianificazione revisionata, non implementata. La PR #46 e' annullata;
+Stato al 2026-09-21: B completata e verificata post-merge (PR #48/#49);
+A1 implementata su branch separato, migration 015 applicata con gate esplicito;
+A2/C non avviate. Vedere [M10_A1_CHECKLIST.md](M10_A1_CHECKLIST.md).
+La PR #46 e' annullata;
 non recuperare permission group, readonly, scope o configurazioni personali.
 
 Piano vincolante: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
@@ -262,7 +265,7 @@ snapshot transazionale, da eseguire in finestra senza scritture. Eventuali
 funzioni additive per la transazione C richiedono revisione e approvazione nella
 relativa PR; non sono implementate in B.
 
-Gate operativi: `MIGRATION M10-A LIVE APPROVATA` per la futura migration A1;
+Gate operativi: `MIGRATION M10-A LIVE APPROVATA` ricevuto il 2026-09-21 per la sola 015 A1;
 `IMPORT NUOVI SOCI LIVE APPROVATO` per il primo import live sul file/hash
 validato. La documentazione non costituisce autorizzazione a eseguirli.
 

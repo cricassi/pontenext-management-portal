@@ -1,6 +1,17 @@
 # M10 - Field Visibility and Excel Data Portability
 
-Data: 2026-09-19. Stato: **M10-B implementata su branch dedicato; A1/A2/C solo pianificate**.
+Piano del 2026-09-19. Aggiornamento operativo: 2026-09-21.
+**M10-B completata/verificata post-merge (PR #48/#49); M10-A1 implementata su
+branch separato; A2/C non avviate.**
+
+A1: migration `015_ui_field_visibility`, versione live `20260921195425`,
+applicata dopo gate esplicito. Registro versione 1 con 42 schermate e 116 coppie
+configurabili; tutte le schermate hanno `integrated: false`. Il catalogo e'
+consultabile, nessuna impostazione attivabile dalla pagina o dalle sue action.
+Nessuna modifica a form, liste, dettagli, mapper o service business.
+Evidenze e limiti: [M10_A1_CHECKLIST.md](M10_A1_CHECKLIST.md).
+Le sezioni di analisi sotto conservano la baseline del piano del 19 settembre;
+per lo stato applicato fa fede questo aggiornamento e la checklist A1.
 
 Aggiornamento operativo M10-B: richiesta successiva al piano vieta migration e
 modifiche Supabase. Nessuna RPC snapshot introdotta; vedere sezione 14 e

@@ -1,6 +1,6 @@
 # Migration and Backup
 
-Data aggiornamento: 2026-06-16
+Data aggiornamento: 2026-09-21
 
 ## 1. Scopo del documento
 
@@ -43,6 +43,7 @@ Non migrare nel repository:
 Migrare:
 
 - schema `public`;
+- schema `app_private`, inclusi gli helper RLS `is_active_admin` e `is_super_admin`;
 - funzioni SQL;
 - trigger;
 - indici;
@@ -126,6 +127,7 @@ Migration operative attuali, applicate su Supabase PonteNext:
 008_events
 009_sponsor_contributions
 010_email
+015_ui_field_visibility
 ```
 
 File locali:
@@ -141,9 +143,17 @@ database/migrations/007_sponsors.sql
 database/migrations/008_events.sql
 database/migrations/009_sponsor_contributions.sql
 database/migrations/010_email.sql
+database/migrations/015_ui_field_visibility.sql
 ```
 
 I file `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e `014_seed.sql` sono placeholder/futuri nel repository e non risultano applicati al database live.
+
+La `015_ui_field_visibility` e' stata applicata il 2026-09-21, versione live
+`20260921195425`, dopo il gate esplicito `MIGRATION M10-A LIVE APPROVATA`.
+Ordine effettivo: **001-010, poi 015**, saltando i quattro placeholder.
+Non rinumerare lo storico e non riapplicare la 015 dove e' gia' registrata.
+La sola tabella nuova e' `ui_field_visibility`, inizialmente vuota: nessun seed.
+RLS e helper super_admin sono nella stessa migration; nessun ALTER delle tabelle business.
 
 ## 5. Seed necessari
 
@@ -244,11 +254,11 @@ Procedura:
 
 1. Creare o selezionare ambiente target.
 2. Verificare che il target sia quello giusto.
-3. Applicare migration operative `001`-`010`.
+3. Applicare migration operative `001`-`010`, poi `015`, senza i placeholder `011`-`014`.
 4. Applicare seed.
-5. Ripristinare dati applicativi.
-6. Ripristinare o ricreare utenti Supabase Auth.
-7. Riallineare `admin_users.auth_user_id` agli utenti Auth target.
+5. Ripristinare o ricreare gli utenti Supabase Auth necessari, con procedura supportata.
+6. Ripristinare `admin_users`, riallineando `auth_user_id` agli utenti Auth target.
+7. Ripristinare gli altri dati applicativi in ordine di dipendenza FK, inclusi gli override A1.
 8. Verificare RLS attiva.
 9. Verificare policy admin-only.
 10. Eseguire login admin reale.
@@ -264,8 +274,8 @@ Passi:
 2. Eseguire backup sorgente.
 3. Creare progetto target.
 4. Applicare migration e seed.
-5. Migrare dati applicativi.
-6. Migrare o ricreare utenti Auth.
+5. Migrare o ricreare gli utenti Auth necessari.
+6. Migrare prima `admin_users`, poi gli altri dati applicativi rispettando le FK.
 7. Aggiornare `.env.local` e variabili ambiente hosting.
 8. Verificare RLS/policy/funzioni.
 9. Verificare login e route protette.
@@ -361,8 +371,8 @@ Verifiche obbligatorie:
 - [ ] Identificato ambiente target.
 - [ ] Backup creato e cifrato.
 - [ ] Commit applicativo annotato.
-- [ ] Migration `001`-`010` applicate in ordine.
-- [ ] Placeholder `011`+ non applicati.
+- [ ] Migration `001`-`010`, poi `015`, applicate in ordine.
+- [ ] Placeholder `011`-`014` non applicati.
 - [ ] Seed ruoli applicato.
 - [ ] Seed piani iscrizione applicato.
 - [ ] Utenti Supabase Auth verificati.
@@ -380,8 +390,9 @@ Verifiche obbligatorie:
 
 ## 17. Portabilita' Excel M10: non e' backup/restore
 
-Stato al 2026-09-19: **M10-B implementata su branch dedicato**, A1/A2/C ancora
-solo progettazione. Nessuna migration M10 applicata. Vedere
+Stato al 2026-09-21: **M10-B completata e verificata post-merge** (PR #48/#49).
+M10-A1 implementata su branch separato, con migration 015 applicata dopo gate;
+A2/C non avviate. Vedere
 [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md) e
 [M10_B_EXPORT_CHECKLIST.md](M10_B_EXPORT_CHECKLIST.md).
 
@@ -415,18 +426,16 @@ Supabase. Per ricostruzione, Auth, RLS, bootstrap e restore rimangono valide le
 procedure sopra, incluso login admin reale dopo ogni restore. I soci importati
 non ottengono accesso all'applicazione.
 
-Futura M10-A1: sola nuova ui_field_visibility, RLS/helper super_admin, registro,
+M10-A1: sola nuova ui_field_visibility, RLS/helper super_admin, registro,
 resolver e pagina Impostazioni; tabella inizialmente vuota, nessuna trasformazione
 business e nessuna modifica alle schermate o ai mapper/update dei moduli.
 M10-A2 integra progressivamente le schermate con test di non perdita dati prima
 di attivare le preferenze. Risolvere updated_by da
 admin_users.id tramite auth_user_id, non scrivere auth.uid() nella FK. Ordine
-live attuale sempre `001`-`010`; `011`-`014` sono placeholder. Eventuali nuove
-migration/funzioni additive A1/C richiedono approvazione e aggiornamento di
-questa guida al momento dell'implementazione; la numerazione segue l'ordine
-effettivo; B non ne aggiunge. A2 riusa la foundation e non richiede nuove
-migration salvo necessita' separatamente documentata/approvata. Nessuna risulta
-applicata ora.
+live attuale `001`-`010`, poi `015`; `011`-`014` sono placeholder. Eventuali nuove
+migration/funzioni additive richiedono approvazione e aggiornamento di questa
+guida; B non ne aggiunge. A2 riusa la foundation e non richiede nuove migration
+salvo necessita' separatamente documentata/approvata.
 
 Il piano C propone una futura chiave server-only MEMBERS_IMPORT_RECEIPT_SECRET
 per ricevute dry-run firmate: non esiste una nuova configurazione in questa PR.
@@ -483,3 +492,30 @@ Auth non e' contenuto nel file; gli UUID `created_by`/`sent_by` restano riferime
 esterni ad admin_users. Questo file non ricrea utenti, privilegi, RLS o schema e
 non e' accettato dal futuro import nuovi soci. Ogni restore completo resta
 soggetto alle verifiche precedenti, incluso login admin reale.
+
+### 17.2 Backup e restore della foundation A1
+
+Il dump completo deve includere schema e righe di `ui_field_visibility`, anche
+gli override archiviati, indici, CHECK delle coppie, policy e trigger, oltre agli
+helper `app_private`. Il workbook M10-B non contiene questa configurazione.
+`schema_migration_version` del workbook resta la baseline `010_email` del
+manifest business verificato, non l'ultima migration tecnica applicata: A1 non
+cambia tabelle/colonne esportate o formato.
+
+Nel restore dati ricostruire prima Auth e `admin_users`, poi gli override:
+`updated_by` riferisce **admin_users.id**, non Auth UID. Preservare gli UUID
+applicativi; se vengono rimappati, rimappare anche questa FK con procedura
+approvata, mai disabilitando RLS per il runtime. Non usare un export Excel come dump.
+
+Verificare la versione del registro nel codice e il CHECK SQL insieme: una
+nuova coppia supportata richiede una migration dedicata. Cambio di label non
+deve cambiare chiavi. RLS attiva, SELECT admin attivi, INSERT/UPDATE super_admin
+attivi con autore corretto, nessun grant DELETE/TRUNCATE e nessun accesso anonimo.
+Tutte le schermate restano `integrated: false` in A1: non abilitarle durante
+restore o deploy. Il bootstrap admin e le variabili ambiente non cambiano.
+
+Dopo restore eseguire login admin reale e aprire `/settings/field-visibility`:
+catalogo disponibile senza warning DB, stato non attivo e pulsanti disabilitati.
+Test di scrittura/RLS con identita' sintetiche soltanto su ambiente isolato,
+non modificando utenti o record live. Procedura e risultati:
+[M10_A1_CHECKLIST.md](M10_A1_CHECKLIST.md).

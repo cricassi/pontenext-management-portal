@@ -1,0 +1,201 @@
+# M10-A1 - Field Visibility Foundation
+
+Data: 2026-09-21. Base: `main` al merge `63283c9`, PR #49 documentale positiva
+M10-B mergiata prima dell'avvio. Branch: `codex/m10-a1-field-visibility-foundation`.
+Progetto: **PonteNext**, `uhxfpsamenjhyrfgwckw`, PostgreSQL 17, ACTIVE_HEALTHY.
+
+## Esito e confini
+
+Foundation implementata e verificata, pronta alla review; merge/post-merge A1
+ancora da eseguire. **Non e' il completamento di M10-A: A2 non e' iniziata.**
+Nessun form, lista, dettaglio, mapper/update o validatore business modificato.
+L'unico file applicativo preesistente modificato e' l'indice Impostazioni,
+per aggiungere il link al catalogo. Nessun import C, gruppo, scope o readonly.
+
+- [x] Una sola nuova tabella: `public.ui_field_visibility`.
+- [x] Migration additiva `015_ui_field_visibility.sql`, nessun seed.
+- [x] RLS, helper super_admin, CHECK coppie, FK autore, indici e trigger.
+- [x] Registro tipizzato versione 1, 42 schermate, 116 coppie configurabili.
+- [x] Resolver server-only in batch, default visible e diagnostica senza valori business.
+- [x] Pagina protetta `/settings/field-visibility`, link da Impostazioni.
+- [x] Lettura admin attivi, modifiche riservate a super_admin attivi.
+- [x] Tutte le schermate `integrated: false`: switch, Salva e Ripristina disabilitati.
+- [x] Rifiuto server save/reset su schermate non integrate prima di query configurazione.
+- [x] Nessun consumo del resolver nei moduli business o export.
+- [x] Nessuna nuova dipendenza applicativa, env o modifica provider/deploy.
+- [ ] Review finale e merge della PR A1.
+- [ ] Verifica post-merge A1 prima dell'avvio A2.
+
+## Migration e validazione live
+
+Ricevuto dall'utente il gate esatto **MIGRATION M10-A LIVE APPROVATA**, dopo
+la presentazione del SQL completo e del perimetro additivo. Applicata tramite
+MCP `apply_migration` solo `015_ui_field_visibility`, versione
+**20260921195425**. Nessun placeholder 011-014 applicato. Storico 001-010 invariato.
+
+Lo scaffold e' stato creato con Supabase CLI 2.101.0 in una directory temporanea
+non collegata al live, poi riportato nella convenzione numerata del repository.
+Non sono stati creati config CLI, file di link o credenziali nel repository.
+
+- Nuova tabella con id, screen_key, field_key, is_visible, updated_by,
+  created_at, updated_at, archived_at. Zero righe dopo migration e browser test.
+- `updated_by` NOT NULL riferisce `admin_users.id`, non `auth.uid()`.
+- CHECK `ui_field_visibility_supported_pair`: solo coppie facoltative supportate;
+  hash MD5 della definizione di catalogo live `4bd414d8dd14cbaab05c884ee608b2c4`.
+- Unicita' parziale `(screen_key, field_key)` WHERE archived_at IS NULL;
+  indice FK updated_by, trigger `set_ui_field_visibility_updated_at` che riusa
+  `public.set_updated_at()` senza modificarlo.
+- Helper `app_private.is_super_admin()`: STABLE SECURITY DEFINER,
+  `search_path = ''`, nomi qualificati, ruolo/stato/archiviazione verificati;
+  anon senza EXECUTE, authenticated con EXECUTE.
+- Tre sole policy, tutte authenticated: SELECT admin attivi; INSERT/UPDATE
+  super_admin attivi, autore verificato. UPDATE esclude righe sorgenti archiviate;
+  reset non rende riutilizzabile il vecchio ID.
+- Grant authenticated limitati SELECT/INSERT/UPDATE; nessun anon/PUBLIC,
+  DELETE/TRUNCATE/REFERENCES/TRIGGER applicativo. Non replicati i grant legacy ampi.
+- 15 tabelle public dopo migration, tutte con RLS attiva. Nessun ALTER/DML su
+  tabelle business, nessuna modifica Auth o dati amministratore.
+
+Conteggi esatti prima e dopo, sole letture aggregate, nessun record esportato:
+
+| Tabella preesistente | Prima | Dopo |
+| --- | ---: | ---: |
+| admin_users | 2 | 2 |
+| members | 105 | 105 |
+| roles | 7 | 7 |
+| member_roles | 3 | 3 |
+| membership_plans | 3 | 3 |
+| memberships | 6 | 6 |
+| payments | 2 | 2 |
+| sponsors | 2 | 2 |
+| sponsor_contributions | 2 | 2 |
+| events | 2 | 2 |
+| event_sponsors | 0 | 0 |
+| email_templates | 1 | 1 |
+| email_campaigns | 0 | 0 |
+| email_campaign_recipients | 0 | 0 |
+
+Gli stessi conteggi non sono da soli una prova di uguaglianza dei valori:
+la preservazione e' supportata anche dall'assenza di DML/ALTER business nel SQL
+applicato e dall'assenza di operazioni live di modifica durante il collaudo.
+
+## Registro, risoluzione e scritture predisposte
+
+- Chiavi stabili indipendenti dalle label, mappatura esplicita `formKey`, campi
+  obbligatori e workflow non configurabili. Nessun ID tecnico o audit nel catalogo.
+- Desktop/card mobile condividono screen_key; contesti create/edit/detail distinti.
+- Registro autorevole e CHECK SQL allineati da test; nuove coppie richiedono
+  aggiornamento coordinato con una nuova migration, non modifica della 015 applicata.
+- Una SELECT di configurazione per insieme canonico di schermate, colonne esplicite,
+  conteggio esatto e limite derivato dal registro; nessuna query per campo.
+- React `cache` limitata alla request/render, nessuna cache globale o localStorage.
+  Guard prima di accedere al loader; client Supabase di sessione, mai service role.
+- Default visible per assenza/archiviazione; override invalidi ignorati con warning.
+  Errore lettura -> default con avviso; scritture bloccate, errori sanitizzati.
+- Salvataggio predisposto: allowlist completa per schermata, soli booleani,
+  rilettura fresca non memoizzata, ID/autore/timestamp server, un bulk upsert su PK.
+  Conflitto di coppia attiva o ID archiviato -> fallimento intero, nessun retry.
+- Reset predisposto: unico UPDATE degli override attivi, soft archive, nessun DELETE.
+  Created_at preservato; nuovo salvataggio dopo reset usa nuovo ID.
+- Revalidate della sola pagina Impostazioni. A2 aggiungera' le viste integrate;
+  nessuna invalidazione o applicazione prematura ai moduli business.
+
+La Data API consente al super_admin le scritture di configurazione autorizzate
+dalla RLS; il flag di integrazione e' un gate applicativo, non una nuova permission
+DB. Anche una preferenza scritta direttamente non nasconde campi in A1, poiche'
+nessuna schermata business consuma il resolver. Non promettere riservatezza dei dati.
+
+## Test automatizzati
+
+Comandi eseguiti sul branch:
+
+```text
+npm run lint
+npx --no-install tsc --noEmit
+npm run build
+node --require ./tests/register-typescript.cjs ./tests/field-visibility.test.ts
+node --require ./tests/register-typescript.cjs ./tests/field-visibility-db.test.ts
+node --require ./tests/register-typescript.cjs ./tests/data-export.test.ts
+```
+
+Esiti: lint, typecheck e build superati; **12/12** test foundation,
+**7 scenari SQL** piu' wrapper (8/8 nel runner), **16/16** regressioni M10-B.
+Build include `/settings/field-visibility` dinamica e conserva tutte le route.
+Il primo processo lint rimasto fermo e' stato interrotto e rilanciato con
+`npm.cmd run lint`, terminato con exit 0. Build eseguita con permesso di avvio worker.
+
+I test SQL usano **PGlite 0.3.14**, PostgreSQL/WASM in memoria, con Auth/ruoli e
+anagrafiche esclusivamente sintetici. Non sono mock del motore SQL, ma non sono
+nemmeno un'istanza Supabase/PostgREST completa. Nessuna dipendenza nel package.json.
+Prerequisito riproducibile PowerShell, installato solo in directory temporanea:
+
+```powershell
+$runtime = Join-Path $env:TEMP 'pontenext-m10-a1-validation'
+npm install --prefix $runtime --no-save --package-lock=false --ignore-scripts @electric-sql/pglite@0.3.14
+$env:PGLITE_TEST_MODULE = Join-Path $runtime 'node_modules/@electric-sql/pglite'
+node --require ./tests/register-typescript.cjs ./tests/field-visibility-db.test.ts
+```
+
+`PGLITE_TEST_MODULE` e' solo un percorso per il test, non una env applicativa,
+una connessione remota o un segreto da aggiungere a `.env.example`.
+
+Casi coperti: default/override/archiviazione, parita' di tutte le coppie,
+obbligatori/chiavi arbitrarie, booleani/stringhe/payload tecnici, guard prima
+delle query, admin ordinario, super_admin, anon, inactive/archived/Auth senza
+admin, autore falsificato/Auth UUID, grant distruttivi negati, trigger,
+unicita', rollback bulk, ID obsoleto dopo reset non riattivabile, nuovo ID
+dopo reset. Le fixture di salvataggio usano un'integrazione simulata solo nel
+test; non esiste un bypass o una variabile ambiente di attivazione nel runtime.
+
+## Browser e responsive
+
+Build locale avviata con:
+
+```text
+node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3011
+```
+
+- [x] Anonimo su `/settings/field-visibility` -> `/login?next=...`.
+- [x] Login super_admin reale autorizzato, redirect alla pagina corretta.
+- [x] Lettura della tabella live vuota: catalogo completo, nessun warning DB.
+- [x] Scelta modulo/schermata, ricerca campo e nessun risultato.
+- [x] Empty state template email senza campi configurabili.
+- [x] Obbligatori visibili/disabilitati, testi di motivazione, tutti i comandi inattivi.
+- [x] Desktop tabella, mobile elenco, input a 16px.
+- [x] 1440px, 375px e 360px: larghezza documento non supera il viewport.
+- [x] A 375x667 i pulsanti finali arrivano a y=523, con spazio inferiore disponibile.
+- [x] Reload autenticato riuscito, nessuna preferenza scritta e nessun export reale.
+
+Prima del nuovo login la sessione locale precedente ha prodotto
+`Invalid Refresh Token: Refresh Token Not Found`; il login esplicito e il
+successivo reload sono riusciti. Non modificata la gestione Auth per questo
+evento locale. Nessun token o credenziale copiato in file/log della PR.
+Controllo responsive tramite Chromium del browser integrato, non dispositivo
+Safari reale: il collaudo fisico iPhone resta una verifica aggiuntiva.
+
+## Rilievi e prossimi gate
+
+Nessun blocker A1 rilevato. Restano documentati, senza interventi fuori scope:
+
+- Security Advisor: warning Auth per
+  [protezione password compromesse disabilitata](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+  Nessun rilievo sul nuovo helper/tabella/RLS.
+- Performance Advisor: tre FK legacy senza indice (created_by/sent_by email_campaigns,
+  created_by email_templates), e 42 indici segnalati inutilizzati. Sulla foundation
+  solo `ui_field_visibility_updated_by_idx` inutilizzato, atteso su tabella vuota:
+  non rimuoverlo. [FK](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys),
+  [indici inutilizzati](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index).
+- Concorrenza SQL/rollback verificati in isolamento; due richieste simultanee
+  PostgREST e invalidazione dopo scrittura reale da collaudare in staging prima
+  di attivare il primo modulo A2. In A1 i comandi operativi sono bloccati.
+- La memoizzazione e' testata con adapter di request cache, non con un contatore
+  query su Next.js Production. Il loader di pagina e' stato verificato nel browser.
+- A2 deve prima rendere mapper/update presence-aware e superare test di non
+  perdita dati per ogni contesto; solo dopo puo' porre integrated=true.
+- M10-B resta invariata: timeout sincrono non rigidamente interrompibile e
+  10 MiB riferiti ai dati normalizzati, non all'intera memoria. Rivalutare solo
+  con crescita significativa dei volumi, come approvato nella review B.
+
+Riferimenti verificati: [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security),
+[changelog](https://supabase.com/changelog), [PGlite](https://pglite.dev/docs/).
+Nessuna email inviata, workbook reale acquisito o dato business modificato.

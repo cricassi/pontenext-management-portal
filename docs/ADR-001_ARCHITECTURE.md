@@ -101,7 +101,8 @@ M4 non invia email. I promemoria scadenze sono rimandati a M7.
 
 ## AD-016 - M10 revisionato: visibilita' e portabilita'
 
-Decisione progettuale, non ancora implementata. Riferimento:
+Stato 2026-09-21: B completata; foundation A1 su branch separato con migration
+015 applicata dopo approvazione. A2 e C restano progettazione. Riferimento:
 [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
 La PR #46 chiusa senza merge e la successiva ipotesi di import multi-tabella
 sono superate da questo piano.

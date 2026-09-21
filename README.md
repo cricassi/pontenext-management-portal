@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M9 - Final Hardening
+M10-A1 - Field Visibility Foundation
 ```
 
 Milestone completate o avviate:
@@ -46,6 +46,22 @@ Milestone completate o avviate:
 - M8: report operativi ed export CSV/XLSX.
 - UI Brand Refresh: identita' visiva Ponte Next applicata a login, layout admin e dashboard.
 - M9: hardening finale, verifiche live, backup/migrazione e documentazione operativa.
+- M10-B: export Excel completo, verificato post-merge con PR #49.
+- M10-A1: foundation visibilita' globale e catalogo Impostazioni; nessun campo business nascosto.
+
+### M10-A1
+
+`/settings/field-visibility` e' leggibile dagli admin attivi. Registro tipizzato,
+resolver in batch e controlli server super_admin predisposti; switch, Salva e
+Ripristina sono disabilitati per tutte le schermate non integrate. Nessun form,
+elenco, dettaglio o update business e' stato modificato. A2/C non avviate.
+
+Migration additiva `015_ui_field_visibility.sql` applicata a PonteNext il
+2026-09-21 dopo approvazione esplicita; nessun seed o nuova env. Su un ambiente
+nuovo applicare 001-010, poi 015, saltando i placeholder 011-014.
+Non riapplicare migration gia' registrate. Dettagli e verifiche:
+[M10_A1_CHECKLIST.md](docs/M10_A1_CHECKLIST.md) e
+[MIGRATION_AND_BACKUP.md](docs/MIGRATION_AND_BACKUP.md).
 
 M2 include:
 
@@ -158,7 +174,7 @@ prefisso `NEXT_PUBLIC_`, non stampare la chiave nei log e non committare valori
 reali. `EMAIL_FROM` deve corrispondere a un mittente autorizzato/verificato in
 Resend prima dell'invio reale.
 
-### 3. Database fino a M9
+### 3. Database fino a M10-A1
 
 Applicare le migration in ordine:
 
@@ -173,7 +189,11 @@ database/migrations/007_sponsors.sql
 database/migrations/008_events.sql
 database/migrations/009_sponsor_contributions.sql
 database/migrations/010_email.sql
+database/migrations/015_ui_field_visibility.sql
 ```
+
+Saltare i placeholder 011-014. La 015 e' gia' applicata su PonteNext;
+questo elenco serve per un nuovo ambiente, non per riapplicare lo storico.
 
 Applicare poi i seed richiesti dalle milestone:
 

@@ -1,5 +1,24 @@
 ﻿# CHANGELOG.md
 
+# M10-A1 - Field Visibility Foundation (2026-09-21)
+
+- Mergiata PR documentale #49 dopo esito positivo M10-B, commit `63283c9`.
+- Creata/applicata la sola migration additiva `015_ui_field_visibility`,
+  versione live `20260921195425`, su PonteNext dopo gate utente esplicito.
+  Nuova tabella vuota, RLS, helper super_admin sicuro, grant minimi, CHECK
+  coppie configurabili, unicita' parziale, FK autore e trigger updated_at.
+- Registro tipizzato versione 1: 42 schermate, 116 coppie configurabili;
+  resolver in batch con cache request-scoped, fallback esplicito e guard.
+- Pagina `/settings/field-visibility` e link in Impostazioni; lettura admin,
+  configurazione solo super_admin. Tutte le schermate non integrate: comandi
+  disabilitati e richieste server rifiutate prima delle query di configurazione.
+- Predisposti bulk upsert atomico della sola configurazione e reset soft;
+  test isolati di autorizzazione, autore, vincoli, concorrenza/stale ID.
+- Nessun campo business nascosto, nessuna modifica a form/liste/dettagli,
+  mapper/update, Auth, env, provider o dati live. Nessun import, gruppo o readonly.
+- Aggiornati checklist, guida backup/restore, modello dati e stato del piano.
+  Conteggi delle 14 tabelle preesistenti invariati dopo migration.
+
 # M10-B - Complete Excel Export (2026-09-19)
 
 - Ricevuta conferma utente dello smoke test autenticato su Vercel Preview PR #48:

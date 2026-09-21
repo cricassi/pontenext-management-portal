@@ -174,7 +174,8 @@ cambiano report, export, email, segmentazioni o il formato import soci.
 ## BR-013 - Portabilita' Excel e soli nuovi soci, prevista M10-B/C
 
 Piano: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
-Funzioni non ancora implementate; precedente import multi-tabella annullato.
+M10-B completata e verificata post-merge; M10-C non implementata.
+Precedente import multi-tabella annullato.
 
 M10-B Complete Excel Export precede A1/A2 per rendere disponibile uno snapshot
 read-only prima delle modifiche ai form; M10-C New Members Excel Import viene

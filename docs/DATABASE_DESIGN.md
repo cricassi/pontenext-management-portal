@@ -91,6 +91,7 @@ Usare campi `text` con vincoli `check`, non enum PostgreSQL nella prima versione
 - email_templates
 - email_campaigns
 - email_campaign_recipients
+- ui_field_visibility
 - audit_logs
 
 ---
@@ -516,7 +517,11 @@ La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gest
 012_views.sql
 013_rls_policies.sql
 014_seed.sql
+015_ui_field_visibility.sql
 ```
+
+Ordine operativo live al 2026-09-21: 001-010, poi 015. I file 011-014
+sono placeholder da saltare; dettaglio foundation M10-A1 nella sezione 11.
 
 Nota M5: la migration applicata `007_sponsors.sql` crea sia `sponsors` sia
 `sponsor_contributions`, senza `event_id`.
@@ -548,24 +553,25 @@ automatico, e richiede conferma amministratore.
 
 ---
 
-# 11. Proposta M10 revisionata, non applicata
+# 11. M10: foundation e portabilita'
 
 Riferimento: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
-Verifica metadati live PonteNext `uhxfpsamenjhyrfgwckw` del 2026-09-19:
-migration operative applicate `001`-`010`; file `011`-`014` sopra elencati
-ancora placeholder. Non applicarli, rinumerarli o riscrivere migration storiche.
-Nessuna modifica live nella fase di piano.
+Verifica live PonteNext `uhxfpsamenjhyrfgwckw` del 2026-09-21:
+migration operative `001`-`010` e `015_ui_field_visibility` (versione
+`20260921195425`), applicata dopo gate esplicito utente. File `011`-`014`
+sopra elencati ancora placeholder: non applicarli o rinumerarli.
+Nessuna modifica dei dati business; conteggi pre/post invariati.
 
-## 11.1 ui_field_visibility proposta M10-A1
+## 11.1 ui_field_visibility M10-A1
 
-Unica nuova tabella prevista: `public.ui_field_visibility`.
+Unica nuova tabella A1: `public.ui_field_visibility`, vuota dopo l'applicazione.
 M10-A Field Visibility e' suddivisa in A1 Field Visibility Foundation e
 A2 Field Visibility Rollout; l'ordine operativo completo e' **B -> A1 -> A2 -> C**.
 In A1 si predispongono tabella, RLS, helper super_admin, registro, resolver e
 pagina Impostazioni senza modificare schermate business. A2 integra i moduli
 e adegua mapper/update con test di preservazione, senza ricreare la tabella.
 
-| Campo | Specifica proposta |
+| Campo | Specifica implementata |
 | --- | --- |
 | id | uuid PK, default generazione UUID |
 | screen_key | text NOT NULL, chiave nota |
@@ -584,10 +590,16 @@ nel registro e tramite CHECK coerente. Nessun permission group/scope/readonly.
 RLS: SELECT per admin attivi, INSERT/UPDATE solo super_admin attivi, autore
 verificato, nessuna policy DELETE/anon. updated_by non e' Auth UUID: risolvere
 `admin_users.auth_user_id = auth.uid()` e usare `admin_users.id`.
-Migration futura A1 solo additiva, nessun ALTER/DML delle tabelle business o
-seed business. Il numero va scelto dopo le eventuali migration additive B:
-`015` non e' riservato a ui_field_visibility, poiche' B viene sviluppata prima.
-Non applicare placeholder o rinumerare lo storico. Nessun file SQL creato dal piano.
+Migration `database/migrations/015_ui_field_visibility.sql` solo additiva:
+nessun ALTER/DML delle tabelle business o seed. B non ha introdotto migration,
+quindi 015 e' il primo numero libero dopo i placeholder. Helper STABLE SECURITY
+DEFINER `app_private.is_super_admin()`, search_path vuoto, EXECUTE solo
+authenticated. Grant della nuova tabella limitati a SELECT/INSERT/UPDATE;
+nessun DELETE/TRUNCATE. UPDATE USING limita le righe sorgenti a non archiviate,
+WITH CHECK permette il reset logico con autore corretto; vietata la riattivazione
+del vecchio ID. FK updated_by indicizzata e trigger set_updated_at esistente.
+CHECK statico: 116 coppie configurabili, parita' col registro versione 1.
+Nessuna schermata business applica ancora questi override: e' lavoro A2.
 
 ## 11.2 Export e import non modificano il modello business
 
