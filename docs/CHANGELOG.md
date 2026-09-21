@@ -4,6 +4,21 @@
 
 ## Correzione B1 successiva alla review PR #50: lock 016 preparato
 
+### Applicazione approvata e review finale positiva
+
+- Ricevuta conferma `MIGRATION 016 LOCK M10-A1 APPROVATA`; applicata solo
+  `016_lock_ui_field_visibility_foundation`, versione live `20260921205506`.
+  Nessuna modifica/riesecuzione della 015; nessun dato o tabella business modificati.
+- RLS attiva, sola policy SELECT admin attivi, authenticated senza privilegi
+  di scrittura. Data API con JWT super_admin: SELECT 200, INSERT e PATCH 403/42501;
+  anon 401/42501. Nessuna service role, configurazione vuota e conteggi invariati.
+- Rieseguiti lint, typecheck, build, test foundation 13/13, SQL isolato 12/12,
+  export M10-B 16/16; browser catalogo/login/controlli disabilitati e responsive base.
+- B1 risolto. **Review finale: MERGE SI**. PR #50 aggiornata senza merge automatico;
+  A2/C non avviate. Guide allineate allo storico live 001-010, 015, 016.
+
+### Preparazione precedente al gate (storico)
+
 - Preparata `016_lock_ui_field_visibility_foundation.sql`: solo policy/grant
   della configurazione, SELECT admin attivi conservata, scritture authenticated
   negate anche al super_admin. Nessun DML, nuova funzione o modifica business.

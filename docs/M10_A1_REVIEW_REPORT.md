@@ -7,18 +7,19 @@ Commit applicativo esaminato: `cb1886de541e387c261206d24a930faad68b3495`.
 Progetto live: **PonteNext**, `uhxfpsamenjhyrfgwckw`, ACTIVE_HEALTHY,
 PostgreSQL 17.6.1.127. PR aperta e non mergiata durante la review.
 
-## Aggiornamento: correzione B1 preparata, in attesa del gate live
+## Esito finale dopo applicazione e verifica live della 016
 
 Decisione dell'utente: A1 interamente read-only anche per super_admin.
-Preparata `016_lock_ui_field_visibility_foundation.sql`, senza modificare o
+Applicata `016_lock_ui_field_visibility_foundation.sql`, senza modificare o
 rieseguire la 015. Il SQL elimina le due policy di scrittura, revoca i privilegi
 di scrittura e mantiene SELECT/RLS admin attivi. Non contiene DML, nuove funzioni,
 RPC o interventi su tabelle business. Nessun codice applicativo modificato.
 
-**Decisione attuale: MERGE NO, in attesa di approvazione e validazione live 016.**
-La 016 non e' applicata e non e' autorizzata dalla sola citazione del gate nella
-richiesta. Serve la conferma `MIGRATION 016 LOCK M10-A1 APPROVATA` dopo SQL completo
-e conteggi pre-migration. Nessun merge automatico.
+**Decisione finale: MERGE SI. Nessun problema bloccante residuo per M10-A1.**
+Ricevuta la conferma esplicita `MIGRATION 016 LOCK M10-A1 APPROVATA` dopo SQL
+completo e conteggi. Applicata una sola volta sul live, versione **20260921205506**.
+Correzione esaminata al commit `2061899`; questo aggiornamento e' solo documentale.
+PR #50 lasciata aperta: nessun merge automatico. M10-A2 e M10-C non avviate.
 
 Test della correzione: 13/13 foundation; 10 scenari SQL con due wrapper (12/12).
 Il contratto SQL accetta soltanto i sette statement previsti. Nel DB isolato,
@@ -28,11 +29,34 @@ esistente. Idempotenza, preservazione dati/struttura/helper/policy estranee veri
 Le fixture owner-only e la riesecuzione della 015 sono esclusivamente in database
 nuovi in memoria, mai sul live. Non acquisiti workbook reali o segreti.
 
-Restano da eseguire dopo il gate: applicazione sola 016, controllo storico,
-grant/policy, INSERT/PATCH Data API con JWT super_admin senza service role,
-tabella configurazione vuota e conteggi delle 14 tabelle preesistenti invariati.
-I controlli browser riportati sotto sono quelli della review iniziale; nessuna
-modifica UI in questa correzione. Non sono presentati come collaudo live post-016.
+### Evidenze live post-016
+
+- Storico: 001-010, una sola 015 e una sola 016. Nessun placeholder applicato.
+- SQL della 016 registrato identico al file, normalizzati CRLF e whitespace finale:
+  MD5 `045fd1e5ec19cf7c9120158b53099274`. MD5 della 015 invariato:
+  `06744a30b53e6a153f44d58a02fdde1d`. Hash usati per confronto, non come firme.
+- RLS attiva su tutte le 15 tabelle public; nessuna policy DELETE.
+- ui_field_visibility: sola policy SELECT active_admin autenticati, identica alla
+  precedente. authenticated ha SELECT e nessun INSERT/UPDATE/DELETE/TRUNCATE/
+  REFERENCES/TRIGGER. anon non ha alcuno di questi privilegi; nessun ACL di colonna.
+- Data API con publishable key e JWT reale del super_admin attivo gia' autorizzato:
+  SELECT HTTP 200, zero righe; POST con coppia valida e proprio admin_users.id
+  HTTP **403 / SQLSTATE 42501**; PATCH HTTP **403 / 42501**. Non un falso successo
+  con zero righe aggiornate. SELECT senza sessione HTTP **401 / 42501**.
+- Nessuna service role; JWT/password/chiavi non stampati o salvati in file.
+  Logout della sessione API temporanea riuscito (204). Nessuna riga creata o aggiornata.
+- Tabella configurazione sempre vuota, conteggi delle 14 tabelle preesistenti
+  invariati prima/dopo. Nessun dato business esportato o modificato, nessuna email.
+
+Browser dopo il lock, build locale collegata a PonteNext: catalogo super_admin
+leggibile senza warning DB, cambio schermata/ricerca/empty state funzionanti,
+switch e Salva/Ripristina disabilitati. Dopo logout, navigazione alla route
+protetta mostra il login; nuovo login riuscito e ritorno al catalogo. A 1440px
+scrollWidth=1425, a 375px scrollWidth=375; nessun overflow orizzontale.
+Durante il primo passaggio di logout/navigazione ravvicinati il browser integrato
+ha mostrato temporaneamente "This page couldn't load"; la nuova navigazione
+esplicita ha completato il redirect. Non riprodotto come errore applicativo.
+Browser chiuso e server temporaneo fermato prima della build finale.
 
 Strategia futura A2: niente ripristino dei grant INSERT/UPDATE diretti. RPC
 dedicata, allowlist database delle coppie realmente integrate, super_admin attivo,
@@ -41,25 +65,27 @@ Ogni rollout estendera' esplicitamente l'allowlist dopo i test di non perdita da
 Questa RPC non viene implementata ora; service/action di scrittura predisposti
 non possono essere riattivati senza adeguamento al nuovo confine database.
 
-### Verifiche rieseguite sulla correzione, prima del gate
+### Verifiche rieseguite dopo il gate
 
 | Verifica | Esito |
 | --- | --- |
-| npm.cmd run lint | PASS, exit 0; anche esecuzione diagnostica --debug PASS |
+| npm.cmd run lint | PASS, exit 0 |
 | npx.cmd --no-install tsc --noEmit | PASS, exit 0 |
 | npm.cmd run build | PASS, exit 0; tutte le route conservate |
 | Foundation / SQL isolato / export M10-B | PASS, rispettivamente 13/13, 12/12, 16/16 |
 | git diff --check | PASS |
 | Diff src, package e 015 rispetto al commit di review 7fbad39 | Vuoto |
-| Supabase live | Sole letture di storico, grant, policy e conteggi |
-| Data API POST/PATCH super_admin dopo 016 | NON ESEGUITO: attende il gate live |
+| Supabase live | Sola 016 approvata; verifiche catalogo/count read-only, test di scrittura negati |
+| Data API POST/PATCH super_admin dopo 016 | PASS, entrambi 403 / 42501 |
+| Browser post-016 | PASS catalogo, controlli disabilitati, login/redirect e responsive base |
 
-Il primo lint nel sandbox e' rimasto senza output ed e' stato interrotto dopo
-identificazione del solo processo ESLint. La riesecuzione autorizzata e' terminata
-con exit 0; un ulteriore giro diagnostico e' passato senza --fix. Nessun processo
-di verifica lasciato attivo. Build con worker autorizzati, nessun cambio configurazione.
+Il precedente stallo lint pre-gate non si e' ripresentato nella verifica finale.
+Build con worker autorizzati, nessun cambio configurazione. Test SQL sempre in
+PGlite isolato; nessun SQL di fixture eseguito sul live. Regressione M10-B tramite
+16 test sintetici e diff invariato, non tramite acquisizione di workbook reale.
 
-Baseline live pre-016 riletta il **2026-09-21 alle 20:48:12 UTC**:
+Conteggi pre-016 riletti il **2026-09-21 alle 20:54:35 UTC**; post-016 e Data API
+alle **21:00:09 UTC**. Per ogni riga seguente, valore prima = valore dopo:
 
 | Tabella | Righe |
 | --- | ---: |
@@ -79,17 +105,23 @@ Baseline live pre-016 riletta il **2026-09-21 alle 20:48:12 UTC**:
 | email_campaign_recipients | 0 |
 | ui_field_visibility | 0 |
 
-Storico ancora 001-010 e sola 015 `20260921195425`, nessuna 016. RLS attiva;
-ancora tre policy della 015 e grant SELECT/INSERT/UPDATE authenticated, nessun
-ACL di colonna separato. Conteggi uguali alla review iniziale. Non equivalgono
-a un confronto di tutti i valori; non sono state eseguite mutation live.
-Rileggere la baseline immediatamente prima dell'eventuale applicazione approvata.
+Conteggi uguali anche alla review iniziale. Non equivalgono a un confronto di
+tutti i valori: la preservazione e' sostenuta dall'assenza di DML e interventi
+business nella migration e dal rifiuto verificato delle richieste Data API.
+Security Advisor: solo warning preesistente su password compromesse (sezione 3).
+Performance Advisor: tre FK email senza indice e 42 indici inutilizzati, gia'
+documentati nella checklist; nessun nuovo rilievo di sicurezza sulla foundation.
+
+Problemi importanti non bloccanti: collaudo RPC/concorrenza/cache prima di A2,
+protezione password compromesse, nessun account admin ordinario disponibile per
+browser live (copertura SQL/service isolata). Problemi minori: Safari fisico non
+verificato, rilievi performance legacy e limiti export M10-B gia' accettati.
 
 Le sezioni seguenti conservano le evidenze della review iniziale pre-correzione.
 
 ## 1. Esito complessivo della review iniziale
 
-**Decisione finale: MERGE NO rispetto ai criteri di questa review.**
+**Esito storico pre-016: MERGE NO, superato dalla verifica finale sopra.**
 
 Build, controlli statici, test automatici, struttura SQL, autorizzazioni per
 ruolo, catalogo e responsive hanno esito positivo. Non sono emerse regressioni
@@ -338,13 +370,14 @@ Il successo della suite SQL non elimina B1: la suite attuale verifica proprio
 che il super_admin possa scrivere direttamente. Una futura correzione del gate
 dovra' aggiungere test negativi coerenti per gli accessi diretti in A1.
 
-## 9. Azione richiesta prima del merge
+## 9. Chiusura del blocker e decisione finale
 
-L'utente ha scelto il lock assoluto: la precedente alternativa di accettare le
-scritture dirette non e' piu' proposta. Applicare solo la 016 dopo il gate,
-verificare il rifiuto Data API e aggiornare l'esito. Fino ad allora **MERGE NO**.
+L'utente ha scelto il lock assoluto e autorizzato la sola 016. Applicazione e
+rifiuto Data API verificati: **B1 RISOLTO, MERGE SI**. La precedente alternativa
+di accettare scritture dirette non e' adottata. Nessun blocker residuo A1.
 
 Il primo commit di review era solo documentale; la correzione aggiunge SQL 016,
-test isolati e documentazione. Nessun codice applicativo, configurazione Vercel
-o dato live modificato. La 015 resta immutata e non deve essere riapplicata.
+test isolati e documentazione. Sul live modificati soltanto policy/grant della
+configurazione tramite 016 approvata, nessun codice applicativo, Vercel o dato
+business. La 015 resta immutata e non deve essere riapplicata.
 M10-A2 e M10-C restano ferme. Nessun merge automatico della PR #50.

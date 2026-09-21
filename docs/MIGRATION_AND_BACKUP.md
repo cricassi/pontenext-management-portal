@@ -128,6 +128,7 @@ Migration operative attuali, applicate su Supabase PonteNext:
 009_sponsor_contributions
 010_email
 015_ui_field_visibility
+016_lock_ui_field_visibility_foundation
 ```
 
 File locali:
@@ -151,16 +152,16 @@ I file `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e `014_seed
 
 La `015_ui_field_visibility` e' stata applicata il 2026-09-21, versione live
 `20260921195425`, dopo il gate esplicito `MIGRATION M10-A LIVE APPROVATA`.
-Ordine effettivo: **001-010, poi 015**, saltando i quattro placeholder.
+Ordine effettivo: **001-010, poi 015 e 016**, saltando i quattro placeholder.
 Non rinumerare lo storico e non riapplicare la 015 dove e' gia' registrata.
 La sola tabella nuova e' `ui_field_visibility`, inizialmente vuota: nessun seed.
 RLS e helper super_admin sono nella stessa migration; nessun ALTER delle tabelle business.
 
-La `016_lock_ui_field_visibility_foundation` e' preparata e testata in isolamento,
-**non ancora applicata live**. Modifica soltanto policy/grant di ui_field_visibility,
-non righe o schema business. Richiede il gate `MIGRATION 016 LOCK M10-A1 APPROVATA`
-dopo SQL completo e conteggi. Sul live esistente applicare solo 016 dopo approvazione:
-non modificare o rieseguire 015. Su un target nuovo l'ordine completo previsto e'
+La `016_lock_ui_field_visibility_foundation` e' **applicata e verificata live**,
+versione `20260921205506`. Modifica soltanto policy/grant di ui_field_visibility,
+non righe o schema business. Ricevuto il gate `MIGRATION 016 LOCK M10-A1 APPROVATA`
+dopo SQL completo e conteggi. Sul live esistente non rieseguire 015 o 016:
+entrambe sono gia' registrate. Su un target nuovo l'ordine completo e'
 001-010 -> 015 -> 016. Saltare 011-014; niente esecuzione automatica al merge/deploy.
 
 ## 5. Seed necessari
@@ -262,7 +263,7 @@ Procedura:
 
 1. Creare o selezionare ambiente target.
 2. Verificare che il target sia quello giusto.
-3. Su target nuovo applicare `001`-`010`, poi `015` e il lock `016`, senza i placeholder `011`-`014`; rispettare il gate live della 016 ancora pendente.
+3. Su target nuovo applicare `001`-`010`, poi `015` e il lock `016`, senza i placeholder `011`-`014`; concordare l'autorizzazione per il target, senza rieseguire lo storico del live esistente.
 4. Applicare seed.
 5. Ripristinare o ricreare gli utenti Supabase Auth necessari, con procedura supportata.
 6. Ripristinare `admin_users`, riallineando `auth_user_id` agli utenti Auth target.
@@ -399,7 +400,7 @@ Verifiche obbligatorie:
 ## 17. Portabilita' Excel M10: non e' backup/restore
 
 Stato al 2026-09-21: **M10-B completata e verificata post-merge** (PR #48/#49).
-M10-A1 implementata su branch separato, con migration 015 applicata dopo gate;
+M10-A1 implementata su branch separato, con 015 e lock 016 applicati dopo gate distinti;
 A2/C non avviate. Vedere
 [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md) e
 [M10_B_EXPORT_CHECKLIST.md](M10_B_EXPORT_CHECKLIST.md).
@@ -440,9 +441,9 @@ business e nessuna modifica alle schermate o ai mapper/update dei moduli.
 M10-A2 integra progressivamente le schermate con test di non perdita dati prima
 di attivare le preferenze. Risolvere updated_by da
 admin_users.id tramite auth_user_id, non scrivere auth.uid() nella FK. Ordine
-live attuale `001`-`010`, poi `015`; `011`-`014` sono placeholder. Eventuali nuove
+live attuale `001`-`010`, poi `015` e `016`; `011`-`014` sono placeholder. Eventuali nuove
 migration/funzioni additive richiedono approvazione e aggiornamento di questa
-guida; B non ne aggiunge. La 016 e' preparata, non ancora live. A2 richiedera'
+guida; B non ne aggiunge. La 016 e' applicata e verificata live. A2 richiedera'
 una RPC dedicata e allowlist database approvate separatamente: non riaprire i
 grant diretti sulla tabella e non riattivare il vecchio upsert/reset dal service.
 

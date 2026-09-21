@@ -8,8 +8,8 @@ A1: migration `015_ui_field_visibility`, versione live `20260921195425`,
 applicata dopo gate esplicito. Registro versione 1 con 42 schermate e 116 coppie
 configurabili; tutte le schermate hanno `integrated: false`. Il catalogo e'
 consultabile, nessuna impostazione attivabile dalla pagina o dalle sue action.
-Review B1: la sola 015 permette ancora scritture dirette super_admin. Lock 016
-preparato e testato in isolamento, non applicato live, in attesa di gate separato.
+Review B1: la sola 015 permetteva scritture dirette super_admin. Lock 016
+applicato dopo gate separato, versione `20260921205506`, e verificato con Data API.
 In A1 nessun utente applicativo deve scrivere; futura A2 solo RPC controllata con
 allowlist DB delle coppie integrate, senza ripristinare grant INSERT/UPDATE diretti.
 Nessuna modifica a form, liste, dettagli, mapper o service business.
@@ -213,8 +213,8 @@ rinominare una label non cambia le chiavi.
 Decisione correttiva dopo review PR #50 (2026-09-21): A1 deve essere read-only
 anche tramite Data API per ogni utente applicativo, incluso super_admin.
 La 015 e' gia' applicata e non va modificata o rieseguita. La nuova 016 elimina
-le due policy di scrittura e revoca i relativi grant: preparata/testata in
-isolamento, non ancora live. Gate: `MIGRATION 016 LOCK M10-A1 APPROVATA`.
+le due policy di scrittura e revoca i relativi grant: applicata/verificata live,
+versione `20260921205506`, dopo gate `MIGRATION 016 LOCK M10-A1 APPROVATA`.
 Nessuna RPC implementata in A1. Questa decisione sostituisce la precedente
 predisposizione di scritture dirette, che non deve essere riattivata in A2.
 
@@ -971,6 +971,9 @@ Quel gate ha autorizzato la sola 015 gia' registrata. Il lock correttivo 016
 richiede una nuova conferma esatta `MIGRATION 016 LOCK M10-A1 APPROVATA`, dopo
 SQL completo e conteggi: non e' autorizzato dal gate precedente o dalla sua
 citazione in un piano. Non riapplicare la 015 sul live.
+Gate 016 ricevuto esplicitamente il 2026-09-21, dopo presentazione SQL/conteggi;
+migration applicata una sola volta e test Data API 403/42501 superati. Neppure
+la 016 deve essere rieseguita al merge/deploy.
 A2 non ripete la migration foundation; eventuali necessita' aggiuntive richiedono
 decisione separata. L'ordine B -> A1 non autorizza migration o export live automatici.
 

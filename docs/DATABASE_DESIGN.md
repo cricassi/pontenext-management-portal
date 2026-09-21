@@ -521,9 +521,9 @@ La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gest
 016_lock_ui_field_visibility_foundation.sql
 ```
 
-Ordine operativo live al 2026-09-21: 001-010, poi 015. I file 011-014
+Ordine operativo live al 2026-09-21: 001-010, poi 015 e 016. I file 011-014
 sono placeholder da saltare; dettaglio foundation M10-A1 nella sezione 11.
-La 016 e' preparata/testata in isolamento, non applicata live: richiede il gate
+La 016 e' applicata live, versione `20260921205506`, dopo il gate
 `MIGRATION 016 LOCK M10-A1 APPROVATA`. Non modifica ne' riapplica la 015.
 
 Nota M5: la migration applicata `007_sponsors.sql` crea sia `sponsors` sia
@@ -561,7 +561,8 @@ automatico, e richiede conferma amministratore.
 Riferimento: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
 Verifica live PonteNext `uhxfpsamenjhyrfgwckw` del 2026-09-21:
 migration operative `001`-`010` e `015_ui_field_visibility` (versione
-`20260921195425`), applicata dopo gate esplicito utente. File `011`-`014`
+`20260921195425`), poi lock `016_lock_ui_field_visibility_foundation`
+(`20260921205506`), entrambi dopo gate espliciti distinti. File `011`-`014`
 sopra elencati ancora placeholder: non applicarli o rinumerarli.
 Nessuna modifica dei dati business; conteggi pre/post invariati.
 
@@ -603,14 +604,14 @@ WITH CHECK permette il reset logico con autore corretto; vietata la riattivazion
 del vecchio ID. FK updated_by indicizzata e trigger set_updated_at esistente.
 CHECK statico: 116 coppie configurabili, parita' col registro versione 1.
 
-### Lock correttivo 016, non ancora applicato live
+### Lock correttivo 016, applicato e verificato live
 
 `016_lock_ui_field_visibility_foundation.sql` tocca soltanto policy e privilegi
 di ui_field_visibility: elimina le policy INSERT/UPDATE, revoca ad authenticated
 INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER, mantiene SELECT e revoca tutto
 ad anon/PUBLIC. RLS e policy SELECT admin attivi restano inalterate. Nessun
 INSERT/UPDATE/DELETE/TRUNCATE di dati, nuova funzione o intervento su altre tabelle.
-Stato atteso dopo 016: tutti gli utenti applicativi, anche super_admin, read-only;
+Stato verificato dopo 016: tutti gli utenti applicativi, anche super_admin, read-only;
 nessun override salvabile tramite Data API. Non modifica i privilegi infrastrutturali
 del proprietario database; l'app non usa service role per aggirare il blocco.
 

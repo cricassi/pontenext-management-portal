@@ -6,9 +6,9 @@ Progetto: **PonteNext**, `uhxfpsamenjhyrfgwckw`, PostgreSQL 17, ACTIVE_HEALTHY.
 
 ## Esito e confini
 
-Foundation implementata; la review PR #50 ha rilevato il blocker B1 sulle
-scritture Data API. Correzione `016` preparata e testata in isolamento, **non
-ancora applicata live**. Esito merge: **NO**, in attesa del gate e del collaudo.
+Foundation implementata; blocker B1 sulle scritture Data API **risolto** con
+la sola `016`, applicata dopo gate esplicito, versione live `20260921205506`.
+Test isolati e Data API live superati. Esito review: **MERGE SI**; PR non mergiata.
 **Non e' il completamento di M10-A: A2 non e' iniziata.**
 Nessun form, lista, dettaglio, mapper/update o validatore business modificato.
 L'unico file applicativo preesistente modificato e' l'indice Impostazioni,
@@ -21,12 +21,13 @@ per aggiungere il link al catalogo. Nessun import C, gruppo, scope o readonly.
 - [x] Resolver server-only in batch, default visible e diagnostica senza valori business.
 - [x] Pagina protetta `/settings/field-visibility`, link da Impostazioni.
 - [x] Lettura admin attivi; action di modifica bloccate anche per super_admin.
-- [ ] Blocco scritture dirette Data API: richiede applicazione approvata della 016.
+- [x] Blocco scritture dirette Data API verificato dopo la 016 approvata.
 - [x] Tutte le schermate `integrated: false`: switch, Salva e Ripristina disabilitati.
 - [x] Rifiuto server save/reset su schermate non integrate prima di query configurazione.
 - [x] Nessun consumo del resolver nei moduli business o export.
 - [x] Nessuna nuova dipendenza applicativa, env o modifica provider/deploy.
-- [ ] Review finale e merge della PR A1.
+- [x] Review finale positiva dopo applicazione e collaudo della 016.
+- [ ] Merge della PR A1, non eseguito automaticamente.
 - [ ] Verifica post-merge A1 prima dell'avvio A2.
 
 ## Correzione B1: lock 016
@@ -37,14 +38,15 @@ per aggiungere il link al catalogo. Nessun import C, gruppo, scope o readonly.
 - [x] Nessun DML, RPC, funzione o modifica business; RLS e SELECT policy conservate.
 - [x] Test isolati: admin e super_admin leggono, scritture ricevono SQLSTATE 42501.
 - [x] Idempotenza e preservazione di righe, struttura, helper e oggetti estranei verificate in isolamento.
-- [ ] Gate esatto dopo SQL completo/conteggi: `MIGRATION 016 LOCK M10-A1 APPROVATA`.
-- [ ] Applicazione della sola 016, verifica storico/grant/policy e conteggi pre/post.
-- [ ] INSERT/PATCH Data API con JWT super_admin negati, senza service role.
-- [ ] Review finale aggiornata dopo il collaudo live; nessun merge automatico.
+- [x] Gate esatto dopo SQL completo/conteggi: `MIGRATION 016 LOCK M10-A1 APPROVATA`.
+- [x] Applicazione della sola 016, verifica storico/grant/policy e conteggi pre/post.
+- [x] INSERT/PATCH Data API con JWT super_admin negati (403/42501), senza service role.
+- [x] Review finale aggiornata dopo il collaudo live; nessun merge automatico.
 
-Il testo del gate citato nelle istruzioni non costituisce approvazione.
-Fino all'applicazione della 016 il live conserva i privilegi della 015 descritti
-sotto; il blocker non e' ancora chiuso sul progetto PonteNext.
+Ricevuta conferma autonoma dopo SQL/conteggi: non usata la sola citazione nelle
+istruzioni. Stato live attuale: SELECT admin attivi, nessuna scrittura applicativa,
+anon negato, RLS attiva e configurazione vuota. La sezione 015 sotto e' storica.
+Conteggi delle 14 tabelle preesistenti invariati alle 20:54:35 e 21:00:09 UTC.
 
 ## Migration 015 e validazione live storica
 
@@ -121,7 +123,7 @@ applicato e dall'assenza di operazioni live di modifica durante il collaudo.
   nessuna invalidazione o applicazione prematura ai moduli business.
 
 Le scritture dirette consentite dalla 015 sono il blocker B1, non un comportamento
-accettabile per A1. La 016 deve negarle anche al super_admin autenticato.
+accettabile per A1. La 016 le nega anche al super_admin autenticato: test Data API PASS.
 Le funzioni upsert/reset predisposte restano irraggiungibili con integrated=false;
 non riattivarle direttamente in A2. La futura A2 richiede una RPC controllata,
 allowlist database delle sole coppie integrate, verifica super_admin attivo e
@@ -149,8 +151,9 @@ e **10 scenari SQL piu' due wrapper (12/12 runner)**, superati in isolamento.
 Le prove storiche della sola 015 restano separate da quelle dello stato 015+016.
 Rieseguiti sulla correzione: lint, typecheck, build e git diff --check PASS;
 regressione M10-B **16/16 PASS** con soli dati sintetici. Nessun nuovo export live.
-Conteggi pre-016 riletti alle 20:48:12 UTC del 2026-09-21: identici alla tabella
-storica sopra, ui_field_visibility = 0. Nessuna 016 nello storico live.
+Conteggi pre/post-016 del 2026-09-21 identici alla tabella storica sopra,
+ui_field_visibility = 0. Nello storico una sola 016 `20260921205506`;
+nessuna riesecuzione della 015. Rerun post-gate delle tre suite e lint/tsc/build PASS.
 Dettagli e limiti del collaudo corrente in M10_A1_REVIEW_REPORT.md.
 Build include `/settings/field-visibility` dinamica e conserva tutte le route.
 Il primo processo lint rimasto fermo e' stato interrotto e rilanciato con
@@ -207,7 +210,7 @@ Safari reale: il collaudo fisico iPhone resta una verifica aggiuntiva.
 
 ## Rilievi e prossimi gate
 
-**B1 ancora aperto sul live finche' la 016 non e' approvata/applicata/verificata.**
+**B1 risolto: 016 approvata, applicata e verificata anche tramite Data API.**
 Gli altri rilievi restano documentati, senza interventi fuori scope:
 
 - Security Advisor: warning Auth per

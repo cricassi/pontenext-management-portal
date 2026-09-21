@@ -244,7 +244,7 @@ Quattro PR operative distinte, nel seguente ordine vincolante:
    `ui_field_visibility`, RLS, helper super_admin, registro, resolver e pagina
    `/settings/field-visibility`. Nessuna schermata business modificata e
    nessun intervento sui suoi mapper/update; controlli dei moduli non ancora attivi.
-   Lock 016 preparato dopo review B1, in attesa di gate live: SELECT admin,
+   Lock 016 applicato dopo gate e review B1, versione 20260921205506: SELECT admin,
    nessuna scrittura applicativa anche per super_admin; 015 non riapplicabile.
 3. **M10-A2 Field Visibility Rollout**: integrazione progressiva visible/hidden
    tramite futura RPC controllata, allowlist DB delle coppie integrate e autore

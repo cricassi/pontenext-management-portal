@@ -114,7 +114,7 @@ sono superate da questo piano.
 - `ui_field_visibility` e' l'unica nuova tabella prevista. Registro tipizzato
   autorevole nel codice; default visible; RLS admin attivi in lettura. In A1
   nessuna scrittura applicativa, neppure super_admin: lock correttivo 016
-  preparato, in attesa di gate live; 015 invariata. In A2 solo RPC controllata,
+  applicato dopo gate live (20260921205506); 015 invariata. In A2 solo RPC controllata,
   allowlist DB delle coppie integrate e super_admin attivo; mai ripristinare
   INSERT/UPDATE diretti. Nessun DELETE. `updated_by` riferisce
   `admin_users.id`, risolto tramite auth_user_id, non direttamente auth.uid().
