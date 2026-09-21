@@ -224,9 +224,10 @@ Release candidate.
 
 # M10 - Visibilita' globale e portabilita' Excel
 
-Stato al 2026-09-21: B completata e verificata post-merge (PR #48/#49);
+Stato al 2026-09-22 (Europe/Rome): B completata e verificata post-merge (PR #48/#49);
 A1 mergiata e verificata post-merge nelle PR #50/#51, 015 e lock 016 applicati;
-A2.1 Members Only preparata su branch separato, 017 non applicata live.
+A2.1 Members Only nella PR #52 in bozza; 017 applicata e verificata live,
+versione `20260921221332`, dopo approvazione separata. Merge/review ancora pendenti.
 Altri moduli A2 e C non avviati. Vedere
 [M10_A2_1_MEMBERS_CHECKLIST.md](M10_A2_1_MEMBERS_CHECKLIST.md).
 La PR #46 e' annullata;

@@ -2,7 +2,8 @@
 
 Implementazione e verifiche: 2026-09-21/22, orario Europe/Rome.
 Base: main `e40f790`, dopo merge della verifica A1, PR #51.
-Stato: **implementazione/test locali completati; 017 NON applicata live**.
+Stato: **implementazione/test locali completati; 017 applicata e verificata live**.
+PR #52 in bozza; applicazione autorizzata separatamente, non equivale al merge.
 Nessun merge o attivazione Production A2.1 automatici.
 
 ## Scope
@@ -102,7 +103,8 @@ sandbox riuscita. Nessun uso di Start-Process.
 
 ## Supabase Read-Only e Gate
 
-Solo PonteNext `uhxfpsamenjhyrfgwckw`. Rilettura live 2026-09-21 22:07:27 UTC:
+Solo PonteNext `uhxfpsamenjhyrfgwckw`. Pre-migration 2026-09-21 22:13:11 UTC;
+post-migration/test 22:15:36 UTC. Conteggi identici in entrambe le letture:
 
 | Tabella | Conteggio |
 | --- | ---: |
@@ -123,29 +125,59 @@ Solo PonteNext `uhxfpsamenjhyrfgwckw`. Rilettura live 2026-09-21 22:07:27 UTC:
 | ui_field_visibility | 0 |
 
 Conteggi invariati dalla verifica A1. RLS attiva, sola policy SELECT admin attivi,
-authenticated senza grant di scrittura. RPC 017 assente. Nessuna modifica live,
+authenticated senza grant di scrittura diretta. Nessuna modifica di dati business,
 email o export reale eseguiti durante A2.1.
 
 Storico: 015 registrata una volta come `20260921195425`, 016 una volta come
-`20260921205506`; nessuna 017. Wrapper public e writer privato entrambi assenti.
+`20260921205506`; sola 017 applicata come `20260921221332` dopo il gate. Wrapper
+public e writer privato presenti. 015 e 016 non rieseguite.
 
-Advisor read-only: warning preesistente Leaked Password Protection Disabled;
-performance: 3 FK email senza indice e 42 unused indexes informativi. Nessun
-intervento fuori scope; questi advisor live non certificano la 017 non applicata.
+### Evidenze Post-Applicazione 017
 
-- [ ] Approvazione separata ricevuta: `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`.
-- [ ] Applicazione della sola 017 e verifica live post-migration.
+- SQL approvato invariato: SHA-256 file
+  `2c045354946243566628915aec2aed42e0268ca3894b61eec7a1d7997409a5da`.
+- Confronto SQL locale/storico live rimuovendo whitespace, MD5 uguali:
+
+| Migration | MD5 SQL normalizzato |
+| --- | --- |
+| 015 | dc411b05b0ca1d9c683f3b10d8cdf73c |
+| 016 | 9f74a75112080ce904215fd5b012e330 |
+| 017 | 300f8ff5773a384fdd6d453bf3367df0 |
+
+- Entrambe le funzioni owner postgres, search_path vuoto; EXECUTE authenticated,
+  negato ad anon/service_role; writer privato definer e wrapper pubblico invoker.
+- Test SQL live in BEGIN/ROLLBACK: impersonazione del ruolo authenticated con
+  auth.uid() di super_admin attivo esistente, senza creare/modificare utenti Auth.
+  Save dei 3 campi members.list, email hidden, updated_by corretto: PASS.
+  Baseline obsoleta rifiutata con 40001; screen sponsor e campo non ammesso con 22023.
+  INSERT/UPDATE/DELETE diretti rifiutati con 42501, reset soft: PASS.
+- Prove annullate interamente: zero override persistenti. Nessun INSERT/UPDATE/
+  DELETE/TRUNCATE su tabelle business. Privilegio TRUNCATE verificato assente,
+  senza eseguire TRUNCATE. Non usate chiavi service role.
+- Authenticated senza corrispondenza admin, RPC anon e SELECT anon negati: PASS.
+  Nessun account live admin ordinario disponibile; quel caso resta coperto dai
+  test isolati. Queste prove SQL non sono chiamate HTTP Data API o browser.
+
+Advisor post-migration: solo warning preesistente
+[Leaked Password Protection Disabled](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+Performance invariata: 3 [FK email senza indice](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys)
+e 42 [unused indexes](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index)
+informativi. Nessun intervento fuori scope.
+
+- [x] Approvazione separata ricevuta: `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`.
+- [x] Applicazione della sola 017 e verifica SQL live post-migration.
 - [ ] Review finale e smoke test sul deploy A2.1 dopo gate/approvazioni.
 
 SQL completo: [017_enable_member_field_visibility_rpc.sql](../database/migrations/017_enable_member_field_visibility_rpc.sql).
-Prima di applicarlo rileggere conteggi/storico, verificare checksum del file
-approvato e presentare lo scope. La semplice citazione del gate in questa guida
-non e' approvazione. Non applicare nuovamente 015/016, non modificare dati business.
+Gate completato dopo presentazione SQL e conteggi, con approvazione utente
+esplicita separata. Non applicare nuovamente 015/016/017. Per nuovi target
+servono verifica storico/checksum e autorizzazione dedicata; la semplice
+citazione del gate in questa guida non e' approvazione.
 
 ## Limiti Residui
 
 - Test concorrenza coprono baseline obsoleta e rollback dopo errore a meta' batch.
-  Stress con due connessioni PostgREST reali non eseguito prima del gate; PGlite
+  Stress con due connessioni PostgREST reali non eseguito; PGlite
   non sostituisce quel test. Lock transazionale e confronto avvengono nel DB.
 - Nessun login admin ordinario live creato; test ruoli in SQL e render isolati.
 - Preferenze UI, non autorizzazioni per colonna. Export/report/email e API business
@@ -153,4 +185,5 @@ non e' approvazione. Non applicare nuovamente 015/016, non modificare dati busin
 - Lettura preferenze e modifica socio sono richieste separate: non si promette
   atomicita' fra un cambio preferenza concorrente e l'update business. La patch
   usa le preferenze rilette al submit e non azzera campi assenti; il record usa CAS.
-- Nessun esito di migrazione/rollout live dichiarato finche' il gate resta aperto.
+- Migration live verificata; rollout applicativo Production non dichiarato
+  completato. PR #52 ancora in bozza, review finale/smoke del deploy pendenti.

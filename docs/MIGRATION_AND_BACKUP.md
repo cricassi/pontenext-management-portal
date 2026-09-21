@@ -129,6 +129,7 @@ Migration operative attuali, applicate su Supabase PonteNext:
 010_email
 015_ui_field_visibility
 016_lock_ui_field_visibility_foundation
+017_enable_member_field_visibility_rpc
 ```
 
 File locali:
@@ -146,13 +147,14 @@ database/migrations/009_sponsor_contributions.sql
 database/migrations/010_email.sql
 database/migrations/015_ui_field_visibility.sql
 database/migrations/016_lock_ui_field_visibility_foundation.sql
+database/migrations/017_enable_member_field_visibility_rpc.sql
 ```
 
 I file `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e `014_seed.sql` sono placeholder/futuri nel repository e non risultano applicati al database live.
 
 La `015_ui_field_visibility` e' stata applicata il 2026-09-21, versione live
 `20260921195425`, dopo il gate esplicito `MIGRATION M10-A LIVE APPROVATA`.
-Ordine effettivo: **001-010, poi 015 e 016**, saltando i quattro placeholder.
+Ordine effettivo: **001-010, poi 015, 016 e 017**, saltando i quattro placeholder.
 Non rinumerare lo storico e non riapplicare la 015 dove e' gia' registrata.
 La sola tabella nuova e' `ui_field_visibility`, inizialmente vuota: nessun seed.
 RLS e helper super_admin sono nella stessa migration; nessun ALTER delle tabelle business.
@@ -160,9 +162,12 @@ RLS e helper super_admin sono nella stessa migration; nessun ALTER delle tabelle
 La `016_lock_ui_field_visibility_foundation` e' **applicata e verificata live**,
 versione `20260921205506`. Modifica soltanto policy/grant di ui_field_visibility,
 non righe o schema business. Ricevuto il gate `MIGRATION 016 LOCK M10-A1 APPROVATA`
-dopo SQL completo e conteggi. Sul live esistente non rieseguire 015 o 016:
-entrambe sono gia' registrate. Su un target nuovo l'ordine completo e'
-001-010 -> 015 -> 016. Saltare 011-014; niente esecuzione automatica al merge/deploy.
+dopo SQL completo e conteggi. La `017_enable_member_field_visibility_rpc` e'
+applicata dopo il proprio gate, versione `20260921221332`: solo RPC/helper e
+privilegi di esecuzione, senza riaprire scritture dirette o modificare dati business.
+Sul live esistente non rieseguire 015, 016 o 017: sono gia' registrate.
+Su un target nuovo l'ordine completo e' 001-010 -> 015 -> 016 -> 017.
+Saltare 011-014; niente esecuzione automatica al merge/deploy.
 
 ## 5. Seed necessari
 
@@ -380,7 +385,7 @@ Verifiche obbligatorie:
 - [ ] Identificato ambiente target.
 - [ ] Backup creato e cifrato.
 - [ ] Commit applicativo annotato.
-- [ ] Target nuovo: migration `001`-`010`, poi `015` e lock `016` in ordine, con approvazioni necessarie; nessuna riesecuzione su storico esistente.
+- [ ] Target nuovo: migration `001`-`010`, poi `015`, lock `016` e RPC `017` in ordine, con approvazioni necessarie; nessuna riesecuzione su storico esistente.
 - [ ] Placeholder `011`-`014` non applicati.
 - [ ] Seed ruoli applicato.
 - [ ] Seed piani iscrizione applicato.
@@ -401,7 +406,8 @@ Verifiche obbligatorie:
 
 Stato al 2026-09-21: **M10-B completata e verificata post-merge** (PR #48/#49).
 M10-A1 mergiata e verificata (PR #50/#51), con 015 e lock 016 applicati dopo gate distinti.
-A2.1 Members Only preparata: 017 non applicata live, altri moduli e C non avviati. Vedere
+A2.1 Members Only nella PR #52 in bozza: 017 applicata live dopo gate separato,
+versione `20260921221332`; altri moduli e C non avviati. Vedere
 [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md) e
 [M10_B_EXPORT_CHECKLIST.md](M10_B_EXPORT_CHECKLIST.md).
 
@@ -441,11 +447,12 @@ business e nessuna modifica alle schermate o ai mapper/update dei moduli.
 M10-A2 integra progressivamente le schermate con test di non perdita dati prima
 di attivare le preferenze. Risolvere updated_by da
 admin_users.id tramite auth_user_id, non scrivere auth.uid() nella FK. Ordine
-live attuale `001`-`010`, poi `015` e `016`; `011`-`014` sono placeholder. Eventuali nuove
+live attuale `001`-`010`, poi `015`, `016` e `017`; `011`-`014` sono placeholder. Eventuali nuove
 migration/funzioni additive richiedono approvazione e aggiornamento di questa
-guida; B non ne aggiunge. La 016 e' applicata e verificata live. A2 richiedera'
-una RPC dedicata e allowlist database approvate separatamente: non riaprire i
-grant diretti sulla tabella e non riattivare il vecchio upsert/reset dal service.
+guida; B non ne aggiunge. La 016 resta applicata e verificata live; A2.1 usa la
+RPC dedicata 017 con allowlist dei soli soci, approvata separatamente. Ulteriori
+moduli richiedono un nuovo intervento approvato: non riaprire i grant diretti
+sulla tabella e non riattivare il vecchio upsert/reset dal service.
 
 Il piano C propone una futura chiave server-only MEMBERS_IMPORT_RECEIPT_SECRET
 per ricevute dry-run firmate: non esiste una nuova configurazione in questa PR.
@@ -548,10 +555,15 @@ non modificando utenti o record live. Procedura e risultati:
 ### 17.4 A2.1 Members Only: preparazione, deploy e restore
 
 Migration aggiuntiva: `database/migrations/017_enable_member_field_visibility_rpc.sql`.
-**Preparata/testata in ambiente isolato, NON applicata a PonteNext.**
-Il live resta nell'ordine 001-010 -> 015 -> 016. Per un target A2.1 approvato
-l'ordine diventa 001-010 -> 015 -> 016 -> 017; saltare sempre 011-014.
-Non rieseguire 015/016 su PonteNext e non applicare la 017 automaticamente al deploy.
+**Applicata a PonteNext dopo approvazione esplicita, versione `20260921221332`.**
+Ordine live e di ricreazione A2.1: 001-010 -> 015 -> 016 -> 017;
+saltare sempre 011-014. Non rieseguire 015/016/017 su PonteNext e non applicare
+migration automaticamente al deploy. Il merge della PR #52 resta separato.
+
+Verifica post-applicazione del 2026-09-21 22:15 UTC (22 settembre in Europe/Rome):
+RPC/helper, ownership, search_path, RLS e privilegi corretti. Prove SQL save/reset
+sulla sola configurazione in transazione annullata; zero override persistenti e
+conteggi business invariati. Non sono stati modificati utenti Auth o dati dei soci.
 
 La 017 introduce solo RPC/helper e relativi privilegi EXECUTE, nessuna tabella,
 policy business o modifica dei dati. Conserva le revoche di tabella della 016.
@@ -574,7 +586,9 @@ Procedura di attivazione autorizzata:
 3. Applicare soltanto 017 al target autorizzato; verificare storico, zero modifiche
    ai conteggi, ownership, search_path, ACL, policy SELECT e lock diretto.
 4. Verificare la RPC e i rifiuti con identita' sintetiche in ambiente separato.
-   Qualsiasi modifica di preferenze live durante uno smoke test va concordata:
+   Eventuali prove SQL live devono essere limitate alla configurazione e concluse
+   con rollback verificato; non sostituiscono lo smoke HTTP con sessione reale.
+   Qualsiasi modifica persistente di preferenze live durante uno smoke test va concordata:
    l'approvazione della migration non autorizza modifiche ai dati dei soci.
 5. Pubblicare il codice A2.1 solo dopo gate/verifiche e review; login admin reale
    dopo deploy/restore. Il super_admin puo' configurare solo le quattro schermate

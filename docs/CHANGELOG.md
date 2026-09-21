@@ -2,6 +2,22 @@
 
 # M10-A2.1 - Field Visibility Members Only (2026-09-21)
 
+## Applicazione approvata 017 e verifica live (2026-09-22 Europe/Rome)
+
+- Ricevuta conferma `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`; applicata solo
+  `017_enable_member_field_visibility_rpc`, versione `20260921221332`.
+  SQL identico al file approvato; 015/016 invariate e non rieseguite.
+- RPC/helper verificati: owner postgres, search_path vuoto, EXECUTE authenticated,
+  anon/service_role negati, writer privato e wrapper invoker. RLS e lock 016 invariati.
+- Test SQL live save/reset con rollback, autore, conflitto, allowlist, rifiuto
+  INSERT/UPDATE/DELETE diretti, auth senza admin e anon: PASS. Nessun DML business.
+  Tabella configurazione ancora vuota; tutti i conteggi pre/post invariati.
+- Security Advisor: solo warning Auth preesistente; performance invariata.
+  Checklist e backup/restore aggiornati nella PR #52. PR ancora in bozza,
+  nessun merge, nessuna attivazione Production o avanzamento ad altri moduli.
+
+## Preparazione precedente al gate (storico)
+
 - Verifica post-merge A1 positiva; report nella PR #51 mergiato, main `e40f790`.
 - Registro versione 2: integrate solo members.list/create/edit/detail. Altri
   moduli ancora non attivi, nessun readonly, gruppo o import Excel.

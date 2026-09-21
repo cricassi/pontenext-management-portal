@@ -1,13 +1,15 @@
 # M10 - Field Visibility and Excel Data Portability
 
-Piano del 2026-09-19. Aggiornamento operativo: 2026-09-21.
+Piano del 2026-09-19. Aggiornamento operativo: 2026-09-22 (Europe/Rome).
 **M10-B completata/verificata (PR #48/#49); M10-A1 mergiata/verificata
-(PR #50/#51); M10-A2.1 Members Only preparata su branch separato;
-017 non applicata live. Altri moduli A2 e M10-C non avviati.**
+(PR #50/#51); M10-A2.1 Members Only nella PR #52 in bozza;
+017 applicata live, versione 20260921221332, dopo approvazione separata.
+Review/merge e smoke test del deploy ancora pendenti. Altri moduli A2 e M10-C non avviati.**
 
 Stato A2.1: registro versione 2, integrate esclusivamente members.list/create/
 edit/detail. Configurazione tramite la RPC controllata della 017, mai scritture
-dirette; prima del gate live la configurazione non puo' essere salvata.
+dirette. Gate 017 superato, verifica SQL live positiva con rollback dei soli
+override di prova; zero configurazioni persistenti, nessun dato business modificato.
 La descrizione A1 seguente e le analisi successive conservano il contesto
 storico; per lo stato A2.1 e le verifiche fa fede
 [M10_A2_1_MEMBERS_CHECKLIST.md](M10_A2_1_MEMBERS_CHECKLIST.md).
