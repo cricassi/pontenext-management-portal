@@ -3,8 +3,10 @@
 Implementazione e verifiche: 2026-09-21/22, orario Europe/Rome.
 Base: main `e40f790`, dopo merge della verifica A1, PR #51.
 Stato: **implementazione/test locali completati; 017 applicata e verificata live**.
-PR #52 in bozza; applicazione autorizzata separatamente, non equivale al merge.
-Nessun merge o attivazione Production A2.1 automatici.
+Review finale positiva dopo fix B1 (`f049b1e`): **MERGE SI**.
+PR #52 mantenuta in bozza fino al completamento della review; l'utente ha poi
+autorizzato esplicitamente anche il merge in caso di esito positivo.
+Il presente documento registra le verifiche pre-merge, non certifica il deploy Production.
 
 ## Scope
 
@@ -47,7 +49,9 @@ Nessun merge o attivazione Production A2.1 automatici.
 - [x] Valori legacy non inviati conservati verbatim, anche se non conformi alle
   regole per nuovi input; nessuna rinormalizzazione di hidden. Nuovi input validati.
 - [x] Stringa vuota esplicita azzera soltanto un facoltativo visibile.
-- [x] Confronto updated_at prima dell'UPDATE: conflitto record non sovrascritto.
+- [x] Versione updated_at catturata all'apertura e passata come argomento bound
+  della server action; confronto con lettura fresca e CAS nell'UPDATE. Modulo
+  obsoleto o concorrenza durante la scrittura respinti senza sovrascritture.
 - [x] Create: null/default preesistenti per hidden; obbligatori validati.
 - [x] Nessun aggiornamento a roles, member_roles, memberships o altre relazioni.
 
@@ -58,6 +62,8 @@ telefono. SQL verifica email/note/indirizzo/ID/created_at/archived_at invariati 
 patch esatta `{last_name, phone}`. Conteggio soci resta uno; relazioni identiche.
 Create sintetica in transazione di test, poi rollback; nessuna riga live inserita.
 Test separato dimostra preservazione byte-per-byte di note con spazi ed email legacy.
+La review ha aggiunto due regressioni CAS e verifica esplicita che, dopo reset,
+email/note tornino nei props visibili senza alterare il record nel database isolato.
 
 ## UI e Browser
 
@@ -72,6 +78,9 @@ Test separato dimostra preservazione byte-per-byte di note con spazi ed email le
 - [x] Cinque route controllate a 360, 375, 390 e 1280 pixel, 20 combinazioni;
   nessuno scroll orizzontale della pagina (`scrollWidth <= innerWidth`).
 - [x] Screenshot desktop lista/impostazioni e mobile form ispezionati con soli dati demo.
+- [x] Review: prova browser con due moduli demo aperti; primo salvataggio riuscito,
+  secondo obsoleto rifiutato con messaggio comprensibile. Valori concorrenti
+  preservati dopo ricaricamento; email/note hidden ancora non renderizzate.
 
 Route: /members, /members/new, /members/[id], /members/[id]/edit,
 /settings/field-visibility. Browser Chromium, non dispositivo Safari fisico.
@@ -90,11 +99,13 @@ separatamente nei test SQL. Server e fixture arrestati al termine del collaudo.
 - [x] `tests/field-visibility.test.ts`: 13 test.
 - [x] `tests/field-visibility-db.test.ts`: 12 test runner (015/016 storiche, solo isolate).
 - [x] `tests/member-visibility.test.ts`: 7 test, inclusi render dei 42 screen per entrambi i ruoli.
-- [x] `tests/member-visibility-db.test.ts`: 12 test runner (11 scenari + wrapper).
+- [x] `tests/member-visibility-db.test.ts`: 14 test runner (13 scenari + wrapper).
 - [x] `tests/data-export.test.ts`: 16 regressioni sintetiche M8/M10-B.
 - [x] `git diff --check` e controllo diff 015/016 vuoto.
 
 Suite TypeScript eseguite con `node --require ./tests/register-typescript.cjs`.
+Totale dopo fix della review: **62/62 PASS**, nessun test fallito o saltato.
+Lint, typecheck e build rieseguiti positivamente dopo il fix; CSS/layout invariati.
 Suite SQL richiedono `PGLITE_TEST_MODULE` verso @electric-sql/pglite 0.3.14,
 installato separatamente nella directory temporanea di test. Nessuna nuova
 dipendenza applicativa o modifica al lockfile.
@@ -166,13 +177,46 @@ informativi. Nessun intervento fuori scope.
 
 - [x] Approvazione separata ricevuta: `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`.
 - [x] Applicazione della sola 017 e verifica SQL live post-migration.
-- [ ] Review finale e smoke test sul deploy A2.1 dopo gate/approvazioni.
+- [x] Smoke test autenticato sul deploy dichiarato positivo dall'utente, registrato sotto.
+- [x] Review finale dopo fix B1: MERGE SI; report M10_A2_1_MEMBERS_REVIEW_REPORT.md.
 
 SQL completo: [017_enable_member_field_visibility_rpc.sql](../database/migrations/017_enable_member_field_visibility_rpc.sql).
 Gate completato dopo presentazione SQL e conteggi, con approvazione utente
 esplicita separata. Non applicare nuovamente 015/016/017. Per nuovi target
 servono verifica storico/checksum e autorizzazione dedicata; la semplice
 citazione del gate in questa guida non e' approvazione.
+
+## Smoke Autenticato Dichiarato e Rilettura Post-Reset
+
+Fonte: dichiarazione dell'utente, ricevuta il 2026-09-22 (Europe/Rome).
+Non presentata come nuova prova HTTP effettuata da Codex.
+
+- [x] Accesso super_admin e /settings/field-visibility riusciti.
+- [x] Quattro schermate members modificabili, salvataggio e visibilita' corretti.
+- [x] Reset ai valori predefiniti riuscito; scritture dirette Data API negate.
+- [x] Nessun altro modulo integrato; nessuna modifica business involontaria osservata.
+
+Rilettura Codex esclusivamente SELECT alle 22:28 UTC del 21 settembre (22 in Italia),
+conteggi riconfermati alle 22:39 UTC:
+
+| Schermata | Override attivi | Righe archiviate |
+| --- | ---: | ---: |
+| members.list | 0 | 0 |
+| members.create | 0 | 10 |
+| members.edit | 0 | 0 |
+| members.detail | 0 | 0 |
+| Altri moduli | 0 | 0 |
+
+Dieci righe totali archiviate sono compatibili con il reset soft. Non sono un
+blocker e non vanno cancellate: il resolver ignora archived_at valorizzato.
+members resta a 105; tutti i conteggi business sopra invariati. La tabella non
+e' piu' vuota dopo lo smoke utente, ma non contiene alcun override attivo.
+Nessuna scrittura Supabase, pulizia o riesecuzione migration durante questa review.
+
+La preview di b6c753e risulta completata nei controlli GitHub/Vercel. Il browser
+Codex incontra Vercel Deployment Protection prima dell'app: non e' stato eseguito
+un nuovo smoke autenticato HTTP live da Codex. Valgono lo smoke dichiarato e le
+prove browser demo locali; test su Safari fisico e stress PostgREST non eseguiti.
 
 ## Limiti Residui
 
@@ -185,5 +229,5 @@ citazione del gate in questa guida non e' approvazione.
 - Lettura preferenze e modifica socio sono richieste separate: non si promette
   atomicita' fra un cambio preferenza concorrente e l'update business. La patch
   usa le preferenze rilette al submit e non azzera campi assenti; il record usa CAS.
-- Migration live verificata; rollout applicativo Production non dichiarato
-  completato. PR #52 ancora in bozza, review finale/smoke del deploy pendenti.
+- Migration live verificata; review positiva e smoke utente registrato. Il deploy
+  Production conseguente al merge va distinto da queste evidenze pre-merge.

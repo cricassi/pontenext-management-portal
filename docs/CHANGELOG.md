@@ -2,6 +2,25 @@
 
 # M10-A2.1 - Field Visibility Members Only (2026-09-21)
 
+## Smoke Utente e Review Finale PR #52 (2026-09-22 Europe/Rome)
+
+- Registrato lo smoke autenticato dichiarato dall'utente: configurazione dei
+  quattro screen soci, salvataggio, applicazione visible/hidden e reset riusciti;
+  scritture dirette negate e nessuna modifica business involontaria osservata.
+- Verifica read-only: zero override attivi, 10 righe archiviate members.create,
+  zero override di altri moduli; 105 soci e conteggi business invariati.
+- Risolto blocker B1: il CAS del socio prima proteggeva solo lettura/scrittura
+  durante il submit, non un modulo aperto prima della modifica di un altro admin.
+  Ora la server action riceve la versione del record all'apertura e il server la
+  verifica prima della patch e nell'UPDATE. Nessuna nuova migration o modifica live.
+- Test di preservazione/reset estesi; due regressioni CAS SQL e prova browser
+  con due schede demo positive. Lint, typecheck, build e 62/62 test PASS.
+- Creato M10_A2_1_MEMBERS_REVIEW_REPORT.md, esito finale **MERGE SI** dopo fix B1.
+  Distinti smoke dichiarato, test isolati e limiti del browser preview protetto.
+  L'utente autorizza Ready for review e merge solo dopo review positiva.
+- 015/016/017 invariate, registrate una volta; nessuna riesecuzione o scrittura
+  Supabase durante la review. Nessun altro modulo o M10-C avviato.
+
 ## Applicazione approvata 017 e verifica live (2026-09-22 Europe/Rome)
 
 - Ricevuta conferma `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`; applicata solo
