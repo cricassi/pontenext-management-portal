@@ -157,7 +157,11 @@ Non implementare:
 La configurazione dei campi e' una preferenza UI globale, non un permesso:
 soltanto visible/hidden e soltanto per campi facoltativi. Obbligatori e
 controlli condizionalmente necessari al workflow non possono essere nascosti.
-Admin attivi leggono/applicano; solo super_admin attivi modificano/reset.
+Admin attivi leggono. In A1 nessuno salva o resetta, neppure super_admin tramite
+Data API: lock correttivo 016 applicato e verificato live. La 015 resta
+immutata. In A2 solo super_admin attivi tramite RPC controllata con allowlist DB
+delle coppie integrate, estesa a ogni rollout; mai ripristinare grant diretti.
+L'autore viene risolto dalla sessione, non dal payload. A2 non e' implementata ora.
 
 Ordine operativo M10: **B -> A1 -> A2 -> C**. M10-A Field Visibility e'
 suddivisa in A1 Field Visibility Foundation (tabella/RLS/helper, registro,
@@ -174,7 +178,8 @@ cambiano report, export, email, segmentazioni o il formato import soci.
 ## BR-013 - Portabilita' Excel e soli nuovi soci, prevista M10-B/C
 
 Piano: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
-Funzioni non ancora implementate; precedente import multi-tabella annullato.
+M10-B completata e verificata post-merge; M10-C non implementata.
+Precedente import multi-tabella annullato.
 
 M10-B Complete Excel Export precede A1/A2 per rendere disponibile uno snapshot
 read-only prima delle modifiche ai form; M10-C New Members Excel Import viene

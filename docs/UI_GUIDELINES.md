@@ -329,7 +329,11 @@ Per dettagli completi vedere `docs/BRAND_UI_GUIDELINES.md`.
 
 ---
 
-# 18. Impostazioni M10, progettazione non implementata
+# 18. Impostazioni M10, foundation e rollout
+
+Stato 2026-09-21: B completata, pagina/catalogo A1 implementati su branch
+separato. Tutti i moduli sono non attivi: la configurazione effettiva delle
+schermate e' riservata al rollout A2. Import C non implementato.
 
 Riferimento: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
 

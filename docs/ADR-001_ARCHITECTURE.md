@@ -101,7 +101,8 @@ M4 non invia email. I promemoria scadenze sono rimandati a M7.
 
 ## AD-016 - M10 revisionato: visibilita' e portabilita'
 
-Decisione progettuale, non ancora implementata. Riferimento:
+Stato 2026-09-21: B completata; foundation A1 su branch separato con migration
+015 applicata dopo approvazione. A2 e C restano progettazione. Riferimento:
 [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
 La PR #46 chiusa senza merge e la successiva ipotesi di import multi-tabella
 sono superate da questo piano.
@@ -111,8 +112,11 @@ sono superate da questo piano.
   localStorage o permesso per colonna. Il dato nascosto resta disponibile ai
   processi autorizzati e non viene riscritto quando si modifica un altro campo.
 - `ui_field_visibility` e' l'unica nuova tabella prevista. Registro tipizzato
-  autorevole nel codice; default visible; RLS admin attivi in lettura e soli
-  super_admin attivi in scrittura, senza DELETE. `updated_by` riferisce
+  autorevole nel codice; default visible; RLS admin attivi in lettura. In A1
+  nessuna scrittura applicativa, neppure super_admin: lock correttivo 016
+  applicato dopo gate live (20260921205506); 015 invariata. In A2 solo RPC controllata,
+  allowlist DB delle coppie integrate e super_admin attivo; mai ripristinare
+  INSERT/UPDATE diretti. Nessun DELETE. `updated_by` riferisce
   `admin_users.id`, risolto tramite auth_user_id, non direttamente auth.uid().
 - M10-B esporta il workbook `pontenext-full-export-v1`: 13 tabelle business,
   README e METADATA, senza Auth o segreti. Non e' un backup completo e non e'

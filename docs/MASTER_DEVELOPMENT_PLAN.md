@@ -224,7 +224,10 @@ Release candidate.
 
 # M10 - Visibilita' globale e portabilita' Excel
 
-Stato: pianificazione revisionata, non implementata. La PR #46 e' annullata;
+Stato al 2026-09-21: B completata e verificata post-merge (PR #48/#49);
+A1 implementata su branch separato, migration 015 applicata con gate esplicito;
+A2/C non avviate. Vedere [M10_A1_CHECKLIST.md](M10_A1_CHECKLIST.md).
+La PR #46 e' annullata;
 non recuperare permission group, readonly, scope o configurazioni personali.
 
 Piano vincolante: [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md).
@@ -241,7 +244,11 @@ Quattro PR operative distinte, nel seguente ordine vincolante:
    `ui_field_visibility`, RLS, helper super_admin, registro, resolver e pagina
    `/settings/field-visibility`. Nessuna schermata business modificata e
    nessun intervento sui suoi mapper/update; controlli dei moduli non ancora attivi.
+   Lock 016 applicato dopo gate e review B1, versione 20260921205506: SELECT admin,
+   nessuna scrittura applicativa anche per super_admin; 015 non riapplicabile.
 3. **M10-A2 Field Visibility Rollout**: integrazione progressiva visible/hidden
+   tramite futura RPC controllata, allowlist DB delle coppie integrate e autore
+   risolto dalla sessione. Non ripristinare grant INSERT/UPDATE diretti. Integrazione
    nelle schermate, adeguamento mapper/update e test di non perdita dati prima
    di attivare ciascun modulo. Admin attivi applicano; solo super_admin configurano.
 4. **M10-C New Members Excel Import**: modello dedicato, dry-run e conferma;
@@ -262,7 +269,7 @@ snapshot transazionale, da eseguire in finestra senza scritture. Eventuali
 funzioni additive per la transazione C richiedono revisione e approvazione nella
 relativa PR; non sono implementate in B.
 
-Gate operativi: `MIGRATION M10-A LIVE APPROVATA` per la futura migration A1;
+Gate operativi: `MIGRATION M10-A LIVE APPROVATA` ricevuto il 2026-09-21 per la sola 015 A1;
 `IMPORT NUOVI SOCI LIVE APPROVATO` per il primo import live sul file/hash
 validato. La documentazione non costituisce autorizzazione a eseguirli.
 

@@ -1,6 +1,21 @@
 # M10 - Field Visibility and Excel Data Portability
 
-Data: 2026-09-19. Stato: **M10-B implementata su branch dedicato; A1/A2/C solo pianificate**.
+Piano del 2026-09-19. Aggiornamento operativo: 2026-09-21.
+**M10-B completata/verificata post-merge (PR #48/#49); M10-A1 implementata su
+branch separato; A2/C non avviate.**
+
+A1: migration `015_ui_field_visibility`, versione live `20260921195425`,
+applicata dopo gate esplicito. Registro versione 1 con 42 schermate e 116 coppie
+configurabili; tutte le schermate hanno `integrated: false`. Il catalogo e'
+consultabile, nessuna impostazione attivabile dalla pagina o dalle sue action.
+Review B1: la sola 015 permetteva scritture dirette super_admin. Lock 016
+applicato dopo gate separato, versione `20260921205506`, e verificato con Data API.
+In A1 nessun utente applicativo deve scrivere; futura A2 solo RPC controllata con
+allowlist DB delle coppie integrate, senza ripristinare grant INSERT/UPDATE diretti.
+Nessuna modifica a form, liste, dettagli, mapper o service business.
+Evidenze e limiti: [M10_A1_CHECKLIST.md](M10_A1_CHECKLIST.md).
+Le sezioni di analisi sotto conservano la baseline del piano del 19 settembre;
+per lo stato applicato fa fede questo aggiornamento e la checklist A1.
 
 Aggiornamento operativo M10-B: richiesta successiva al piano vieta migration e
 modifiche Supabase. Nessuna RPC snapshot introdotta; vedere sezione 14 e
@@ -193,7 +208,15 @@ tabella catalogo. Le coppie obbligatorie/non configurabili non sono ammesse.
 Una nuova coppia futura richiedera' aggiornamento coordinato di registro e CHECK;
 rinominare una label non cambia le chiavi.
 
-## 5. M10-A1: migration, RLS e salvataggio
+## 5. M10-A1: migration, RLS e lock delle scritture
+
+Decisione correttiva dopo review PR #50 (2026-09-21): A1 deve essere read-only
+anche tramite Data API per ogni utente applicativo, incluso super_admin.
+La 015 e' gia' applicata e non va modificata o rieseguita. La nuova 016 elimina
+le due policy di scrittura e revoca i relativi grant: applicata/verificata live,
+versione `20260921205506`, dopo gate `MIGRATION 016 LOCK M10-A1 APPROVATA`.
+Nessuna RPC implementata in A1. Questa decisione sostituisce la precedente
+predisposizione di scritture dirette, che non deve essere riattivata in A2.
 
 La futura migration contiene soltanto nuova tabella, vincoli/indici, trigger
 `updated_at`, abilitazione RLS, policy, helper super_admin sicuro e grant minimi.
@@ -204,9 +227,9 @@ e le clausole `FOR UPDATE` delle policy non sono modifiche dei dati business.
 | Operazione su ui_field_visibility | Autorizzazione |
 | --- | --- |
 | SELECT | Admin attivo, non archiviato |
-| INSERT | Super_admin attivo, non archiviato; autore corretto |
-| UPDATE, incluso reset logico | Super_admin attivo, non archiviato; autore corretto |
-| DELETE | Nessuna policy e nessun grant applicativo |
+| INSERT | Negato a tutti gli utenti applicativi in A1, anche super_admin |
+| UPDATE, incluso reset logico | Negato a tutti gli utenti applicativi in A1, anche super_admin |
+| DELETE / TRUNCATE | Nessun grant applicativo; nessuna policy DELETE |
 | anon | Nessuna policy/grant |
 
 Riutilizzare `app_private.is_active_admin()`. L'helper
@@ -216,23 +239,20 @@ EXECUTE minimo e SECURITY DEFINER solo se necessario. L'helper appartiene alla
 foundation A1; B deve funzionare senza attenderlo. Non sostituire la guard
 applicativa e non cambiare la lettura di admin_users.
 
-Salva opera sulla schermata selezionata. Dopo validazione, il service rilegge
-gli ID attivi dal DB e prepara un unico bulk upsert **delle sole configurazioni A**,
-con conflitto sulla PK id, non sull'indice parziale. Per righe nuove genera UUID
-server-side; conserva created_at delle righe esistenti e usa un timestamp
-server affidabile per quelle nuove. ID/autore/timestamp non arrivano dal client.
-L'indice parziale resta la protezione contro creazioni concorrenti della stessa
-coppia: conflitto -> rollback dell'intero bulk e richiesta di ricaricamento,
-senza retry che sovrascriva una configurazione non vista.
+Salva/reset rimangono disabilitati in A1, anche sul server. Per A2 progettare
+una RPC database dedicata, senza restituire INSERT/UPDATE diretti ad authenticated.
+La RPC dovra' controllare super_admin attivo e un'allowlist database delle sole
+coppie screen_key/field_key effettivamente integrate, estesa esplicitamente a ogni
+rollout. Il solo integrated=false nel frontend o nel service non e' sufficiente.
+Autore risolto da auth.uid() -> admin_users.auth_user_id -> admin_users.id;
+ID e timestamp gestiti dal server, mai accettati arbitrariamente dal client.
 
-La policy UPDATE ammette come righe sorgenti solo quelle non archiviate, mentre
-WITH CHECK consente al super_admin sia salvataggio sia archiviazione. Un reset
-concorrente non deve permettere al vecchio ID di essere riattivato dal bulk.
-Reset usa un solo UPDATE delle righe attive della schermata, soggetto a RLS.
-Testare in staging entrambi i casi di concorrenza con PostgREST: nessuna sequenza
-REST multi-step dichiarata atomicamente riuscita. Tra modifiche alle stesse
-righe ancora attive prevale l'ultimo salvataggio intero; mostrare conferma e orario.
-Questo uso di upsert riguarda soltanto ui_field_visibility: **in M10-C e' vietato**.
+La futura RPC dovra' garantire atomicita' per schermata, soli booleani, preservare
+created_at e non riattivare ID archiviati. Reset archivia soltanto override attivi.
+Conflitti concorrenti devono fallire senza salvataggi parziali o retry ciechi.
+Definire e verificare ownership, EXECUTE minimo e search_path sicuro nella futura
+migration separatamente approvata; nessuna service role nel browser. Testare anche
+chiamate RPC dirette e concorrenza PostgREST. Nessuna implementazione A2 in questa PR.
 
 ## 6. Registro e inventario delle schermate
 
@@ -315,7 +335,9 @@ Route definitiva `/settings/field-visibility`: coerente con `/settings/roles`
 e `/settings/membership-plans` e piu' esplicita di `/settings/fields`.
 `requireActiveAdmin` prima di ogni fetch; lettura per admin attivi, modifiche
 con ulteriore controllo super_admin server-side. Il normale admin vede la
-configurazione ma non puo' salvarla o resettarla.
+configurazione ma non puo' salvarla o resettarla. In A1 neppure il super_admin
+puo' salvare: lock database 016 oltre al gate applicativo. In A2 la sola RPC
+controllata autorizzera' le coppie integrate, senza riaprire i grant diretti.
 
 La pagina viene creata in A1. Fino all'integrazione A2 di una schermata, il suo
 catalogo e' consultabile ma switch, Salva e Ripristina per quella schermata
@@ -945,6 +967,13 @@ verificare RLS e chiedere esattamente:
 Senza quella conferma Codex non applica la migration. Eventuali funzioni future
 B/C richiedono proprie revisioni e approvazioni, non sono autorizzate da questa frase.
 Il nome del gate M10-A resta invariato e si applica alla migration di A1.
+Quel gate ha autorizzato la sola 015 gia' registrata. Il lock correttivo 016
+richiede una nuova conferma esatta `MIGRATION 016 LOCK M10-A1 APPROVATA`, dopo
+SQL completo e conteggi: non e' autorizzato dal gate precedente o dalla sua
+citazione in un piano. Non riapplicare la 015 sul live.
+Gate 016 ricevuto esplicitamente il 2026-09-21, dopo presentazione SQL/conteggi;
+migration applicata una sola volta e test Data API 403/42501 superati. Neppure
+la 016 deve essere rieseguita al merge/deploy.
 A2 non ripete la migration foundation; eventuali necessita' aggiuntive richiedono
 decisione separata. L'ordine B -> A1 non autorizza migration o export live automatici.
 

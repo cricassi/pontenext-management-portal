@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CreditCard, FileSpreadsheet, Tags } from "lucide-react";
+import { CreditCard, FileSpreadsheet, SlidersHorizontal, Tags } from "lucide-react";
 import { requireActiveAdmin } from "@/services/admin-auth.service";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +23,20 @@ export default async function SettingsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Visibilità dei campi</CardTitle>
+            <CardDescription>Catalogo delle preferenze globali. Attivazione dei moduli prevista in M10-A2.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link href="/settings/field-visibility">
+                <SlidersHorizontal aria-hidden="true" className="mr-2 size-4" />
+                Apri catalogo campi
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
         {admin.role === "super_admin" ? (
           <Card>
             <CardHeader>

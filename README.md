@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M9 - Final Hardening
+M10-A1 - Field Visibility Foundation
 ```
 
 Milestone completate o avviate:
@@ -46,6 +46,26 @@ Milestone completate o avviate:
 - M8: report operativi ed export CSV/XLSX.
 - UI Brand Refresh: identita' visiva Ponte Next applicata a login, layout admin e dashboard.
 - M9: hardening finale, verifiche live, backup/migrazione e documentazione operativa.
+- M10-B: export Excel completo, verificato post-merge con PR #49.
+- M10-A1: foundation visibilita' globale e catalogo Impostazioni; nessun campo business nascosto.
+
+### M10-A1
+
+`/settings/field-visibility` e' leggibile dagli admin attivi. Registro tipizzato,
+resolver in batch e controlli server super_admin predisposti; switch, Salva e
+Ripristina sono disabilitati per tutte le schermate non integrate. Nessun form,
+elenco, dettaglio o update business e' stato modificato. A2/C non avviate.
+
+Migration additiva `015_ui_field_visibility.sql` applicata a PonteNext il
+2026-09-21 dopo approvazione esplicita; nessun seed o nuova env. Su un ambiente
+nuovo l'ordine previsto e' 001-010, poi 015 e il lock correttivo 016,
+saltando i placeholder 011-014. La 016 e' applicata live, versione
+`20260921205506`, dopo il gate `MIGRATION 016 LOCK M10-A1 APPROVATA`.
+Serve a rendere A1 read-only anche per super_admin via Data API. A2 richiedera'
+una RPC controllata con allowlist, non il ripristino delle scritture dirette.
+Non riapplicare migration gia' registrate. Dettagli e verifiche:
+[M10_A1_CHECKLIST.md](docs/M10_A1_CHECKLIST.md) e
+[MIGRATION_AND_BACKUP.md](docs/MIGRATION_AND_BACKUP.md).
 
 M2 include:
 
@@ -158,7 +178,7 @@ prefisso `NEXT_PUBLIC_`, non stampare la chiave nei log e non committare valori
 reali. `EMAIL_FROM` deve corrispondere a un mittente autorizzato/verificato in
 Resend prima dell'invio reale.
 
-### 3. Database fino a M9
+### 3. Database fino a M10-A1
 
 Applicare le migration in ordine:
 
@@ -173,7 +193,14 @@ database/migrations/007_sponsors.sql
 database/migrations/008_events.sql
 database/migrations/009_sponsor_contributions.sql
 database/migrations/010_email.sql
+database/migrations/015_ui_field_visibility.sql
+database/migrations/016_lock_ui_field_visibility_foundation.sql
 ```
+
+Saltare i placeholder 011-014. La 015 e' gia' applicata su PonteNext e non deve
+essere modificata o riapplicata. Anche la 016 e' gia' applicata dopo approvazione
+separata; il merge/deploy non deve rieseguirla. Questo elenco serve
+per ricostruire un ambiente, non per riapplicare lo storico al progetto esistente.
 
 Applicare poi i seed richiesti dalle milestone:
 
@@ -195,8 +222,8 @@ La migration `010_email.sql` crea le tabelle email M7 e abilita RLS admin-only.
 
 M8, Brand Refresh e M9 non introducono migration.
 
-Le migration `011` e successive sono placeholder per milestone future e non
-vanno applicate durante M9.
+Solo `011`-`014` sono placeholder e non vanno applicate. La 015 e' la foundation
+A1 gia' applicata; la 016 e' il lock correttivo gia' applicato e verificato live.
 
 ### 4. Bootstrap primo super_admin
 

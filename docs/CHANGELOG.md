@@ -1,5 +1,59 @@
 ﻿# CHANGELOG.md
 
+# M10-A1 - Field Visibility Foundation (2026-09-21)
+
+## Correzione B1 successiva alla review PR #50: lock 016 preparato
+
+### Applicazione approvata e review finale positiva
+
+- Ricevuta conferma `MIGRATION 016 LOCK M10-A1 APPROVATA`; applicata solo
+  `016_lock_ui_field_visibility_foundation`, versione live `20260921205506`.
+  Nessuna modifica/riesecuzione della 015; nessun dato o tabella business modificati.
+- RLS attiva, sola policy SELECT admin attivi, authenticated senza privilegi
+  di scrittura. Data API con JWT super_admin: SELECT 200, INSERT e PATCH 403/42501;
+  anon 401/42501. Nessuna service role, configurazione vuota e conteggi invariati.
+- Rieseguiti lint, typecheck, build, test foundation 13/13, SQL isolato 12/12,
+  export M10-B 16/16; browser catalogo/login/controlli disabilitati e responsive base.
+- B1 risolto. **Review finale: MERGE SI**. PR #50 aggiornata senza merge automatico;
+  A2/C non avviate. Guide allineate allo storico live 001-010, 015, 016.
+
+### Preparazione precedente al gate (storico)
+
+- Preparata `016_lock_ui_field_visibility_foundation.sql`: solo policy/grant
+  della configurazione, SELECT admin attivi conservata, scritture authenticated
+  negate anche al super_admin. Nessun DML, nuova funzione o modifica business.
+- La 015 applicata resta invariata e non viene rieseguita sul live. La 016 e'
+  **non applicata live**, in attesa del gate `MIGRATION 016 LOCK M10-A1 APPROVATA`
+  dopo presentazione SQL/conteggi. MERGE NO finche' non viene validato il lock live.
+- Aggiunti test del contratto SQL e del lock in PostgreSQL isolato: 13/13 test
+  foundation e 10 scenari SQL con due wrapper (12/12 runner), inclusa idempotenza.
+- Lint/typecheck/build e diff-check passati; 16/16 regressioni export M10-B.
+  Baseline live riletta solo in lettura: 14 tabelle preesistenti con conteggi
+  invariati, ui_field_visibility vuota e 016 assente dallo storico.
+- Aggiornati review, checklist, modello dati, backup/restore e README. Strategia
+  A2: RPC controllata e allowlist DB delle coppie integrate, mai grant diretti.
+- Nessun codice applicativo, dati live, Auth, env o Vercel modificati; A2/C non
+  avviate. Nessun merge automatico.
+
+## Implementazione iniziale, prima della review
+
+- Mergiata PR documentale #49 dopo esito positivo M10-B, commit `63283c9`.
+- Creata/applicata la sola migration additiva `015_ui_field_visibility`,
+  versione live `20260921195425`, su PonteNext dopo gate utente esplicito.
+  Nuova tabella vuota, RLS, helper super_admin sicuro, grant minimi, CHECK
+  coppie configurabili, unicita' parziale, FK autore e trigger updated_at.
+- Registro tipizzato versione 1: 42 schermate, 116 coppie configurabili;
+  resolver in batch con cache request-scoped, fallback esplicito e guard.
+- Pagina `/settings/field-visibility` e link in Impostazioni; lettura admin,
+  configurazione solo super_admin. Tutte le schermate non integrate: comandi
+  disabilitati e richieste server rifiutate prima delle query di configurazione.
+- Predisposti bulk upsert atomico della sola configurazione e reset soft;
+  test isolati di autorizzazione, autore, vincoli, concorrenza/stale ID.
+- Nessun campo business nascosto, nessuna modifica a form/liste/dettagli,
+  mapper/update, Auth, env, provider o dati live. Nessun import, gruppo o readonly.
+- Aggiornati checklist, guida backup/restore, modello dati e stato del piano.
+  Conteggi delle 14 tabelle preesistenti invariati dopo migration.
+
 # M10-B - Complete Excel Export (2026-09-19)
 
 - Ricevuta conferma utente dello smoke test autenticato su Vercel Preview PR #48:
