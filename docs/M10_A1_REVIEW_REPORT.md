@@ -7,7 +7,87 @@ Commit applicativo esaminato: `cb1886de541e387c261206d24a930faad68b3495`.
 Progetto live: **PonteNext**, `uhxfpsamenjhyrfgwckw`, ACTIVE_HEALTHY,
 PostgreSQL 17.6.1.127. PR aperta e non mergiata durante la review.
 
-## 1. Esito complessivo e decisione
+## Aggiornamento: correzione B1 preparata, in attesa del gate live
+
+Decisione dell'utente: A1 interamente read-only anche per super_admin.
+Preparata `016_lock_ui_field_visibility_foundation.sql`, senza modificare o
+rieseguire la 015. Il SQL elimina le due policy di scrittura, revoca i privilegi
+di scrittura e mantiene SELECT/RLS admin attivi. Non contiene DML, nuove funzioni,
+RPC o interventi su tabelle business. Nessun codice applicativo modificato.
+
+**Decisione attuale: MERGE NO, in attesa di approvazione e validazione live 016.**
+La 016 non e' applicata e non e' autorizzata dalla sola citazione del gate nella
+richiesta. Serve la conferma `MIGRATION 016 LOCK M10-A1 APPROVATA` dopo SQL completo
+e conteggi pre-migration. Nessun merge automatico.
+
+Test della correzione: 13/13 foundation; 10 scenari SQL con due wrapper (12/12).
+Il contratto SQL accetta soltanto i sette statement previsti. Nel DB isolato,
+admin e super_admin possono SELECT e ricevono 42501 su INSERT/UPDATE/DELETE/TRUNCATE.
+Anon negato; inactive/archived/non-admin non vedono neppure una riga sintetica
+esistente. Idempotenza, preservazione dati/struttura/helper/policy estranee verificate.
+Le fixture owner-only e la riesecuzione della 015 sono esclusivamente in database
+nuovi in memoria, mai sul live. Non acquisiti workbook reali o segreti.
+
+Restano da eseguire dopo il gate: applicazione sola 016, controllo storico,
+grant/policy, INSERT/PATCH Data API con JWT super_admin senza service role,
+tabella configurazione vuota e conteggi delle 14 tabelle preesistenti invariati.
+I controlli browser riportati sotto sono quelli della review iniziale; nessuna
+modifica UI in questa correzione. Non sono presentati come collaudo live post-016.
+
+Strategia futura A2: niente ripristino dei grant INSERT/UPDATE diretti. RPC
+dedicata, allowlist database delle coppie realmente integrate, super_admin attivo,
+autore risolto da auth.uid() -> admin_users.auth_user_id -> admin_users.id.
+Ogni rollout estendera' esplicitamente l'allowlist dopo i test di non perdita dati.
+Questa RPC non viene implementata ora; service/action di scrittura predisposti
+non possono essere riattivati senza adeguamento al nuovo confine database.
+
+### Verifiche rieseguite sulla correzione, prima del gate
+
+| Verifica | Esito |
+| --- | --- |
+| npm.cmd run lint | PASS, exit 0; anche esecuzione diagnostica --debug PASS |
+| npx.cmd --no-install tsc --noEmit | PASS, exit 0 |
+| npm.cmd run build | PASS, exit 0; tutte le route conservate |
+| Foundation / SQL isolato / export M10-B | PASS, rispettivamente 13/13, 12/12, 16/16 |
+| git diff --check | PASS |
+| Diff src, package e 015 rispetto al commit di review 7fbad39 | Vuoto |
+| Supabase live | Sole letture di storico, grant, policy e conteggi |
+| Data API POST/PATCH super_admin dopo 016 | NON ESEGUITO: attende il gate live |
+
+Il primo lint nel sandbox e' rimasto senza output ed e' stato interrotto dopo
+identificazione del solo processo ESLint. La riesecuzione autorizzata e' terminata
+con exit 0; un ulteriore giro diagnostico e' passato senza --fix. Nessun processo
+di verifica lasciato attivo. Build con worker autorizzati, nessun cambio configurazione.
+
+Baseline live pre-016 riletta il **2026-09-21 alle 20:48:12 UTC**:
+
+| Tabella | Righe |
+| --- | ---: |
+| admin_users | 2 |
+| members | 105 |
+| roles | 7 |
+| member_roles | 3 |
+| membership_plans | 3 |
+| memberships | 6 |
+| payments | 2 |
+| sponsors | 2 |
+| sponsor_contributions | 2 |
+| events | 2 |
+| event_sponsors | 0 |
+| email_templates | 1 |
+| email_campaigns | 0 |
+| email_campaign_recipients | 0 |
+| ui_field_visibility | 0 |
+
+Storico ancora 001-010 e sola 015 `20260921195425`, nessuna 016. RLS attiva;
+ancora tre policy della 015 e grant SELECT/INSERT/UPDATE authenticated, nessun
+ACL di colonna separato. Conteggi uguali alla review iniziale. Non equivalgono
+a un confronto di tutti i valori; non sono state eseguite mutation live.
+Rileggere la baseline immediatamente prima dell'eventuale applicazione approvata.
+
+Le sezioni seguenti conservano le evidenze della review iniziale pre-correzione.
+
+## 1. Esito complessivo della review iniziale
 
 **Decisione finale: MERGE NO rispetto ai criteri di questa review.**
 
@@ -68,8 +148,8 @@ Per rimuovere il blocker occorre una decisione esplicita:
    diretta consentita al super_admin dalla RLS, senza effetto sui moduli A1.
    Questa alternativa cambia il criterio di accettazione e non e' assunta qui.
 
-**Non modificare retroattivamente la 015.** Nessuna 016 creata o applicata,
-nessun fix SQL o bypass con service role introdotto durante questa review.
+**Non modificare retroattivamente la 015.** Nella review iniziale nessuna 016
+era stata creata o applicata; lo stato della correzione e' nell'aggiornamento iniziale.
 Un fix soltanto nel codice Next.js non chiuderebbe il percorso diretto.
 
 ## 3. Problemi importanti non bloccanti
@@ -260,10 +340,11 @@ dovra' aggiungere test negativi coerenti per gli accessi diretti in A1.
 
 ## 9. Azione richiesta prima del merge
 
-Risolvere B1 tramite approvazione di un intervento SQL separato oppure tramite
-accettazione esplicita del confine applicativo gia' documentato. Fino a questa
-decisione **non attestare "Merge si"** rispetto alla richiesta attuale.
+L'utente ha scelto il lock assoluto: la precedente alternativa di accettare le
+scritture dirette non e' piu' proposta. Applicare solo la 016 dopo il gate,
+verificare il rifiuto Data API e aggiornare l'esito. Fino ad allora **MERGE NO**.
 
-La review aggiunge soltanto questo report alla PR #50. Nessun codice, migration,
-configurazione Supabase/Vercel o dato live applicativo modificato. La 015 resta
-immutata e non deve essere riapplicata al merge. M10-A2 e M10-C restano ferme.
+Il primo commit di review era solo documentale; la correzione aggiunge SQL 016,
+test isolati e documentazione. Nessun codice applicativo, configurazione Vercel
+o dato live modificato. La 015 resta immutata e non deve essere riapplicata.
+M10-A2 e M10-C restano ferme. Nessun merge automatico della PR #50.

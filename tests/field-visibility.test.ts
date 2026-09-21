@@ -48,6 +48,20 @@ test("registry: every business screen inactive; unique optional pairs match SQL 
   assert.deepEqual([...sql.matchAll(/alter table ([\w.]+)/g)].map((match) => match[1]), ["public.ui_field_visibility"]);
 });
 
+test("016 contains only transaction boundaries and configuration policy/grant changes", () => {
+  const sql = readFileSync("database/migrations/016_lock_ui_field_visibility_foundation.sql", "utf8");
+  const statements = sql.replace(/--[^\n]*/g, "").split(";").map((statement) => statement.trim().replace(/\s+/g, " ")).filter(Boolean);
+  assert.deepEqual(statements, [
+    "begin",
+    "drop policy if exists ui_field_visibility_insert_super_admin on public.ui_field_visibility",
+    "drop policy if exists ui_field_visibility_update_super_admin on public.ui_field_visibility",
+    "revoke insert, update, delete, truncate, references, trigger on table public.ui_field_visibility from authenticated",
+    "revoke all on table public.ui_field_visibility from public, anon",
+    "grant select on table public.ui_field_visibility to authenticated",
+    "commit",
+  ]);
+});
+
 test("default, active override, archive, required and malformed fallback", () => {
   const resolved = resolveVisibilityRows(["members.edit"], [row()]);
   assert.equal(resolved.screens[0].fields.find((field) => field.fieldKey === "email")!.isVisible, false);

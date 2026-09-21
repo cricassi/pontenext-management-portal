@@ -518,10 +518,13 @@ La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gest
 013_rls_policies.sql
 014_seed.sql
 015_ui_field_visibility.sql
+016_lock_ui_field_visibility_foundation.sql
 ```
 
 Ordine operativo live al 2026-09-21: 001-010, poi 015. I file 011-014
 sono placeholder da saltare; dettaglio foundation M10-A1 nella sezione 11.
+La 016 e' preparata/testata in isolamento, non applicata live: richiede il gate
+`MIGRATION 016 LOCK M10-A1 APPROVATA`. Non modifica ne' riapplica la 015.
 
 Nota M5: la migration applicata `007_sponsors.sql` crea sia `sponsors` sia
 `sponsor_contributions`, senza `event_id`.
@@ -587,7 +590,7 @@ all'inizio, default visible da registro codice; salvare stati espliciti true/fal
 reset tramite archiviazione del solo override. Coppie configurabili validate
 nel registro e tramite CHECK coerente. Nessun permission group/scope/readonly.
 
-RLS: SELECT per admin attivi, INSERT/UPDATE solo super_admin attivi, autore
+Stato storico della sola 015: SELECT per admin attivi, INSERT/UPDATE solo super_admin attivi, autore
 verificato, nessuna policy DELETE/anon. updated_by non e' Auth UUID: risolvere
 `admin_users.auth_user_id = auth.uid()` e usare `admin_users.id`.
 Migration `database/migrations/015_ui_field_visibility.sql` solo additiva:
@@ -599,6 +602,22 @@ nessun DELETE/TRUNCATE. UPDATE USING limita le righe sorgenti a non archiviate,
 WITH CHECK permette il reset logico con autore corretto; vietata la riattivazione
 del vecchio ID. FK updated_by indicizzata e trigger set_updated_at esistente.
 CHECK statico: 116 coppie configurabili, parita' col registro versione 1.
+
+### Lock correttivo 016, non ancora applicato live
+
+`016_lock_ui_field_visibility_foundation.sql` tocca soltanto policy e privilegi
+di ui_field_visibility: elimina le policy INSERT/UPDATE, revoca ad authenticated
+INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER, mantiene SELECT e revoca tutto
+ad anon/PUBLIC. RLS e policy SELECT admin attivi restano inalterate. Nessun
+INSERT/UPDATE/DELETE/TRUNCATE di dati, nuova funzione o intervento su altre tabelle.
+Stato atteso dopo 016: tutti gli utenti applicativi, anche super_admin, read-only;
+nessun override salvabile tramite Data API. Non modifica i privilegi infrastrutturali
+del proprietario database; l'app non usa service role per aggirare il blocco.
+
+In A2 non ripristinare grant diretti. Progettare una RPC controllata con allowlist
+DB delle sole coppie integrate, super_admin attivo e updated_by risolto dal proprio
+auth.uid() tramite admin_users.auth_user_id. Estendere esplicitamente l'allowlist
+per ogni rollout. RPC non implementata nella 016; A2 richiede approvazione separata.
 Nessuna schermata business applica ancora questi override: e' lavoro A2.
 
 ## 11.2 Export e import non modificano il modello business

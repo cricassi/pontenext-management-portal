@@ -6,8 +6,10 @@ Progetto: **PonteNext**, `uhxfpsamenjhyrfgwckw`, PostgreSQL 17, ACTIVE_HEALTHY.
 
 ## Esito e confini
 
-Foundation implementata e verificata, pronta alla review; merge/post-merge A1
-ancora da eseguire. **Non e' il completamento di M10-A: A2 non e' iniziata.**
+Foundation implementata; la review PR #50 ha rilevato il blocker B1 sulle
+scritture Data API. Correzione `016` preparata e testata in isolamento, **non
+ancora applicata live**. Esito merge: **NO**, in attesa del gate e del collaudo.
+**Non e' il completamento di M10-A: A2 non e' iniziata.**
 Nessun form, lista, dettaglio, mapper/update o validatore business modificato.
 L'unico file applicativo preesistente modificato e' l'indice Impostazioni,
 per aggiungere il link al catalogo. Nessun import C, gruppo, scope o readonly.
@@ -18,7 +20,8 @@ per aggiungere il link al catalogo. Nessun import C, gruppo, scope o readonly.
 - [x] Registro tipizzato versione 1, 42 schermate, 116 coppie configurabili.
 - [x] Resolver server-only in batch, default visible e diagnostica senza valori business.
 - [x] Pagina protetta `/settings/field-visibility`, link da Impostazioni.
-- [x] Lettura admin attivi, modifiche riservate a super_admin attivi.
+- [x] Lettura admin attivi; action di modifica bloccate anche per super_admin.
+- [ ] Blocco scritture dirette Data API: richiede applicazione approvata della 016.
 - [x] Tutte le schermate `integrated: false`: switch, Salva e Ripristina disabilitati.
 - [x] Rifiuto server save/reset su schermate non integrate prima di query configurazione.
 - [x] Nessun consumo del resolver nei moduli business o export.
@@ -26,7 +29,24 @@ per aggiungere il link al catalogo. Nessun import C, gruppo, scope o readonly.
 - [ ] Review finale e merge della PR A1.
 - [ ] Verifica post-merge A1 prima dell'avvio A2.
 
-## Migration e validazione live
+## Correzione B1: lock 016
+
+- [x] `015_ui_field_visibility.sql` invariata e mai rieseguita sul live.
+- [x] `016_lock_ui_field_visibility_foundation.sql`: solo policy/privilegi della tabella configurazione.
+- [x] Rimozione policy INSERT/UPDATE; authenticated mantiene solo SELECT, anon/PUBLIC nessun accesso.
+- [x] Nessun DML, RPC, funzione o modifica business; RLS e SELECT policy conservate.
+- [x] Test isolati: admin e super_admin leggono, scritture ricevono SQLSTATE 42501.
+- [x] Idempotenza e preservazione di righe, struttura, helper e oggetti estranei verificate in isolamento.
+- [ ] Gate esatto dopo SQL completo/conteggi: `MIGRATION 016 LOCK M10-A1 APPROVATA`.
+- [ ] Applicazione della sola 016, verifica storico/grant/policy e conteggi pre/post.
+- [ ] INSERT/PATCH Data API con JWT super_admin negati, senza service role.
+- [ ] Review finale aggiornata dopo il collaudo live; nessun merge automatico.
+
+Il testo del gate citato nelle istruzioni non costituisce approvazione.
+Fino all'applicazione della 016 il live conserva i privilegi della 015 descritti
+sotto; il blocker non e' ancora chiuso sul progetto PonteNext.
+
+## Migration 015 e validazione live storica
 
 Ricevuto dall'utente il gate esatto **MIGRATION M10-A LIVE APPROVATA**, dopo
 la presentazione del SQL completo e del perimetro additivo. Applicata tramite
@@ -100,10 +120,14 @@ applicato e dall'assenza di operazioni live di modifica durante il collaudo.
 - Revalidate della sola pagina Impostazioni. A2 aggiungera' le viste integrate;
   nessuna invalidazione o applicazione prematura ai moduli business.
 
-La Data API consente al super_admin le scritture di configurazione autorizzate
-dalla RLS; il flag di integrazione e' un gate applicativo, non una nuova permission
-DB. Anche una preferenza scritta direttamente non nasconde campi in A1, poiche'
-nessuna schermata business consuma il resolver. Non promettere riservatezza dei dati.
+Le scritture dirette consentite dalla 015 sono il blocker B1, non un comportamento
+accettabile per A1. La 016 deve negarle anche al super_admin autenticato.
+Le funzioni upsert/reset predisposte restano irraggiungibili con integrated=false;
+non riattivarle direttamente in A2. La futura A2 richiede una RPC controllata,
+allowlist database delle sole coppie integrate, verifica super_admin attivo e
+updated_by risolto da auth.uid() tramite admin_users.auth_user_id. Ogni rollout
+estendera' esplicitamente l'allowlist; non ripristinare INSERT/UPDATE diretti.
+Nessuna RPC implementata in A1 e nessuna service role nel browser.
 
 ## Test automatizzati
 
@@ -118,8 +142,16 @@ node --require ./tests/register-typescript.cjs ./tests/field-visibility-db.test.
 node --require ./tests/register-typescript.cjs ./tests/data-export.test.ts
 ```
 
-Esiti: lint, typecheck e build superati; **12/12** test foundation,
-**7 scenari SQL** piu' wrapper (8/8 nel runner), **16/16** regressioni M10-B.
+Esiti della review iniziale: lint, typecheck e build superati; 12/12 test
+foundation, 7 scenari SQL piu' wrapper, 16/16 regressioni M10-B. La correzione
+016 aggiunge il contratto SQL esatto e tre scenari di lock: **13/13** foundation
+e **10 scenari SQL piu' due wrapper (12/12 runner)**, superati in isolamento.
+Le prove storiche della sola 015 restano separate da quelle dello stato 015+016.
+Rieseguiti sulla correzione: lint, typecheck, build e git diff --check PASS;
+regressione M10-B **16/16 PASS** con soli dati sintetici. Nessun nuovo export live.
+Conteggi pre-016 riletti alle 20:48:12 UTC del 2026-09-21: identici alla tabella
+storica sopra, ui_field_visibility = 0. Nessuna 016 nello storico live.
+Dettagli e limiti del collaudo corrente in M10_A1_REVIEW_REPORT.md.
 Build include `/settings/field-visibility` dinamica e conserva tutte le route.
 Il primo processo lint rimasto fermo e' stato interrotto e rilanciato con
 `npm.cmd run lint`, terminato con exit 0. Build eseguita con permesso di avvio worker.
@@ -175,7 +207,8 @@ Safari reale: il collaudo fisico iPhone resta una verifica aggiuntiva.
 
 ## Rilievi e prossimi gate
 
-Nessun blocker A1 rilevato. Restano documentati, senza interventi fuori scope:
+**B1 ancora aperto sul live finche' la 016 non e' approvata/applicata/verificata.**
+Gli altri rilievi restano documentati, senza interventi fuori scope:
 
 - Security Advisor: warning Auth per
   [protezione password compromesse disabilitata](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).

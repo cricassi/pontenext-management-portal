@@ -144,6 +144,7 @@ database/migrations/008_events.sql
 database/migrations/009_sponsor_contributions.sql
 database/migrations/010_email.sql
 database/migrations/015_ui_field_visibility.sql
+database/migrations/016_lock_ui_field_visibility_foundation.sql
 ```
 
 I file `011_audit_logs.sql`, `012_views.sql`, `013_rls_policies.sql` e `014_seed.sql` sono placeholder/futuri nel repository e non risultano applicati al database live.
@@ -154,6 +155,13 @@ Ordine effettivo: **001-010, poi 015**, saltando i quattro placeholder.
 Non rinumerare lo storico e non riapplicare la 015 dove e' gia' registrata.
 La sola tabella nuova e' `ui_field_visibility`, inizialmente vuota: nessun seed.
 RLS e helper super_admin sono nella stessa migration; nessun ALTER delle tabelle business.
+
+La `016_lock_ui_field_visibility_foundation` e' preparata e testata in isolamento,
+**non ancora applicata live**. Modifica soltanto policy/grant di ui_field_visibility,
+non righe o schema business. Richiede il gate `MIGRATION 016 LOCK M10-A1 APPROVATA`
+dopo SQL completo e conteggi. Sul live esistente applicare solo 016 dopo approvazione:
+non modificare o rieseguire 015. Su un target nuovo l'ordine completo previsto e'
+001-010 -> 015 -> 016. Saltare 011-014; niente esecuzione automatica al merge/deploy.
 
 ## 5. Seed necessari
 
@@ -254,7 +262,7 @@ Procedura:
 
 1. Creare o selezionare ambiente target.
 2. Verificare che il target sia quello giusto.
-3. Applicare migration operative `001`-`010`, poi `015`, senza i placeholder `011`-`014`.
+3. Su target nuovo applicare `001`-`010`, poi `015` e il lock `016`, senza i placeholder `011`-`014`; rispettare il gate live della 016 ancora pendente.
 4. Applicare seed.
 5. Ripristinare o ricreare gli utenti Supabase Auth necessari, con procedura supportata.
 6. Ripristinare `admin_users`, riallineando `auth_user_id` agli utenti Auth target.
@@ -371,7 +379,7 @@ Verifiche obbligatorie:
 - [ ] Identificato ambiente target.
 - [ ] Backup creato e cifrato.
 - [ ] Commit applicativo annotato.
-- [ ] Migration `001`-`010`, poi `015`, applicate in ordine.
+- [ ] Target nuovo: migration `001`-`010`, poi `015` e lock `016` in ordine, con approvazioni necessarie; nessuna riesecuzione su storico esistente.
 - [ ] Placeholder `011`-`014` non applicati.
 - [ ] Seed ruoli applicato.
 - [ ] Seed piani iscrizione applicato.
@@ -434,8 +442,9 @@ di attivare le preferenze. Risolvere updated_by da
 admin_users.id tramite auth_user_id, non scrivere auth.uid() nella FK. Ordine
 live attuale `001`-`010`, poi `015`; `011`-`014` sono placeholder. Eventuali nuove
 migration/funzioni additive richiedono approvazione e aggiornamento di questa
-guida; B non ne aggiunge. A2 riusa la foundation e non richiede nuove migration
-salvo necessita' separatamente documentata/approvata.
+guida; B non ne aggiunge. La 016 e' preparata, non ancora live. A2 richiedera'
+una RPC dedicata e allowlist database approvate separatamente: non riaprire i
+grant diretti sulla tabella e non riattivare il vecchio upsert/reset dal service.
 
 Il piano C propone una futura chiave server-only MEMBERS_IMPORT_RECEIPT_SECRET
 per ricevute dry-run firmate: non esiste una nuova configurazione in questa PR.
@@ -509,10 +518,25 @@ approvata, mai disabilitando RLS per il runtime. Non usare un export Excel come 
 
 Verificare la versione del registro nel codice e il CHECK SQL insieme: una
 nuova coppia supportata richiede una migration dedicata. Cambio di label non
-deve cambiare chiavi. RLS attiva, SELECT admin attivi, INSERT/UPDATE super_admin
-attivi con autore corretto, nessun grant DELETE/TRUNCATE e nessun accesso anonimo.
+deve cambiare chiavi. Dopo il lock 016 lo stato atteso e': RLS attiva, SELECT
+admin attivi, nessun grant di scrittura authenticated anche per super_admin,
+nessun accesso anonimo e nessuna policy INSERT/UPDATE/DELETE.
+Un dump precedente alla 016 puo' contenere i vecchi grant/policy: riconciliare
+storico e permessi con il lock approvato prima di riaprire il runtime A1.
 Tutte le schermate restano `integrated: false` in A1: non abilitarle durante
 restore o deploy. Il bootstrap admin e le variabili ambiente non cambiano.
+
+### 17.3 Scritture future A2
+
+Non ripristinare INSERT/UPDATE diretti. La futura RPC di configurazione dovra'
+autorizzare soltanto super_admin attivi e coppie screen_key/field_key presenti in
+una allowlist database delle integrazioni completate. Ogni rollout estendera'
+esplicitamente tale allowlist dopo test di non perdita dati. L'autore non arriva
+dal client: risolvere admin_users.id tramite admin_users.auth_user_id = auth.uid().
+Progettare privilegi minimi della funzione, EXECUTE ristretto, search_path sicuro
+e verifiche anche sulle chiamate RPC dirette; nessuna service role nel browser.
+L'implementazione e la relativa migration richiederanno una review e un gate
+separati. La 016 non introduce RPC o altri percorsi di scrittura.
 
 Dopo restore eseguire login admin reale e aprire `/settings/field-visibility`:
 catalogo disponibile senza warning DB, stato non attivo e pulsanti disabilitati.

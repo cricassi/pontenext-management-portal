@@ -19,7 +19,7 @@ const adminId = (index: number) => `10000000-0000-4000-8000-${String(index).padS
 const policyId = "30000000-0000-4000-8000-000000000001";
 const sqlState = (code: string) => (error: unknown) => !!error && typeof error === "object" && "code" in error && error.code === code;
 
-test("M10-A1 SQL, RLS and atomicity on isolated PostgreSQL with synthetic identities", async (t) => {
+async function createFixture(): Promise<TestDatabase> {
   const db = new PGlite();
   try {
     await db.exec(`
@@ -43,6 +43,16 @@ test("M10-A1 SQL, RLS and atomicity on isolated PostgreSQL with synthetic identi
       await db.query("insert into auth.users values ($1)", [uid(index)]);
       if (index !== 6) await db.query("insert into public.admin_users (id,auth_user_id,full_name,email,role,status,archived_at) values ($1,$2,'Demo',$3,$4,$5,$6)", [adminId(index), uid(index), `demo${index}@example.invalid`, index === 2 ? "admin" : "super_admin", index === 3 ? "inactive" : "active", index === 4 ? "2026-01-01" : null]);
     }
+    return db;
+  } catch (error) {
+    await db.close();
+    throw error;
+  }
+}
+
+test("historical 015 SQL, RLS and atomicity on isolated PostgreSQL with synthetic identities", async (t) => {
+  const db = await createFixture();
+  try {
     const before = await db.query("select * from public.members");
     const beforeAdmin = await db.query("select * from public.admin_users order by id");
     await db.exec(readFileSync("database/migrations/015_ui_field_visibility.sql", "utf8"));
@@ -149,6 +159,85 @@ test("M10-A1 SQL, RLS and atomicity on isolated PostgreSQL with synthetic identi
       await db.exec("reset role");
       assert.deepEqual((await db.query("select * from public.members")).rows, before.rows);
       assert.deepEqual((await db.query("select * from public.admin_users order by id")).rows, beforeAdmin.rows);
+    });
+  } finally { await db.close(); }
+});
+
+test("016 foundation is read-only even for super_admin using the authenticated database role", async (t) => {
+  const db = await createFixture();
+  const lockSql = readFileSync("database/migrations/016_lock_ui_field_visibility_foundation.sql", "utf8");
+  try {
+    await db.exec(readFileSync("database/migrations/015_ui_field_visibility.sql", "utf8"));
+    const businessBefore = (await db.query("select * from public.members order by id")).rows;
+    const adminsBefore = (await db.query("select * from public.admin_users order by id")).rows;
+    const policiesBefore = (await db.query("select * from pg_policies where tablename <> 'ui_field_visibility' order by schemaname,tablename,policyname")).rows;
+    const selectPolicyBefore = (await db.query("select * from pg_policies where policyname='ui_field_visibility_select_active_admin'")).rows;
+    const helperBefore = (await db.query("select pg_get_functiondef('app_private.is_super_admin()'::regprocedure) definition")).rows;
+    const structureBefore = (await db.query("select attname,atttypid,attnotnull from pg_attribute where attrelid='public.ui_field_visibility'::regclass and attnum>0 order by attnum")).rows;
+    const constraintsBefore = (await db.query("select conname,pg_get_constraintdef(oid) definition from pg_constraint where conrelid='public.ui_field_visibility'::regclass order by conname")).rows;
+    const indexesBefore = (await db.query("select indexname,indexdef from pg_indexes where tablename='ui_field_visibility' order by indexname")).rows;
+    const triggersBefore = (await db.query("select tgname,pg_get_triggerdef(oid) definition from pg_trigger where tgrelid='public.ui_field_visibility'::regclass and not tgisinternal order by tgname")).rows;
+    const count = async () => (await db.query<{ count: number }>("select count(*)::int from public.ui_field_visibility")).rows[0].count;
+    async function actor(index: number, role = "authenticated") {
+      await db.exec("reset role");
+      await db.query("select set_config('request.jwt.claim.sub', $1, false)", [index ? uid(index) : ""]);
+      await db.exec(`set role ${role}`);
+    }
+
+    await t.test("016 is idempotent, preserves an empty table and changes only its write policies/grants", async () => {
+      assert.equal(await count(), 0);
+      await db.exec(lockSql);
+      await db.exec(lockSql);
+      assert.equal(await count(), 0);
+      assert.deepEqual((await db.query("select * from pg_policies where policyname='ui_field_visibility_select_active_admin'")).rows, selectPolicyBefore);
+      assert.deepEqual((await db.query<{ cmd: string }>("select cmd from pg_policies where tablename='ui_field_visibility'")).rows, [{ cmd: "SELECT" }]);
+      assert.equal((await db.query<{ rls: boolean }>("select relrowsecurity rls from pg_class where oid='public.ui_field_visibility'::regclass")).rows[0].rls, true);
+      assert.deepEqual((await db.query("select attname,atttypid,attnotnull from pg_attribute where attrelid='public.ui_field_visibility'::regclass and attnum>0 order by attnum")).rows, structureBefore);
+      assert.deepEqual((await db.query("select conname,pg_get_constraintdef(oid) definition from pg_constraint where conrelid='public.ui_field_visibility'::regclass order by conname")).rows, constraintsBefore);
+      assert.deepEqual((await db.query("select indexname,indexdef from pg_indexes where tablename='ui_field_visibility' order by indexname")).rows, indexesBefore);
+      assert.deepEqual((await db.query("select tgname,pg_get_triggerdef(oid) definition from pg_trigger where tgrelid='public.ui_field_visibility'::regclass and not tgisinternal order by tgname")).rows, triggersBefore);
+      assert.deepEqual((await db.query("select pg_get_functiondef('app_private.is_super_admin()'::regprocedure) definition")).rows, helperBefore);
+      assert.deepEqual((await db.query("select * from pg_policies where tablename <> 'ui_field_visibility' order by schemaname,tablename,policyname")).rows, policiesBefore);
+    });
+
+    await t.test("active admin and super_admin SELECT succeed; direct INSERT/UPDATE/DELETE/TRUNCATE fail with 42501", async () => {
+      for (const index of [1, 2]) {
+        await actor(index);
+        assert.equal(await count(), 0);
+        await assert.rejects(db.query("insert into public.ui_field_visibility (screen_key,field_key,is_visible,updated_by) values ('members.edit','email',false,$1)", [adminId(index)]), sqlState("42501"));
+        await assert.rejects(db.query("update public.ui_field_visibility set is_visible=false where screen_key='members.edit'"), sqlState("42501"));
+        await assert.rejects(db.query("delete from public.ui_field_visibility"), sqlState("42501"));
+        await assert.rejects(db.query("truncate public.ui_field_visibility"), sqlState("42501"));
+        for (const privilege of ["INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"]) {
+          assert.equal((await db.query<{ allowed: boolean }>("select has_table_privilege('authenticated','public.ui_field_visibility',$1) allowed", [privilege])).rows[0].allowed, false);
+        }
+        assert.equal(await count(), 0);
+      }
+    });
+
+    await t.test("anon denied; RLS still excludes inactive, archived and non-admin identities", async () => {
+      await actor(0, "anon");
+      await assert.rejects(db.query("select * from public.ui_field_visibility"), sqlState("42501"));
+      await assert.rejects(db.query("insert into public.ui_field_visibility (screen_key,field_key,updated_by) values ('members.edit','email',$1)", [adminId(1)]), sqlState("42501"));
+      // Owner-only synthetic fixture proves that zero results are due to RLS, not an empty table.
+      await db.exec("reset role");
+      await db.query("insert into public.ui_field_visibility (screen_key,field_key,is_visible,updated_by) values ('members.edit','email',false,$1)", [adminId(1)]);
+      const rowsBefore = (await db.query("select * from public.ui_field_visibility order by id")).rows;
+      await db.exec(lockSql);
+      assert.deepEqual((await db.query("select * from public.ui_field_visibility order by id")).rows, rowsBefore);
+      for (const index of [1, 2]) {
+        await actor(index);
+        assert.equal(await count(), 1);
+        await assert.rejects(db.query("update public.ui_field_visibility set is_visible=true"), sqlState("42501"));
+      }
+      for (const index of [0, 3, 4, 6]) {
+        await actor(index);
+        assert.equal(await count(), 0);
+      }
+      await db.exec("reset role");
+      assert.deepEqual((await db.query("select * from public.ui_field_visibility order by id")).rows, rowsBefore);
+      assert.deepEqual((await db.query("select * from public.members order by id")).rows, businessBefore);
+      assert.deepEqual((await db.query("select * from public.admin_users order by id")).rows, adminsBefore);
     });
   } finally { await db.close(); }
 });

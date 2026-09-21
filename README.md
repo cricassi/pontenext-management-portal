@@ -58,7 +58,11 @@ elenco, dettaglio o update business e' stato modificato. A2/C non avviate.
 
 Migration additiva `015_ui_field_visibility.sql` applicata a PonteNext il
 2026-09-21 dopo approvazione esplicita; nessun seed o nuova env. Su un ambiente
-nuovo applicare 001-010, poi 015, saltando i placeholder 011-014.
+nuovo l'ordine previsto e' 001-010, poi 015 e il lock correttivo 016,
+saltando i placeholder 011-014. La 016 e' preparata e testata in isolamento,
+**non applicata live**, in attesa del gate `MIGRATION 016 LOCK M10-A1 APPROVATA`.
+Serve a rendere A1 read-only anche per super_admin via Data API. A2 richiedera'
+una RPC controllata con allowlist, non il ripristino delle scritture dirette.
 Non riapplicare migration gia' registrate. Dettagli e verifiche:
 [M10_A1_CHECKLIST.md](docs/M10_A1_CHECKLIST.md) e
 [MIGRATION_AND_BACKUP.md](docs/MIGRATION_AND_BACKUP.md).
@@ -190,10 +194,13 @@ database/migrations/008_events.sql
 database/migrations/009_sponsor_contributions.sql
 database/migrations/010_email.sql
 database/migrations/015_ui_field_visibility.sql
+database/migrations/016_lock_ui_field_visibility_foundation.sql
 ```
 
-Saltare i placeholder 011-014. La 015 e' gia' applicata su PonteNext;
-questo elenco serve per un nuovo ambiente, non per riapplicare lo storico.
+Saltare i placeholder 011-014. La 015 e' gia' applicata su PonteNext e non deve
+essere modificata o riapplicata. La sola 016 attende approvazione live separata;
+il merge/deploy non autorizza o esegue SQL automaticamente. Questo elenco serve
+per ricostruire un ambiente, non per riapplicare lo storico al progetto esistente.
 
 Applicare poi i seed richiesti dalle milestone:
 
@@ -215,8 +222,8 @@ La migration `010_email.sql` crea le tabelle email M7 e abilita RLS admin-only.
 
 M8, Brand Refresh e M9 non introducono migration.
 
-Le migration `011` e successive sono placeholder per milestone future e non
-vanno applicate durante M9.
+Solo `011`-`014` sono placeholder e non vanno applicate. La 015 e' la foundation
+A1 gia' applicata; la 016 e' il lock correttivo in attesa di approvazione live.
 
 ### 4. Bootstrap primo super_admin
 

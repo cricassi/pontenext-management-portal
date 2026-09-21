@@ -2,6 +2,26 @@
 
 # M10-A1 - Field Visibility Foundation (2026-09-21)
 
+## Correzione B1 successiva alla review PR #50: lock 016 preparato
+
+- Preparata `016_lock_ui_field_visibility_foundation.sql`: solo policy/grant
+  della configurazione, SELECT admin attivi conservata, scritture authenticated
+  negate anche al super_admin. Nessun DML, nuova funzione o modifica business.
+- La 015 applicata resta invariata e non viene rieseguita sul live. La 016 e'
+  **non applicata live**, in attesa del gate `MIGRATION 016 LOCK M10-A1 APPROVATA`
+  dopo presentazione SQL/conteggi. MERGE NO finche' non viene validato il lock live.
+- Aggiunti test del contratto SQL e del lock in PostgreSQL isolato: 13/13 test
+  foundation e 10 scenari SQL con due wrapper (12/12 runner), inclusa idempotenza.
+- Lint/typecheck/build e diff-check passati; 16/16 regressioni export M10-B.
+  Baseline live riletta solo in lettura: 14 tabelle preesistenti con conteggi
+  invariati, ui_field_visibility vuota e 016 assente dallo storico.
+- Aggiornati review, checklist, modello dati, backup/restore e README. Strategia
+  A2: RPC controllata e allowlist DB delle coppie integrate, mai grant diretti.
+- Nessun codice applicativo, dati live, Auth, env o Vercel modificati; A2/C non
+  avviate. Nessun merge automatico.
+
+## Implementazione iniziale, prima della review
+
 - Mergiata PR documentale #49 dopo esito positivo M10-B, commit `63283c9`.
 - Creata/applicata la sola migration additiva `015_ui_field_visibility`,
   versione live `20260921195425`, su PonteNext dopo gate utente esplicito.
