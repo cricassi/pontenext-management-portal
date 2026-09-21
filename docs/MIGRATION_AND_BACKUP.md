@@ -400,8 +400,8 @@ Verifiche obbligatorie:
 ## 17. Portabilita' Excel M10: non e' backup/restore
 
 Stato al 2026-09-21: **M10-B completata e verificata post-merge** (PR #48/#49).
-M10-A1 implementata su branch separato, con 015 e lock 016 applicati dopo gate distinti;
-A2/C non avviate. Vedere
+M10-A1 mergiata e verificata (PR #50/#51), con 015 e lock 016 applicati dopo gate distinti.
+A2.1 Members Only preparata: 017 non applicata live, altri moduli e C non avviati. Vedere
 [M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md](M10_FIELD_VISIBILITY_AND_EXCEL_PLAN.md) e
 [M10_B_EXPORT_CHECKLIST.md](M10_B_EXPORT_CHECKLIST.md).
 
@@ -527,7 +527,7 @@ storico e permessi con il lock approvato prima di riaprire il runtime A1.
 Tutte le schermate restano `integrated: false` in A1: non abilitarle durante
 restore o deploy. Il bootstrap admin e le variabili ambiente non cambiano.
 
-### 17.3 Scritture future A2
+### 17.3 Foundation e rollout A2
 
 Non ripristinare INSERT/UPDATE diretti. La futura RPC di configurazione dovra'
 autorizzare soltanto super_admin attivi e coppie screen_key/field_key presenti in
@@ -544,3 +544,47 @@ catalogo disponibile senza warning DB, stato non attivo e pulsanti disabilitati.
 Test di scrittura/RLS con identita' sintetiche soltanto su ambiente isolato,
 non modificando utenti o record live. Procedura e risultati:
 [M10_A1_CHECKLIST.md](M10_A1_CHECKLIST.md).
+
+### 17.4 A2.1 Members Only: preparazione, deploy e restore
+
+Migration aggiuntiva: `database/migrations/017_enable_member_field_visibility_rpc.sql`.
+**Preparata/testata in ambiente isolato, NON applicata a PonteNext.**
+Il live resta nell'ordine 001-010 -> 015 -> 016. Per un target A2.1 approvato
+l'ordine diventa 001-010 -> 015 -> 016 -> 017; saltare sempre 011-014.
+Non rieseguire 015/016 su PonteNext e non applicare la 017 automaticamente al deploy.
+
+La 017 introduce solo RPC/helper e relativi privilegi EXECUTE, nessuna tabella,
+policy business o modifica dei dati. Conserva le revoche di tabella della 016.
+Il wrapper pubblico `set_member_field_visibility(text,jsonb,jsonb,boolean)` e'
+SECURITY INVOKER; l'omonimo writer in app_private e' SECURITY DEFINER con controllo
+super_admin attivo, auth.uid(), autore derivato e allowlist dei soli soci.
+Entrambe le funzioni hanno search_path vuoto, owner postgres e EXECUTE ristretto
+ad authenticated fra i ruoli applicativi. Non usare service role per aggirare il lock.
+
+Il dump completo A2.1 deve includere entrambe le funzioni, ownership e ACL,
+oltre alla configurazione (anche archiviata), CHECK, indice unico e trigger.
+Il workbook M10-B e il suo manifest 010_email non cambiano: non contiene queste
+preferenze o le funzioni e non costituisce backup PostgreSQL/Supabase completo.
+
+Procedura di attivazione autorizzata:
+
+1. Mostrare SQL completo 017 e conteggi pre-migration; controllare hash del file,
+   assenza di DML business e presenza invariata di 015/016 nello storico.
+2. Ricevere la frase esatta `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`.
+3. Applicare soltanto 017 al target autorizzato; verificare storico, zero modifiche
+   ai conteggi, ownership, search_path, ACL, policy SELECT e lock diretto.
+4. Verificare la RPC e i rifiuti con identita' sintetiche in ambiente separato.
+   Qualsiasi modifica di preferenze live durante uno smoke test va concordata:
+   l'approvazione della migration non autorizza modifiche ai dati dei soci.
+5. Pubblicare il codice A2.1 solo dopo gate/verifiche e review; login admin reale
+   dopo deploy/restore. Il super_admin puo' configurare solo le quattro schermate
+   soci, l'admin ordinario puo' consultare/applicare; tutti gli altri moduli disabilitati.
+
+Senza 017, la UI del branch mostra l'integrazione soci ma il salvataggio
+configurazione fallisce in modo sanitizzato, senza fallback privilegiato. Non
+considerare concluso il collaudo live in tale stato e non mergiare automaticamente.
+Per rollback applicativo usare la versione A1 del codice, che non applica le
+preferenze, senza cancellare dati o riaprire grant; un eventuale ritiro della
+RPC richiede un intervento approvato separatamente, non la riesecuzione di 016.
+
+Test e limiti: [M10_A2_1_MEMBERS_CHECKLIST.md](M10_A2_1_MEMBERS_CHECKLIST.md).

@@ -7,10 +7,18 @@ import { resetFieldVisibility, saveFieldVisibility } from "@/services/field-visi
 import type { VisibilityActionResult } from "@/types/field-visibility";
 import { FieldVisibilityError } from "@/utils/field-visibility";
 
-export async function saveFieldVisibilityAction(input: unknown): Promise<VisibilityActionResult> {
+function invalidateMembers() {
+  revalidatePath(FIELD_VISIBILITY_SETTINGS_PATH);
+  revalidatePath("/members");
+  revalidatePath("/members/new");
+  revalidatePath("/members/[id]", "page");
+  revalidatePath("/members/[id]/edit", "page");
+}
+
+export async function saveFieldVisibilityAction(input: unknown, expected: unknown): Promise<VisibilityActionResult> {
   try {
-    await saveFieldVisibility(input);
-    revalidatePath(FIELD_VISIBILITY_SETTINGS_PATH);
+    await saveFieldVisibility(input, expected);
+    invalidateMembers();
     return { ok: true, message: "Configurazione salvata." };
   } catch (error) {
     unstable_rethrow(error);
@@ -18,10 +26,10 @@ export async function saveFieldVisibilityAction(input: unknown): Promise<Visibil
   }
 }
 
-export async function resetFieldVisibilityAction(screenKey: unknown): Promise<VisibilityActionResult> {
+export async function resetFieldVisibilityAction(screenKey: unknown, expected: unknown): Promise<VisibilityActionResult> {
   try {
-    await resetFieldVisibility(screenKey);
-    revalidatePath(FIELD_VISIBILITY_SETTINGS_PATH);
+    await resetFieldVisibility(screenKey, expected);
+    invalidateMembers();
     return { ok: true, message: "Valori predefiniti ripristinati." };
   } catch (error) {
     unstable_rethrow(error);

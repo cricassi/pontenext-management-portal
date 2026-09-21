@@ -19,6 +19,11 @@ export function FieldVisibilitySettings({ snapshot, canConfigure }: { snapshot: 
   const [screenKey, setScreenKey] = useState(snapshot.screens[0].screenKey);
   const selected = snapshot.screens.find((screen) => screen.screenKey === screenKey) ?? snapshot.screens[0];
   const [values, setValues] = useState(() => valuesFor(selected));
+  const [previousSnapshot, setPreviousSnapshot] = useState(snapshot);
+  if (snapshot !== previousSnapshot) {
+    setPreviousSnapshot(snapshot);
+    setValues(valuesFor(selected));
+  }
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<VisibilityActionResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -62,7 +67,7 @@ export function FieldVisibilitySettings({ snapshot, canConfigure }: { snapshot: 
     if (!window.confirm(reset ? `Ripristinare i valori predefiniti di ${selected.label}? Nessun dato viene cancellato.` : `Salvare la configurazione globale di ${selected.label} per tutti gli amministratori?`)) return;
     startTransition(async () => {
       try {
-        const response = reset ? await resetFieldVisibilityAction(screenKey) : await saveFieldVisibilityAction({ screenKey, values });
+        const response = reset ? await resetFieldVisibilityAction(screenKey, baseline) : await saveFieldVisibilityAction({ screenKey, values }, baseline);
         setResult(response);
         if (response.ok) {
           if (reset) setValues(Object.fromEntries(selected.fields.filter((field) => field.configurable).map((field) => [field.fieldKey, field.defaultVisible])));
@@ -137,7 +142,7 @@ export function FieldVisibilitySettings({ snapshot, canConfigure }: { snapshot: 
           </div>
           <Badge variant={selected.integrated ? "success" : "muted"}>{selected.integrated ? "Attiva" : "Non ancora attiva"}</Badge>
         </div>
-        {!selected.integrated && <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground"><LockKeyhole aria-hidden="true" className="mt-1 size-4 shrink-0" />Attivazione prevista in M10-A2. Le schermate operative restano invariate.</p>}
+        {!selected.integrated && <p className="flex items-start gap-2 text-sm leading-6 text-muted-foreground"><LockKeyhole aria-hidden="true" className="mt-1 size-4 shrink-0" />Attivazione prevista in una fase successiva. Le schermate operative restano invariate.</p>}
         {!selected.fields.some((field) => field.configurable) && <p className="border-y py-4 text-sm">Nessun campo facoltativo configurabile in questa schermata. I campi richiesti dal flusso rimangono visibili.</p>}
         {!matching.length ? <p role="status" className="border-y py-6 text-sm text-muted-foreground">Nessun campo corrisponde alla ricerca.</p> : (
           <>

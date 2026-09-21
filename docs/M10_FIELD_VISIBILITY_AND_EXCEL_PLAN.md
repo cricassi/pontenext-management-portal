@@ -1,8 +1,16 @@
 # M10 - Field Visibility and Excel Data Portability
 
 Piano del 2026-09-19. Aggiornamento operativo: 2026-09-21.
-**M10-B completata/verificata post-merge (PR #48/#49); M10-A1 implementata su
-branch separato; A2/C non avviate.**
+**M10-B completata/verificata (PR #48/#49); M10-A1 mergiata/verificata
+(PR #50/#51); M10-A2.1 Members Only preparata su branch separato;
+017 non applicata live. Altri moduli A2 e M10-C non avviati.**
+
+Stato A2.1: registro versione 2, integrate esclusivamente members.list/create/
+edit/detail. Configurazione tramite la RPC controllata della 017, mai scritture
+dirette; prima del gate live la configurazione non puo' essere salvata.
+La descrizione A1 seguente e le analisi successive conservano il contesto
+storico; per lo stato A2.1 e le verifiche fa fede
+[M10_A2_1_MEMBERS_CHECKLIST.md](M10_A2_1_MEMBERS_CHECKLIST.md).
 
 A1: migration `015_ui_field_visibility`, versione live `20260921195425`,
 applicata dopo gate esplicito. Registro versione 1 con 42 schermate e 116 coppie
@@ -78,6 +86,22 @@ essere completo, ma l'applicazione ai moduli resta non attiva fino ad A2.
 A2 riusa infrastruttura, tabella, RLS, registro, resolver e Impostazioni di A1;
 non ricrea la foundation e non richiede una nuova migration salvo necessita'
 separatamente documentata e approvata. Non introduce readonly o nuovi permessi.
+
+Prima sottofase autorizzata: **M10-A2.1 Members Only**, PR distinta dopo merge
+del report A1. Solo le quattro schermate soci, senza integrare pannelli ruoli,
+membership o altri moduli. Nuova 017 necessaria per le sole RPC/EXECUTE di
+configurazione, preservando il lock 016. Gate separato dopo SQL completo e
+conteggi: `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`.
+
+In A2.1 i submit con campi nascosti presenti, sconosciuti, duplicati o file
+sono respinti; richiesto ricaricamento se le preferenze sono cambiate. Campi
+visibili assenti restano invariati in modifica; stringa vuota esplicita puo'
+azzerare solo un campo visibile facoltativo. Validazione su record ricostruito,
+patch minima e confronto updated_at per evitare aggiornamenti concorrenti persi.
+Valori legacy non inviati non vengono rinormalizzati ne' obbligano a modificare
+un campo nascosto invalido; i nuovi valori inviati mantengono le regole esistenti.
+In create hidden assume i null/default gia' previsti. Export/report/email
+restano indipendenti dalla preferenza UI, che non introduce permessi per colonna.
 
 ### 1.2 Passaggi e verifiche fra le fasi
 

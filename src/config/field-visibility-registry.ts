@@ -1,6 +1,6 @@
 import type { VisibilityField, VisibilityScreen } from "@/types/field-visibility";
 
-export const FIELD_VISIBILITY_REGISTRY_VERSION = 1;
+export const FIELD_VISIBILITY_REGISTRY_VERSION = 2;
 export const FIELD_VISIBILITY_SETTINGS_PATH = "/settings/field-visibility";
 
 type FieldSpec = readonly [key: string, label: string, formKey?: string, description?: string];
@@ -20,9 +20,9 @@ function fields(required: readonly FieldSpec[], optional: readonly FieldSpec[], 
   ].map((field, index) => ({ ...field, defaultVisible: true, displayOrder: index + 1 }));
 }
 
-function screen(module: string, label: string, route: string, screenFields: VisibilityField[]): VisibilityScreen {
+function screen(module: string, label: string, route: string, screenFields: VisibilityField[], integrated = false): VisibilityScreen {
   // A2 enables each screen only after its preservation tests and UI integration.
-  return { module, label, route, integrated: false, fields: screenFields };
+  return { module, label, route, integrated, fields: screenFields };
 }
 
 const contacts: FieldSpec[] = [["email", "Email"], ["phone", "Telefono"], ["city", "Citta"]];
@@ -54,10 +54,10 @@ const campaignRequired: FieldSpec[] = [["subject", "Oggetto"], ["body", "Testo"]
 const campaignOptional: FieldSpec[] = [["template_id", "Template", "templateId", "Associazione facoltativa; modifica consentita solo sulle bozze."]];
 
 export const FIELD_VISIBILITY_REGISTRY = {
-  "members.list": screen("Soci", "Elenco soci", "/members", fields(memberRequired.slice(0, 3), contacts)),
-  "members.create": screen("Soci", "Nuovo socio", "/members/new", fields(memberRequired, memberOptional)),
-  "members.edit": screen("Soci", "Modifica socio", "/members/[id]/edit", fields(memberRequired, memberOptional)),
-  "members.detail": screen("Soci", "Dettaglio socio", "/members/[id]", fields(memberRequired, memberOptional)),
+  "members.list": screen("Soci", "Elenco soci", "/members", fields(memberRequired.slice(0, 3), contacts), true),
+  "members.create": screen("Soci", "Nuovo socio", "/members/new", fields(memberRequired, memberOptional), true),
+  "members.edit": screen("Soci", "Modifica socio", "/members/[id]/edit", fields(memberRequired, memberOptional), true),
+  "members.detail": screen("Soci", "Dettaglio socio", "/members/[id]", fields(memberRequired, memberOptional), true),
   "roles.list": screen("Ruoli", "Elenco ruoli", "/settings/roles", fields(roleRequired, roleOptional)),
   "roles.create": screen("Ruoli", "Nuovo ruolo", "/settings/roles", fields(roleRequired, roleOptional)),
   "roles.edit": screen("Ruoli", "Modifica ruolo", "/settings/roles", fields(roleRequired, roleOptional)),

@@ -1,5 +1,23 @@
 ﻿# CHANGELOG.md
 
+# M10-A2.1 - Field Visibility Members Only (2026-09-21)
+
+- Verifica post-merge A1 positiva; report nella PR #51 mergiato, main `e40f790`.
+- Registro versione 2: integrate solo members.list/create/edit/detail. Altri
+  moduli ancora non attivi, nessun readonly, gruppo o import Excel.
+- Preparata `017_enable_member_field_visibility_rpc.sql`, **non applicata live**:
+  RPC pubblica invoker e writer privato controllato, super_admin attivo,
+  allowlist membri, autore derivato, CAS degli stati e lock per schermata,
+  salvataggio atomico e reset soft. Grant e policy del lock 016 invariati.
+- Liste desktop/card mobile, form e dettaglio soci applicano visible/hidden.
+  Form client privo dei valori nascosti; submit rilegge la configurazione;
+  update minimale presence-aware, protezione da richieste manomesse e controllo
+  concorrenza del record. Valori nascosti/assenti e relazioni preservati.
+- Test PostgreSQL isolati e browser demo: nessun dato live modificato.
+  Export, report, segmentazione email e altri moduli non cambiano.
+- Checklist e guide aggiornate. Deploy operativo e verifica RPC live subordinati
+  al gate separato `MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`; non rieseguire 015/016.
+
 # M10-A1 - Field Visibility Foundation (2026-09-21)
 
 ## Correzione B1 successiva alla review PR #50: lock 016 preparato

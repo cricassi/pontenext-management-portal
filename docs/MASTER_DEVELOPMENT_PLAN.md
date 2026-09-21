@@ -225,8 +225,10 @@ Release candidate.
 # M10 - Visibilita' globale e portabilita' Excel
 
 Stato al 2026-09-21: B completata e verificata post-merge (PR #48/#49);
-A1 implementata su branch separato, migration 015 applicata con gate esplicito;
-A2/C non avviate. Vedere [M10_A1_CHECKLIST.md](M10_A1_CHECKLIST.md).
+A1 mergiata e verificata post-merge nelle PR #50/#51, 015 e lock 016 applicati;
+A2.1 Members Only preparata su branch separato, 017 non applicata live.
+Altri moduli A2 e C non avviati. Vedere
+[M10_A2_1_MEMBERS_CHECKLIST.md](M10_A2_1_MEMBERS_CHECKLIST.md).
 La PR #46 e' annullata;
 non recuperare permission group, readonly, scope o configurazioni personali.
 

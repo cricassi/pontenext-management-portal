@@ -6,6 +6,10 @@ import { MemberTable } from "@/components/members/MemberTable";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { getMembers } from "@/services/members.service";
+import { requireActiveAdmin } from "@/services/admin-auth.service";
+import { getFieldVisibility } from "@/services/field-visibility.service";
+import { memberVisibility } from "@/utils/member-visibility";
+import { MemberVisibilityWarning } from "@/components/members/MemberVisibilityWarning";
 import { getAssignableRoles } from "@/services/roles.service";
 import {
   MEMBER_SORT_OPTIONS,
@@ -50,6 +54,9 @@ function getFilters(
 }
 
 export default async function MembersPage({ searchParams }: MembersPageProps) {
+  await requireActiveAdmin();
+  const snapshot = await getFieldVisibility(["members.list"]);
+  const visibility = memberVisibility(snapshot.screens[0]);
   const params = (await searchParams) ?? {};
   const filters = getFilters(params);
   const [roles, members] = await Promise.all([
@@ -73,8 +80,9 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       />
 
       <MemberFilters filters={filters} roles={roles} />
-      <MemberTable members={members} />
-      <MemberCardList members={members} />
+      <MemberVisibilityWarning warning={snapshot.warning} />
+      <MemberTable members={members} visibility={visibility} />
+      <MemberCardList members={members} visibility={visibility} />
     </div>
   );
 }

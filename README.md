@@ -30,7 +30,7 @@ La piattaforma consente progressivamente la gestione di:
 Fase corrente:
 
 ```text
-M10-A1 - Field Visibility Foundation
+M10-A2.1 - Field Visibility Members Only (017 in attesa di approvazione live)
 ```
 
 Milestone completate o avviate:
@@ -49,20 +49,26 @@ Milestone completate o avviate:
 - M10-B: export Excel completo, verificato post-merge con PR #49.
 - M10-A1: foundation visibilita' globale e catalogo Impostazioni; nessun campo business nascosto.
 
-### M10-A1
+### M10-A1 e A2.1
 
-`/settings/field-visibility` e' leggibile dagli admin attivi. Registro tipizzato,
-resolver in batch e controlli server super_admin predisposti; switch, Salva e
-Ripristina sono disabilitati per tutte le schermate non integrate. Nessun form,
-elenco, dettaglio o update business e' stato modificato. A2/C non avviate.
+M10-A1 e' mergiata e verificata (PR #50/#51). Il branch A2.1 integra soltanto
+lista, creazione, modifica e dettaglio soci. `/settings/field-visibility` e'
+leggibile dagli admin attivi; solo super_admin puo' configurare i campi
+facoltativi soci tramite RPC. Altri moduli restano disabilitati.
+Gli update preservano i valori nascosti. Nessun import o nuovo permesso per campo.
 
 Migration additiva `015_ui_field_visibility.sql` applicata a PonteNext il
 2026-09-21 dopo approvazione esplicita; nessun seed o nuova env. Su un ambiente
 nuovo l'ordine previsto e' 001-010, poi 015 e il lock correttivo 016,
 saltando i placeholder 011-014. La 016 e' applicata live, versione
 `20260921205506`, dopo il gate `MIGRATION 016 LOCK M10-A1 APPROVATA`.
-Serve a rendere A1 read-only anche per super_admin via Data API. A2 richiedera'
-una RPC controllata con allowlist, non il ripristino delle scritture dirette.
+Serve a rendere la tabella read-only anche per super_admin via Data API.
+La `017_enable_member_field_visibility_rpc.sql` e' preparata e testata solo in
+ambiente isolato: **non applicata live**, nessuna esecuzione automatica al deploy.
+Prima dell'uso operativo A2.1 occorrono approvazione e applicazione della sola
+017; i salvataggi configurazione falliscono in modo sicuro finche' la RPC manca.
+Non ripristinare i grant diretti e non riapplicare 015/016.
+Dettagli e gate: [M10_A2_1_MEMBERS_CHECKLIST.md](docs/M10_A2_1_MEMBERS_CHECKLIST.md).
 Non riapplicare migration gia' registrate. Dettagli e verifiche:
 [M10_A1_CHECKLIST.md](docs/M10_A1_CHECKLIST.md) e
 [MIGRATION_AND_BACKUP.md](docs/MIGRATION_AND_BACKUP.md).

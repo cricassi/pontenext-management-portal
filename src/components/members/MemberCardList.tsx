@@ -4,12 +4,14 @@ import { archiveMemberAction } from "@/app/(admin)/members/actions";
 import { MemberStatusBadge } from "@/components/members/MemberStatusBadge";
 import { Button } from "@/components/ui/Button";
 import type { MemberListItem } from "@/types/member";
+import type { MemberVisibility } from "@/utils/member-visibility";
 
 type MemberCardListProps = {
   members: MemberListItem[];
+  visibility: MemberVisibility;
 };
 
-export function MemberCardList({ members }: MemberCardListProps) {
+export function MemberCardList({ members, visibility }: MemberCardListProps) {
   if (members.length === 0) {
     return null;
   }
@@ -23,26 +25,26 @@ export function MemberCardList({ members }: MemberCardListProps) {
               <h2 className="truncate text-base font-semibold tracking-normal">
                 {member.firstName} {member.lastName}
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              {visibility.email !== false && <p className="mt-1 break-words text-sm text-muted-foreground">
                 {member.email ?? "Email non presente"}
-              </p>
+              </p>}
             </div>
             <MemberStatusBadge status={member.status} />
           </div>
 
           <dl className="mt-4 grid gap-2 text-sm">
-            <div className="flex justify-between gap-3">
+            {visibility.phone !== false && <div className="flex justify-between gap-3">
               <dt className="text-muted-foreground">Telefono</dt>
               <dd className="text-right">{member.phone ?? "-"}</dd>
-            </div>
+            </div>}
             <div className="flex justify-between gap-3">
               <dt className="text-muted-foreground">Ruolo</dt>
               <dd className="text-right">{member.primaryRoleName ?? "-"}</dd>
             </div>
-            <div className="flex justify-between gap-3">
+            {visibility.city !== false && <div className="flex justify-between gap-3">
               <dt className="text-muted-foreground">Citta</dt>
               <dd className="text-right">{member.city ?? "-"}</dd>
-            </div>
+            </div>}
           </dl>
 
           <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">

@@ -519,12 +519,14 @@ La RLS iniziale deve essere parte di M0 insieme alla protezione delle route gest
 014_seed.sql
 015_ui_field_visibility.sql
 016_lock_ui_field_visibility_foundation.sql
+017_enable_member_field_visibility_rpc.sql
 ```
 
 Ordine operativo live al 2026-09-21: 001-010, poi 015 e 016. I file 011-014
 sono placeholder da saltare; dettaglio foundation M10-A1 nella sezione 11.
 La 016 e' applicata live, versione `20260921205506`, dopo il gate
 `MIGRATION 016 LOCK M10-A1 APPROVATA`. Non modifica ne' riapplica la 015.
+La 017 e' preparata per A2.1 ma **non applicata live**: richiede il proprio gate.
 
 Nota M5: la migration applicata `007_sponsors.sql` crea sia `sponsors` sia
 `sponsor_contributions`, senza `event_id`.
@@ -619,7 +621,37 @@ In A2 non ripristinare grant diretti. Progettare una RPC controllata con allowli
 DB delle sole coppie integrate, super_admin attivo e updated_by risolto dal proprio
 auth.uid() tramite admin_users.auth_user_id. Estendere esplicitamente l'allowlist
 per ogni rollout. RPC non implementata nella 016; A2 richiede approvazione separata.
-Nessuna schermata business applica ancora questi override: e' lavoro A2.
+Questo descrive il confine storico A1; l'integrazione A2.1 e' descritta sotto.
+
+### A2.1: RPC membri, preparata e non applicata live
+
+`017_enable_member_field_visibility_rpc.sql` non modifica alcuna tabella,
+policy RLS o grant di tabella. Crea due funzioni con firma
+`set_member_field_visibility(text,jsonb,jsonb,boolean)`: wrapper `public`
+SECURITY INVOKER e writer `app_private` SECURITY DEFINER, entrambi search_path
+vuoto, owner postgres ed EXECUTE solo authenticated fra i ruoli applicativi.
+Il privilegio definer e' limitato alla scrittura configurazione: controllo
+auth.uid(), is_super_admin(), stato/archiviazione e autore admin_users.id.
+Nessuna service role nell'app, nessun SQL dinamico, nessun DML business.
+
+Allowlist: members.list (email, phone, city) e members.create/edit/detail
+(email, phone, city, address, postal_code, province, birth_date, fiscal_code,
+profession, notes). I 33 accoppiamenti sono gia' ammessi dal CHECK della 015;
+la RPC non permette le altre coppie del catalogo. Obbligatori e chiavi tecniche
+non accettati. ID, autore e timestamp non sono assegnabili dal client.
+
+Valori e baseline attesa devono essere oggetti completi con soli booleani;
+reset richiede valori vuoti e baseline completa. Lock advisory transazionale
+per schermata e confronto atomico degli stati effettivi: conflitto 40001 senza
+retry automatico. Confronto semantico dei booleani, non versione audit di ogni
+scrittura: una configurazione tornata identica alla baseline e' equivalente.
+Upsert atomico sulla coppia attiva conserva id/created_at; reset archivia solo
+override attivi; il salvataggio successivo crea nuovi ID, senza riesumare righe.
+
+Data API diretta ancora SELECT-only anche per super_admin; nessuna policy
+INSERT/UPDATE/DELETE nuova. Test 017 eseguiti solo in PostgreSQL isolato; live
+resta a 015/016 con zero override. Gate richiesto:
+`MIGRATION 017 M10-A2.1 MEMBERS APPROVATA`.
 
 ## 11.2 Export e import non modificano il modello business
 
