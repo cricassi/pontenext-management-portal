@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { FIELD_VISIBILITY_REGISTRY } from "@/config/field-visibility-registry";
 import type { FieldVisibilityRow } from "@/types/field-visibility";
 import { resolveVisibilityRows } from "@/utils/field-visibility";
+import { memberFormView, memberVisibility } from "@/utils/member-visibility";
 import { loadModule } from "./load-module";
 
 interface Database {
@@ -118,6 +119,7 @@ test("017 controlled RPC and real member update preservation in isolated Postgre
 
     // Small PostgREST-shaped adapter executes the ACTUAL service patch against this isolated DB.
     const writes: Record<string, unknown>[] = [];
+    let beforeUpdate: (() => Promise<void>) | undefined;
     const client = {
       from: (table: string) => {
         assert.equal(table, "members");
@@ -131,6 +133,11 @@ test("017 controlled RPC and real member update preservation in isolated Postgre
           let sql: string;
           if (payload) {
             assert.ok(Object.keys(payload).every((k) => allowed.has(k)));
+            if (!insert && beforeUpdate) {
+              const concurrentWrite = beforeUpdate;
+              beforeUpdate = undefined;
+              await concurrentWrite();
+            }
             writes.push(payload);
             sql = insert ? `insert into public.members (${Object.keys(payload).join(",")}) values (${Object.values(payload).map(bind).join(",")})`
               : `update public.members set ${Object.entries(payload).map(([k, v]) => `${k}=${bind(v)}`).join(",")}`;
@@ -156,8 +163,9 @@ test("017 controlled RPC and real member update preservation in isolated Postgre
       for (const [key,value] of Object.entries({ firstName: "Ada", lastName: "Updated", country: "Italia", status: "active", ...values })) data.set(key,value);
       return data;
     };
+    const updateCurrent = async (data: FormData) => service.updateMember(mid, data, String((await rows("members"))[0].updated_at));
     await t.test("actual update service changes visible surname/phone, preserves hidden email/notes and missing address", async () => {
-      const result = await service.updateMember(mid, form({ phone: "98765" }));
+      const result = await updateCurrent(form({ phone: "98765" }));
       assert.equal(result.ok, true);
       assert.deepEqual(writes.at(-1), { last_name: "Updated", phone: "98765" });
       const after = (await rows("members"))[0];
@@ -167,21 +175,41 @@ test("017 controlled RPC and real member update preservation in isolated Postgre
       assert.deepEqual(await rows("member_roles"), relations.assignments);
       assert.deepEqual(await rows("memberships"), relations.memberships);
     });
+    await t.test("stale form version cannot overwrite another admin's later visible edit", async () => {
+      const opened = (await rows("members"))[0];
+      await db.query("update public.members set phone='concurrent-phone' where id=$1", [mid]);
+      const concurrent = await rows("members");
+      assert.notEqual(concurrent[0].updated_at, opened.updated_at);
+      const attempts = writes.length;
+      await assert.rejects(service.updateMember(mid, form({ phone: String(opened.phone) }), String(opened.updated_at)), /dopo l'apertura/);
+      assert.equal(writes.length, attempts);
+      assert.deepEqual(await rows("members"), concurrent);
+      for (const version of ["", "invalid-date"]) await assert.rejects(service.updateMember(mid, form(), version));
+    });
+    await t.test("CAS rejects a competing write between fresh record read and UPDATE", async () => {
+      const version = String((await rows("members"))[0].updated_at);
+      beforeUpdate = async () => { await db.query("update public.members set phone='later-concurrent-phone' where id=$1", [mid]); };
+      await assert.rejects(service.updateMember(mid, form({ phone: "must-not-win" }), version), /modificati nel frattempo/);
+      const preserved = (await rows("members"))[0];
+      assert.equal(preserved.phone, "later-concurrent-phone");
+      assert.equal(preserved.email, before[0].email);
+      assert.equal(preserved.notes, before[0].notes);
+    });
     await t.test("tampered hidden/unknown/technical/duplicate fields and missing required controls cause no writes", async () => {
       const baseline = await rows("members");
       const invalid: Record<string, string>[] = [{ email: "forged@example.invalid" }, { notes: "" }, { id: mid }, { membership_id: uid(10) }, { archived_at: "" }, { status: "" }];
-      for (const extra of invalid) await assert.rejects(service.updateMember(mid, form(extra)));
+      for (const extra of invalid) await assert.rejects(updateCurrent(form(extra)));
       const duplicate = form(); duplicate.append("lastName", "Other");
-      await assert.rejects(service.updateMember(mid, duplicate));
+      await assert.rejects(updateCurrent(duplicate));
       const missing = form(); missing.delete("country");
-      await assert.rejects(service.updateMember(mid, missing));
+      await assert.rejects(updateCurrent(missing));
       assert.deepEqual(await rows("members"), baseline);
     });
     await t.test("visible explicit empty clears only that field; invalid values fail validation", async () => {
-      const result = await service.updateMember(mid, form({ phone: "" }));
+      const result = await updateCurrent(form({ phone: "" }));
       assert.equal(result.ok, true);
       assert.deepEqual(writes.at(-1), { phone: null });
-      const invalid = await service.updateMember(mid, form({ province: "TOO LONG" }));
+      const invalid = await updateCurrent(form({ province: "TOO LONG" }));
       assert.equal(invalid.ok, false);
       assert.equal((await rows("members"))[0].email, "original@example.invalid");
     });
@@ -203,7 +231,7 @@ test("017 controlled RPC and real member update preservation in isolated Postgre
       await db.exec("reset role");
       await db.query("update public.members set email='legacy-invalid-email',notes='  Legacy notes  ' where id=$1", [mid]);
       await actor(1);
-      const result = await service.updateMember(mid, form({ lastName: "Legacy preserved" }));
+      const result = await updateCurrent(form({ lastName: "Legacy preserved" }));
       assert.equal(result.ok, true);
       assert.deepEqual(writes.at(-1), { last_name: "Legacy preserved" });
       const stored = (await rows("members"))[0];
@@ -211,11 +239,18 @@ test("017 controlled RPC and real member update preservation in isolated Postgre
       assert.equal(stored.notes, "  Legacy notes  ");
     });
     await t.test("reset archives overrides, returns visible defaults; next save creates new IDs", async () => {
+      const memberBeforeReset = (await rows("members"))[0];
       const old = (await config()).filter((r) => r.screen_key === "members.edit");
       await rpc("members.edit", {}, hidden, true);
       const reset = (await config()).filter((r) => r.screen_key === "members.edit");
       assert.ok(reset.every((r) => r.archived_at !== null));
       assert.ok(resolveVisibilityRows(["members.edit"], reset).screens[0].fields.every((f) => f.isVisible));
+      const visibleMember = await service.getMemberById(mid);
+      assert.ok(visibleMember);
+      const restoredView = memberFormView(visibleMember, memberVisibility(resolveVisibilityRows(["members.edit"], reset).screens[0]));
+      assert.equal(restoredView.email, memberBeforeReset.email);
+      assert.equal(restoredView.notes, memberBeforeReset.notes);
+      assert.deepEqual((await rows("members"))[0], memberBeforeReset);
       await rpc("members.edit", defaults(), defaults());
       const active = (await config()).filter((r) => r.screen_key === "members.edit" && !r.archived_at);
       assert.equal(active.length, 10);

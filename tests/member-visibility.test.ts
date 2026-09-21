@@ -79,7 +79,7 @@ test("fresh configuration error and auth failure stop member services before bus
       "@/services/supabase.service": { getSupabaseServerClientOrThrow: async () => { events.push("business"); throw new Error("Unexpected business query"); } },
     });
     await assert.rejects(service.createMember(new FormData()));
-    await assert.rejects(service.updateMember(member.id, new FormData()));
+    await assert.rejects(service.updateMember(member.id, new FormData(), member.updatedAt));
     assert.ok(!events.includes("business"));
     assert.equal(events[0], "guard");
   }
@@ -92,6 +92,7 @@ test("page guards run before queries and edit strips hidden fields at the client
   }
   const source = readFileSync("src/app/(admin)/members/[id]/edit/page.tsx", "utf8");
   assert.match(source, /member=\{memberFormView\(member, visibility\)\}/);
+  assert.match(source, /updateMemberAction\.bind\(null, member\.id, member\.updatedAt\)/);
   for (const file of ["src/services/data-export.service.ts", "src/services/reports.service.ts", "src/services/email.service.ts"]) {
     // These modules must never acquire visibility as a filtering permission.
     try { assert.doesNotMatch(readFileSync(file, "utf8"), /getFieldVisibility|memberVisibility/); }

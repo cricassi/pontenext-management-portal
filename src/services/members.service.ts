@@ -388,12 +388,14 @@ export async function createMember(formData: FormData) {
 export async function updateMember(
   memberId: string,
   formData: FormData,
+  expectedUpdatedAt: string,
 ) {
   await requireActiveAdmin();
-  if (!isUuid(memberId)) throw new MemberSubmissionError();
+  if (!isUuid(memberId) || typeof expectedUpdatedAt !== "string" || !Number.isFinite(Date.parse(expectedUpdatedAt))) throw new MemberSubmissionError();
   const visibility = await getFreshFieldVisibility("members.edit");
   const current = await getMemberById(memberId);
   if (!current) throw new MemberSubmissionError("Socio non disponibile. Ricarica la pagina.");
+  if (current.updatedAt !== expectedUpdatedAt) throw new MemberSubmissionError("Il socio e' stato modificato dopo l'apertura del modulo. Ricarica prima di riprovare.");
   const prepared = prepareMemberSubmission(formData, visibility, current);
   const validation = validateMemberFormData(prepared.formData, prepared.submitted);
   if (!validation.ok) return validation;
@@ -405,7 +407,7 @@ export async function updateMember(
     .update(patch)
     .eq("id", memberId)
     .is("archived_at", null)
-    .eq("updated_at", current.updatedAt)
+    .eq("updated_at", expectedUpdatedAt)
     .select(memberSelect)
     .single<MemberRow>();
 

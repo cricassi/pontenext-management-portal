@@ -41,7 +41,7 @@ export default async function EditMemberPage({ params }: EditMemberPageProps) {
         member={memberFormView(member, visibility)}
         visibility={visibility}
         unavailable={!!snapshot.warning}
-        action={updateMemberAction.bind(null, member.id)}
+        action={updateMemberAction.bind(null, member.id, member.updatedAt)}
         submitLabel="Salva modifiche"
       />
       <MemberVisibilityWarning warning={snapshot.warning} />

@@ -43,12 +43,13 @@ export async function createMemberAction(
 
 export async function updateMemberAction(
   memberId: string,
+  expectedUpdatedAt: string,
   _state: FormState,
   formData: FormData,
 ): Promise<FormState> {
   await requireActiveAdmin();
   try {
-    const result = await updateMember(memberId, formData);
+    const result = await updateMember(memberId, formData, expectedUpdatedAt);
     if (!result.ok) return { message: result.message, errors: result.errors };
   } catch (error) {
     unstable_rethrow(error);
