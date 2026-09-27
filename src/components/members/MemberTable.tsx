@@ -29,7 +29,7 @@ export function MemberTable({ members, visibility }: MemberTableProps) {
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
-            <th className="px-4 py-3 font-medium">Nome</th>
+            <th className="px-4 py-3 font-medium">Cognome e nome</th>
             {visibility.email !== false && <th className="px-4 py-3 font-medium">Email</th>}
             {visibility.phone !== false && <th className="px-4 py-3 font-medium">Telefono</th>}
             <th className="px-4 py-3 font-medium">Ruolo principale</th>
@@ -43,13 +43,13 @@ export function MemberTable({ members, visibility }: MemberTableProps) {
               <td className="px-4 py-3">
                 {member.archivedAt ? (
                   <span className="font-medium text-foreground">
-                    {member.firstName} {member.lastName}
+                    {member.lastName} {member.firstName}
                   </span>
                 ) : <Link
                   href={`/members/${member.id}`}
                   className="font-medium text-foreground hover:underline"
                 >
-                  {member.firstName} {member.lastName}
+                  {member.lastName} {member.firstName}
                 </Link>}
                 {visibility.city !== false && member.city ? (
                   <p className="text-xs text-muted-foreground">{member.city}</p>
@@ -82,7 +82,7 @@ export function MemberTable({ members, visibility }: MemberTableProps) {
                       type="submit"
                       variant="ghost"
                       size="icon"
-                      aria-label={`Archivia ${member.firstName} ${member.lastName}`}
+                      aria-label={`Archivia ${member.lastName} ${member.firstName}`}
                     >
                       <Archive aria-hidden="true" className="size-4" />
                     </Button>

@@ -157,6 +157,7 @@ function memberMatchesQuery(member: Member, query: string) {
     member.phone,
     member.city,
     member.fiscalCode,
+    `${member.lastName} ${member.firstName}`,
   ]
     .filter(Boolean)
     .join(" ")

@@ -14,7 +14,7 @@ type MemberFiltersProps = {
 
 export function MemberFilters({ filters, roles }: MemberFiltersProps) {
   return (
-    <form className="grid min-w-0 gap-3 rounded-lg border bg-card p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_160px_200px_180px_auto]">
+    <form className="grid min-w-0 gap-3 rounded-lg border bg-card p-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_250px_200px_180px_auto]">
       <div className="relative min-w-0">
         <Search
           aria-hidden="true"
@@ -34,7 +34,7 @@ export function MemberFilters({ filters, roles }: MemberFiltersProps) {
         className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         aria-label="Filtra per stato anagrafico"
       >
-        <option value="all">Tutti gli stati</option>
+        <option value="all">Tutti gli stati (no Archiviati)</option>
         <option value="active">Attivi</option>
         <option value="inactive">Inattivi</option>
         <option value="archived">Archiviati</option>
@@ -60,8 +60,8 @@ export function MemberFilters({ filters, roles }: MemberFiltersProps) {
         className="h-10 min-w-0 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         aria-label="Ordina elenco soci"
       >
-        <option value={MEMBER_SORT_OPTIONS.NAME_ASC}>Nome A-Z</option>
-        <option value={MEMBER_SORT_OPTIONS.NAME_DESC}>Nome Z-A</option>
+        <option value={MEMBER_SORT_OPTIONS.NAME_ASC}>Cognome A-Z</option>
+        <option value={MEMBER_SORT_OPTIONS.NAME_DESC}>Cognome Z-A</option>
         <option value={MEMBER_SORT_OPTIONS.CREATED_DESC}>Recenti prima</option>
         <option value={MEMBER_SORT_OPTIONS.CREATED_ASC}>Meno recenti</option>
         <option value={MEMBER_SORT_OPTIONS.STATUS_ASC}>

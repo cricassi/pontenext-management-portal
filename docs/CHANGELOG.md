@@ -1,5 +1,21 @@
 ﻿# CHANGELOG.md
 
+# Elenco soci: cognome prima del nome (2026-09-27)
+
+- Tabella e card mobile mostrano `Cognome Nome`, anche per soci archiviati.
+  Intestazione `Cognome e nome` e ordinamenti `Cognome A-Z` / `Cognome Z-A`.
+- Etichetta filtro `Tutti gli stati (no Archiviati)` e spazio adeguato nel
+  selettore; valore `all` e logica di esclusione soft delete invariati.
+- Ordinamento esistente per cognome, poi nome, invariato; restano validi i
+  parametri URL `name_asc` e `name_desc`. Ricerca compatibile con entrambi
+  gli ordini del nome completo. Nessuna modifica ai dati salvati.
+- Test di rendering per soci ordinari/archiviati, ricerca nei due ordini,
+  ordinamento crescente/decrescente e nomi diversi con cognome uguale.
+- Lint, typecheck, build e 57 test PASS. Browser Chromium desktop 1280x900
+  e mobile emulato 375x667 su dati sintetici: ordine visualizzato, A-Z/Z-A,
+  cognomi uguali e ricerca nei due ordini verificati; nessun overflow o errore
+  console nel test finale. Nessuna modifica Supabase; Safari fisico non testato.
+
 # Correzione filtro soci archiviati (2026-09-27)
 
 - Il filtro `Archiviati` non combina piu' `status = archived` con
