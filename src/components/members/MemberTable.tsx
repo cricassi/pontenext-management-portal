@@ -41,12 +41,16 @@ export function MemberTable({ members, visibility }: MemberTableProps) {
           {members.map((member) => (
             <tr key={member.id} className="border-b last:border-b-0">
               <td className="px-4 py-3">
-                <Link
+                {member.archivedAt ? (
+                  <span className="font-medium text-foreground">
+                    {member.firstName} {member.lastName}
+                  </span>
+                ) : <Link
                   href={`/members/${member.id}`}
                   className="font-medium text-foreground hover:underline"
                 >
                   {member.firstName} {member.lastName}
-                </Link>
+                </Link>}
                 {visibility.city !== false && member.city ? (
                   <p className="text-xs text-muted-foreground">{member.city}</p>
                 ) : null}
@@ -64,7 +68,9 @@ export function MemberTable({ members, visibility }: MemberTableProps) {
                 <MemberStatusBadge status={member.status} />
               </td>
               <td className="px-4 py-3">
-                <div className="flex justify-end gap-2">
+                {member.archivedAt ? (
+                  <p className="text-right text-muted-foreground">Archiviato</p>
+                ) : <div className="flex justify-end gap-2">
                   <Button asChild variant="outline" size="sm">
                     <Link href={`/members/${member.id}`}>Apri</Link>
                   </Button>
@@ -81,7 +87,7 @@ export function MemberTable({ members, visibility }: MemberTableProps) {
                       <Archive aria-hidden="true" className="size-4" />
                     </Button>
                   </form>
-                </div>
+                </div>}
               </td>
             </tr>
           ))}

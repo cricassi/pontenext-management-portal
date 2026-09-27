@@ -47,7 +47,7 @@ export function MemberCardList({ members, visibility }: MemberCardListProps) {
             </div>}
           </dl>
 
-          <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
+          {!member.archivedAt && <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
             <Button asChild variant="outline">
               <Link href={`/members/${member.id}`}>Apri</Link>
             </Button>
@@ -64,7 +64,7 @@ export function MemberCardList({ members, visibility }: MemberCardListProps) {
                 <Archive aria-hidden="true" className="size-4" />
               </Button>
             </form>
-          </div>
+          </div>}
         </article>
       ))}
     </div>

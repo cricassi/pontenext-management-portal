@@ -301,9 +301,13 @@ export async function getMembers(filters: MemberFilters = {}) {
   let query = supabase
     .from("members")
     .select(memberSelect)
-    .is("archived_at", null)
     .order("last_name", { ascending: true })
     .order("first_name", { ascending: true });
+
+  // Only the explicit archive filter may include soft-deleted members.
+  if (filters.status !== MEMBER_STATUS.ARCHIVED) {
+    query = query.is("archived_at", null);
+  }
 
   if (filters.status && filters.status !== "all") {
     query = query.eq("status", filters.status);
