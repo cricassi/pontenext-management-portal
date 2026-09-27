@@ -18,14 +18,16 @@ import { requireActiveAdmin } from "@/services/admin-auth.service";
 import { getFieldVisibility } from "@/services/field-visibility.service";
 import { memberVisibility } from "@/utils/member-visibility";
 import { MemberVisibilityWarning } from "@/components/members/MemberVisibilityWarning";
+import { NewMemberMembershipPrompt } from "@/components/members/NewMemberMembershipPrompt";
 
 export const dynamic = "force-dynamic";
 
 type MemberPageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ created?: string }>;
 };
 
-export default async function MemberPage({ params }: MemberPageProps) {
+export default async function MemberPage({ params, searchParams }: MemberPageProps) {
   await requireActiveAdmin();
   const { id } = await params;
 
@@ -46,9 +48,17 @@ export default async function MemberPage({ params }: MemberPageProps) {
     getMembershipsByMemberId(id),
     getMemberExpiration(id),
   ]);
+  const showMembershipPrompt =
+    (await searchParams)?.created === "1" &&
+    memberships.length === 0 &&
+    !member.archivedAt &&
+    member.status !== "archived";
 
   return (
     <div className="flex flex-col gap-6">
+      {showMembershipPrompt ? (
+        <NewMemberMembershipPrompt memberId={member.id} />
+      ) : null}
       <PageHeader
         title={`${member.firstName} ${member.lastName}`}
         description="Scheda anagrafica e ruoli associativi."

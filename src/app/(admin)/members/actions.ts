@@ -38,7 +38,7 @@ export async function createMemberAction(
   }
 
   revalidatePath("/members");
-  redirect(`/members/${memberId}`);
+  redirect(`/members/${memberId}?created=1`);
 }
 
 export async function updateMemberAction(

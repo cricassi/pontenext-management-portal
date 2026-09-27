@@ -13,7 +13,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { MEMBERSHIP_STATUS, type Membership } from "@/types/membership";
 import { formatCurrency } from "@/utils/currency";
 import { formatDate } from "@/utils/date";
-import { buildMembershipRenewalHref } from "@/utils/membership-links";
+import {
+  buildInitialMembershipHref,
+  buildMembershipRenewalHref,
+} from "@/utils/membership-links";
 
 type MembershipHistoryPanelProps = {
   memberId: string;
@@ -24,6 +27,9 @@ export function MembershipHistoryPanel({
   memberId,
   memberships,
 }: MembershipHistoryPanelProps) {
+  const newMembershipHref = memberships.length === 0
+    ? buildInitialMembershipHref(memberId)
+    : buildMembershipRenewalHref(memberId);
   return (
     <Card>
       <CardHeader>
@@ -35,7 +41,7 @@ export function MembershipHistoryPanel({
             </CardDescription>
           </div>
           <Button asChild>
-            <Link href={buildMembershipRenewalHref(memberId)}>
+            <Link href={newMembershipHref}>
               Nuova iscrizione
             </Link>
           </Button>
@@ -100,7 +106,7 @@ export function MembershipHistoryPanel({
           <EmptyState
             title="Nessuna iscrizione"
             description="Crea la prima iscrizione per questo socio."
-            actionHref={buildMembershipRenewalHref(memberId)}
+            actionHref={newMembershipHref}
             actionLabel="Nuova iscrizione"
           />
         )}

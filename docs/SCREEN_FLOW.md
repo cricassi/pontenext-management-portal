@@ -214,6 +214,29 @@ Lista card con:
 
 # 8. Scheda Socio
 
+## Conferma nuovo socio (2026-09-27)
+
+- `Crea socio` esegue il salvataggio e, solo se riuscito, porta a
+  `/members/[id]?created=1`.
+- Prima della scheda compare la domanda "Vuoi creare anche l'iscrizione
+  annuale?", con azioni `Crea iscrizione` e `Non ora`. Blocco in pagina,
+  senza modale o overlay che intralci lo scrolling mobile.
+- `Non ora` torna alla scheda senza domanda. `Crea iscrizione` apre
+  `/memberships/new?memberId=[id]&mode=initial`: socio preselezionato, piano
+  annuale/quote proposti, oggi in Italia e scadenza a un anno. La conferma
+  resta separata dalla creazione del socio. `Annulla` torna alla scheda.
+- Dopo `Non ora` o `Annulla`, `Nuova iscrizione` nella sezione Iscrizioni della
+  scheda socio riapre lo stesso flusso annuale quando lo storico e' vuoto.
+- Nessun pagamento automatico. Nessuna domanda dopo la modifica del socio,
+  dopo un errore di creazione o se esiste gia' un'iscrizione non archiviata.
+- La route e la server action verificano l'admin prima dei fetch; l'action
+  vincola il socio, rilegge disponibilita'/storico e rifiuta un reinvio
+  sequenziale dopo il salvataggio. Un URL iniziale riaperto dopo la creazione
+  torna alla scheda. I rinnovi ordinari/rapidi restano invariati.
+- Il controllo storico e l'INSERT non sono una transazione unica: non viene
+  promessa unicita' atomica fra due admin che confermano simultaneamente.
+  Il pulsante esistente disabilita il submit mentre e' in corso.
+
 ## Route
 
 ```text
