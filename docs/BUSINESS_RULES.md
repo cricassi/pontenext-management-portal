@@ -22,6 +22,25 @@ Un socio puo' esistere anche senza iscrizione attiva.
 
 Lo stato associativo del socio e' derivato dalle iscrizioni presenti in `memberships`.
 
+### Prima iscrizione dopo la creazione manuale del socio
+
+Dopo il salvataggio riuscito dell'anagrafica, chiedere se creare anche
+l'iscrizione annuale. Nessuna iscrizione viene creata automaticamente.
+`Non ora` conserva il solo socio; `Crea iscrizione` apre il modulo precompilato,
+con conferma separata. Annullamento o errore non eliminano l'anagrafica.
+
+Decorrenza proposta: data odierna in Europe/Rome. Scadenza proposta: stesso
+giorno dell'anno successivo, con 29 febbraio ricondotto al 28 febbraio se
+necessario. Non sommare semplicemente 365 giorni. Proporre il primo piano
+attivo/non archiviato di 12 mesi nell'ordinamento esistente e la sua quota;
+se assente, piano Personalizzato, durata annuale e quota da verificare.
+Restano modificabili piano, date e quota; scegliendo esplicitamente un altro
+piano si applica la sua durata. Quota zero richiede le note, come gia' previsto.
+
+Il salvataggio esplicito crea una nuova riga `memberships`, mai un pagamento,
+un rinnovo di righe precedenti o una modifica dell'anagrafica. Il flusso riguarda
+solo la creazione manuale, non l'import Excel M10-C. Nessuna migration necessaria.
+
 ## BR-003 - Iscrizioni
 
 Un socio puo' avere piu' iscrizioni nel tempo.

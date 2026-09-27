@@ -12,7 +12,11 @@ const token = [Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toStrin
 const data = {
   admin_users: [{ id: adminId, auth_user_id: userId, full_name: "Demo Super Admin", email: user.email, role: "super_admin", status: "active", archived_at: null }],
   members: [{ id: memberId, first_name: "Ada", last_name: "Demo", email: "preserved@example.invalid", phone: "0123456789", address: "Via Dimostrativa 1", city: "Ponte Demo", postal_code: "00100", province: "PC", country: "Italia", birth_date: "1990-01-01", fiscal_code: "DEMOONLY", profession: "Dimostrazione", notes: "Note demo da preservare", status: "active", created_at: stamp(), updated_at: stamp(), archived_at: null }],
-  ui_field_visibility: [], roles: [], member_roles: [], memberships: [], membership_plans: [], payments: [],
+  ui_field_visibility: [], roles: [], member_roles: [], memberships: [],
+  membership_plans: [
+    { id: "60000000-0000-4000-8000-000000000006", name: "Agevolata demo", description: null, minimum_fee: 15, default_duration_months: 6, is_active: true, sort_order: 1, created_at: stamp(), updated_at: stamp(), archived_at: null },
+    { id: "60000000-0000-4000-8000-000000000012", name: "Ordinaria demo", description: null, minimum_fee: 30, default_duration_months: 12, is_active: true, sort_order: 2, created_at: stamp(), updated_at: stamp(), archived_at: null },
+  ], payments: [],
 };
 for (const [screen, definition] of Object.entries(FIELD_VISIBILITY_REGISTRY)) {
   if (!definition.integrated) continue;
@@ -23,6 +27,7 @@ function matches(row, params) {
     if (["select", "order", "limit", "offset"].includes(key)) return true;
     if (value === "is.null") return row[key] == null;
     if (value.startsWith("eq.")) return String(row[key]) === value.slice(3);
+    if (value.startsWith("neq.")) return String(row[key]) !== value.slice(4);
     if (value.startsWith("in.(")) return value.slice(4,-1).split(",").map(v=>v.replaceAll('"','')).includes(String(row[key]));
     return false;
   });
@@ -64,13 +69,18 @@ const server = http.createServer(async (req, res) => {
   if (!Object.hasOwn(data, table)) return send(404, { message: "Fixture route unavailable" });
   let rows = data[table].filter(r=>matches(r,url.searchParams));
   if (req.method !== "GET") {
-    if (table !== "members" || !["POST", "PATCH"].includes(req.method)) return send(403, { code: "42501" });
-    if (req.method === "POST") { const row = { ...input, id: randomUUID(), created_at: stamp(), updated_at: stamp(), archived_at: null }; data.members.push(row); rows=[row]; }
+    if (!((table === "members" && ["POST", "PATCH"].includes(req.method)) || (table === "memberships" && req.method === "POST"))) return send(403, { code: "42501" });
+    if (table === "memberships" && input.notes === "FIXTURE_FAIL") return send(500, { message: "Synthetic insert failure" });
+    if (req.method === "POST") {
+      const row = { ...(table === "memberships" ? { paid_amount: 0, payment_status: "unpaid" } : {}), ...input, id: randomUUID(), created_at: stamp(), updated_at: stamp(), archived_at: null };
+      data[table].push(row); rows=[row];
+    }
     else rows.forEach(row=>Object.assign(row,input,{ updated_at: stamp() }));
   }
   const count = rows.length;
   const limit = Number(url.searchParams.get("limit") ?? count);
   rows = rows.slice(0,limit);
+  if (table === "memberships") rows = rows.map(row => ({ ...row, members: data.members.find(member => member.id === row.member_id) ?? null, membership_plans: data.membership_plans.find(plan => plan.id === row.membership_plan_id) ?? null }));
   res.setHeader("Content-Range", count ? `0-${rows.length-1}/${count}` : "*/0");
   return send(200, req.headers.accept?.includes("vnd.pgrst.object") ? (rows[0] ?? null) : rows);
 });

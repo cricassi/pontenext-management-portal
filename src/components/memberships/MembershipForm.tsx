@@ -14,9 +14,10 @@ import { FormSubmitButton } from "@/components/ui/FormSubmitButton";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { emptyFormState, type FormState } from "@/types/form";
-import type { MemberListItem } from "@/types/member";
+import type { Member } from "@/types/member";
 import type { MembershipPlan } from "@/types/membership";
 import { addMonthsToDateInputValue } from "@/utils/date";
+import { addInitialMembershipMonths } from "@/utils/initial-membership";
 
 type MembershipFormDefaults = {
   memberId?: string;
@@ -36,13 +37,14 @@ type MembershipFormContext = {
 };
 
 type MembershipFormProps = {
-  members: MemberListItem[];
+  members: Pick<Member, "id" | "firstName" | "lastName">[];
   plans: MembershipPlan[];
   defaults: MembershipFormDefaults;
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   submitLabel: string;
   cancelHref?: string;
   context?: MembershipFormContext;
+  initialMembership?: boolean;
 };
 
 function fieldError(state: FormState, key: string) {
@@ -63,6 +65,7 @@ export function MembershipForm({
   submitLabel,
   cancelHref = "/memberships",
   context,
+  initialMembership = false,
 }: MembershipFormProps) {
   const [state, formAction] = useActionState(action, emptyFormState);
   const [selectedPlanId, setSelectedPlanId] = useState(
@@ -80,6 +83,9 @@ export function MembershipForm({
     () => new Map(plans.map((plan) => [plan.id, plan])),
     [plans],
   );
+  const addMonths = initialMembership
+    ? addInitialMembershipMonths
+    : addMonthsToDateInputValue;
 
   function handlePlanChange(planId: string) {
     const plan = plansById.get(planId);
@@ -93,7 +99,7 @@ export function MembershipForm({
     const fee = formatAmountInput(plan.minimumFee);
     setMinimumFee(fee);
     setExpectedFee(fee);
-    setEndDate(addMonthsToDateInputValue(startDate, plan.defaultDurationMonths));
+    setEndDate(addMonths(startDate, plan.defaultDurationMonths));
   }
 
   function handleStartDateChange(value: string) {
@@ -101,8 +107,8 @@ export function MembershipForm({
 
     setStartDate(value);
 
-    if (plan && value) {
-      setEndDate(addMonthsToDateInputValue(value, plan.defaultDurationMonths));
+    if ((plan || initialMembership) && value) {
+      setEndDate(addMonths(value, plan?.defaultDurationMonths ?? 12));
     }
   }
 
@@ -114,6 +120,13 @@ export function MembershipForm({
             <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
               {state.message}
             </div>
+          ) : null}
+
+          {initialMembership ? (
+            <p className="text-sm text-muted-foreground">
+              Anagrafica gia&apos; salvata. L&apos;iscrizione viene registrata solo alla conferma.
+              Nessun pagamento automatico.
+            </p>
           ) : null}
 
           {context ? (

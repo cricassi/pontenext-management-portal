@@ -1,5 +1,31 @@
 ﻿# CHANGELOG.md
 
+# Prima iscrizione proposta dopo il nuovo socio (2026-09-27)
+
+- Solo dopo la creazione manuale riuscita, la scheda socio chiede se creare
+  anche l'iscrizione annuale: `Crea iscrizione` oppure `Non ora`.
+- Nuovo contesto `mode=initial` sulla route iscrizioni esistente: socio
+  vincolato, primo piano annuale attivo nell'ordinamento e relativa quota;
+  senza piano annuale, durata annuale personalizzata. Date/quote verificabili
+  e modificabili prima della conferma. Oggi calcolato in Europe/Rome e
+  anniversario di calendario, con 29 febbraio -> 28 febbraio ove necessario.
+- `Non ora`, annullamento ed errore iscrizione conservano l'anagrafica. La
+  sezione Iscrizioni con storico vuoto permette di riprendere il flusso.
+  Nessun pagamento automatico; rinnovi ordinari e rapidi invariati.
+- Guard admin prima dei fetch; action legata al socio, verifica dello storico
+  al submit e rifiuto dei reinvii sequenziali. Nessuna garanzia transazionale
+  nuova per submit simultanei da amministratori diversi (vedere SCREEN_FLOW).
+- Aggiunti 13 test mirati; 49 test complessivi con regressioni visibilita' ed
+  export superati. Lint, typecheck e build verificati. Browser Chromium
+  desktop 1280x900 e mobile emulato 375x667: percorso completo, annullamento,
+  errore simulato, conferma, redirect anonimo e riapertura dopo salvataggio;
+  zero errori console e nessun overflow. Dati esclusivamente sintetici su
+  fixture locale, screenshot fuori repository. Safari/iPhone fisico non testato.
+- Browser plugin non disponibile: Playwright con Chrome installato, senza
+  nuove dipendenze. Build/test fuori sandbox dopo blocco locale spawn EPERM.
+- Nessuna modifica a schema, migration, RLS, Supabase live o Vercel; nessun
+  invio email. Import Excel e altri rollout M10 restano fuori scope.
+
 # M10-A2.1 - Field Visibility Members Only (2026-09-21)
 
 ## Smoke Utente e Review Finale PR #52 (2026-09-22 Europe/Rome)
