@@ -22,6 +22,19 @@ Un socio puo' esistere anche senza iscrizione attiva.
 
 Lo stato associativo del socio e' derivato dalle iscrizioni presenti in `memberships`.
 
+### Consultazione dei soci archiviati
+
+L'elenco ordinario, anche con `Tutti gli stati`, esclude i record con
+`archived_at` valorizzato. Il filtro esplicito `Archiviati` seleziona
+`status = archived` senza imporre `archived_at IS NULL`: include quindi sia
+l'archiviazione soft sia lo stato anagrafico archivio impostato dal form.
+Ricerca, filtro ruolo e ordinamento restano applicabili.
+
+Per i record in soft delete, tabella desktop e card mobile mostrano i dati
+di elenco senza link Apri/Modifica o nuova azione Archivia. Le route di
+dettaglio/modifica e le selezioni operative continuano a escluderli. Questa
+correzione non introduce ripristino, modifica o cancellazione degli archiviati.
+
 ### Prima iscrizione dopo la creazione manuale del socio
 
 Dopo il salvataggio riuscito dell'anagrafica, chiedere se creare anche

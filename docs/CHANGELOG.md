@@ -1,5 +1,24 @@
 ﻿# CHANGELOG.md
 
+# Correzione filtro soci archiviati (2026-09-27)
+
+- Il filtro `Archiviati` non combina piu' `status = archived` con
+  `archived_at IS NULL`: i soci archiviati tramite soft delete sono visibili.
+- Elenco ordinario, Tutti gli stati, filtri Attivi/Inattivi e selezione soci
+  per nuove iscrizioni mantengono l'esclusione dei record soft-deleted.
+- Tabella desktop e card mobile non espongono link a dettaglio/modifica o
+  azioni di archiviazione per record in soft delete, tuttora esclusi dalle
+  relative route. Nessuna nuova funzione di ripristino.
+- Sei test di regressione su query con SDK Supabase e trasporto sintetico,
+  filtri combinati, ordinamento, lookup e rendering desktop/mobile.
+- Verifiche: 55/55 test complessivi, lint, typecheck, build e diff check PASS.
+  Browser Chromium desktop 1280x900 e mobile emulato 375x667: creazione e
+  archiviazione demo, filtro archivio, esclusione da elenco standard e nuova
+  iscrizione, redirect anonimo; zero errori console e nessun overflow.
+  Playwright usato per assenza del Browser plugin; Safari fisico non testato.
+  Dati sintetici su fixture in memoria, screenshot fuori repository.
+- Nessuna migration, modifica RLS, scrittura Supabase live o invio email.
+
 # Prima iscrizione proposta dopo il nuovo socio (2026-09-27)
 
 - Solo dopo la creazione manuale riuscita, la scheda socio chiede se creare
