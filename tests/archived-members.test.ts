@@ -22,7 +22,7 @@ const rows = [
   { ...base, id: "soft-deleted-active", status: "active", archived_at: stamp },
 ];
 
-function setup() {
+function setup(memberRows = rows) {
   const queries: URL[] = [];
   // Exercise the real query builder, but replace transport with synthetic rows.
   const supabase = createClient("https://fixture.example.invalid", "synthetic-anon-key", {
@@ -31,7 +31,7 @@ function setup() {
       assert.equal(init?.method, "GET");
       const url = new URL(String(input));
       queries.push(url);
-      let result = url.pathname.endsWith("/members") ? rows : [];
+      let result = url.pathname.endsWith("/members") ? memberRows : [];
       for (const [field, filter] of url.searchParams) {
         if (["select", "order"].includes(field)) continue;
         result = result.filter((row) => {
@@ -106,8 +106,7 @@ test("desktop and mobile archives have no broken detail/edit links or archive ac
   const { MemberCardList } = loadModule<typeof import("@/components/members/MemberCardList")>("src/components/members/MemberCardList.tsx", mocks);
   for (const Component of [MemberTable, MemberCardList]) {
     const html = renderToStaticMarkup(createElement(Component, { members: [archived], visibility: { email: false } }));
-    assert.match(html, /NomeTest/);
-    assert.match(html, /CognomeTest/);
+    assert.match(html, /CognomeTest NomeTest/);
     assert.match(html, /Archiviato/);
     assert.doesNotMatch(html, /href="\/members\//);
     assert.doesNotMatch(html, /<form|Modifica|>Apri<|demo@example/);
@@ -115,6 +114,30 @@ test("desktop and mobile archives have no broken detail/edit links or archive ac
     const activeHtml = renderToStaticMarkup(createElement(Component, { members: [active], visibility: {} }));
     assert.match(activeHtml, /href="\/members\/archived"/);
     assert.match(activeHtml, /Modifica/);
-    assert.match(activeHtml, /aria-label="Archivia/);
+    assert.match(activeHtml, />CognomeTest NomeTest</);
+    assert.match(activeHtml, /aria-label="Archivia CognomeTest NomeTest"/);
   }
+});
+
+test("member list sorts by surname, then first name, and searches both name orders", async () => {
+  const { service } = setup([
+    { ...base, id: "rossi", first_name: "Ada", last_name: "Rossi", status: "active" },
+    { ...base, id: "bianchi-zeno", first_name: "Zeno", last_name: "Bianchi", status: "active" },
+    { ...base, id: "bianchi-anna", first_name: "Anna", last_name: "Bianchi", status: "active" },
+  ]);
+  for (const sort of [undefined, "name_asc"] as const) {
+    assert.deepEqual((await service.getMembers({ sort })).map((m) => m.id), ["bianchi-anna", "bianchi-zeno", "rossi"]);
+  }
+  assert.deepEqual((await service.getMembers({ sort: "name_desc" })).map((m) => m.id), ["rossi", "bianchi-zeno", "bianchi-anna"]);
+  for (const query of ["Rossi Ada", "Ada Rossi", "rossi ada"]) {
+    assert.deepEqual((await service.getMembers({ query })).map((m) => m.id), ["rossi"]);
+  }
+});
+
+test("member ordering controls name the surname and retain existing sort URLs", () => {
+  const { MemberFilters } = loadModule<typeof import("@/components/members/MemberFilters")>("src/components/members/MemberFilters.tsx", {});
+  const html = renderToStaticMarkup(createElement(MemberFilters, { filters: {}, roles: [] }));
+  assert.match(html, /value="all"[^>]*>Tutti gli stati \(no Archiviati\)</);
+  assert.match(html, /value="name_asc"[^>]*>Cognome A-Z</);
+  assert.match(html, /value="name_desc"[^>]*>Cognome Z-A</);
 });

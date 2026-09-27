@@ -23,7 +23,7 @@ export function MemberCardList({ members, visibility }: MemberCardListProps) {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="truncate text-base font-semibold tracking-normal">
-                {member.firstName} {member.lastName}
+                {member.lastName} {member.firstName}
               </h2>
               {visibility.email !== false && <p className="mt-1 break-words text-sm text-muted-foreground">
                 {member.email ?? "Email non presente"}
@@ -59,7 +59,7 @@ export function MemberCardList({ members, visibility }: MemberCardListProps) {
                 type="submit"
                 variant="ghost"
                 size="icon"
-                aria-label={`Archivia ${member.firstName} ${member.lastName}`}
+                aria-label={`Archivia ${member.lastName} ${member.firstName}`}
               >
                 <Archive aria-hidden="true" className="size-4" />
               </Button>
